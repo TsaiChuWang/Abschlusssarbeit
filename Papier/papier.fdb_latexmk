@@ -1,14 +1,14 @@
 # Fdb version 4
-["biber template"] 1725867768 "template.bcf" "template.bbl" "template" 1725867779 0
+["biber papier"] 0 "papier.bcf" "papier.bbl" "papier" 1725869946 -1
   "./sample.bib" 1675643610 423 bb4d4040f48aec7c0bc550ef99e007d4 ""
-  "template.bcf" 1725867778 106716 8a49c2aa7e8660a89e97e0cd3b59393f "pdflatex"
+  "papier.bcf" 1725869945 106716 8a49c2aa7e8660a89e97e0cd3b59393f "pdflatex"
   (generated)
-  "template.bbl"
-  "template.blg"
+  "papier.bbl"
+  "papier.blg"
   (rewritten before read)
-["pdflatex"] 1725867775 "/home/wtsaichu/Dokumente/Arbeitsplatz/Abschlusssarbeit/Papier/template.tex" "template.pdf" "template" 1725867779 0
+["pdflatex"] 1725869943 "/home/wtsaichu/Dokumente/Arbeitsplatz/Abschlusssarbeit/Papier/papier.tex" "papier.pdf" "papier" 1725869946 0
   "/etc/texmf/web2c/texmf.cnf" 1716754325 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/wtsaichu/Dokumente/Arbeitsplatz/Abschlusssarbeit/Papier/template.tex" 1675757372 19772 c7ae37a22ece227546d485553ec6f474 ""
+  "/home/wtsaichu/Dokumente/Arbeitsplatz/Abschlusssarbeit/Papier/papier.tex" 1725869942 19603 22ccb001293ed602fcdfb15602bbc4f3 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc" 1165713224 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/adobe/palatino/pplb8r.tfm" 1136768653 2532 9ad73cf4dd2173a847f2a5f5608e0b9a ""
@@ -142,16 +142,16 @@
   "Figures//Fibroblastid.jpg" 1675397966 1196031 4586114cceabf6743681870dd8aeb612 ""
   "Figures//Tolmukapea.jpg" 1675386049 653480 1eec97ed292c65b5c5bd54bfe0606110 ""
   "LTJournalArticle.cls" 1675757648 9784 e38e4f05326438c9cfb0a6c6bf9f0764 ""
-  "template.aux" 1725867778 4456 370af3e7b98b72691fd4ff7f7f03ac6d "pdflatex"
-  "template.bbl" 1725867770 3199 985b69af5beeb44be6a586f575026aae "biber template"
-  "template.out" 1725867778 1565 59e2c02a582909cb38775fec7280f07c "pdflatex"
-  "template.run.xml" 1725867778 2329 dd0b28ad5248dccc56c9d3651d0f9aad "pdflatex"
-  "template.tex" 1675757372 19772 c7ae37a22ece227546d485553ec6f474 ""
+  "papier.aux" 1725869945 4456 370af3e7b98b72691fd4ff7f7f03ac6d "pdflatex"
+  "papier.bbl" 1725869658 3199 985b69af5beeb44be6a586f575026aae "biber papier"
+  "papier.out" 1725869945 1565 59e2c02a582909cb38775fec7280f07c "pdflatex"
+  "papier.run.xml" 1725869945 2315 f5470e300fb4c381a63ccca59901bb06 "pdflatex"
+  "papier.tex" 1725869942 19603 22ccb001293ed602fcdfb15602bbc4f3 ""
   (generated)
-  "template.aux"
-  "template.bcf"
-  "template.log"
-  "template.out"
-  "template.pdf"
-  "template.run.xml"
+  "papier.aux"
+  "papier.bcf"
+  "papier.log"
+  "papier.out"
+  "papier.pdf"
+  "papier.run.xml"
   (rewritten before read)

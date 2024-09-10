@@ -82,7 +82,6 @@ void pfostenHaupt(struct Streit streit){
         // Lineare Programmdatei lesen
 		char lineareProgrammdateiName[MAX_NAME_LÄNGE];
 	    sprintf(lineareProgrammdateiName, "../Datei/Haupt_%s.lp", streit.DATEI_NAME);
-        printf("%s\n", lineareProgrammdateiName);
 
         char *dateiinhalt = lesenDatei(lineareProgrammdateiName);
         if (!dateiinhalt) {

@@ -4,7 +4,7 @@
 #include "../Enthalten/Konfiguration.h"
 #include "../Enthalten/Aufbau.h"
 #include "../Enthalten/Streit.h"
-// #include "../Enthalten/Netz.h"
+#include "../Enthalten/Netz.h"
 
 // gcc ./Haupt.c -o ../Ausführung/Haupt -lcurl
 // ../Ausführung/Haupt USA-26
@@ -71,7 +71,6 @@ int main(int argc, char *argv[]){
 
     // Konstante
 
-
     // Öffnen Sie die Textdatei
 	FILE *dateizeiger;
 	char datei_name[MAX_NAME_LÄNGE];
@@ -85,5 +84,10 @@ int main(int argc, char *argv[]){
     fprintf(dateizeiger, "\nBounds\n\n"); 
     fprintf(dateizeiger,"\nEnd\n");
 
+    fclose(dateizeiger);
+
+    // Erhalten Sie die Lösung
+    pfostenHaupt(streit);
+    
     return ERFOLG;
 }

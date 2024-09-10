@@ -6,7 +6,4 @@ Subject to
 Bounds
 
 
-ALPHA >= 0
-
-
 End

@@ -158,7 +158,7 @@ Assume that the traffic usage patterns of each tenant follow a Gaussian distribu
 
 \begin{equation}
 	\begin{aligned}
-		\min &\ \textcolor{blue}\alpha &&\\
+		\min \ \textcolor{blue}\alpha &&\\
 		& \text{subject to}&&\\
 		& P(\sum_{s,t\in N, s\neq t}d_{st}\textcolor{blue}{f_{st}(e)}\leq c_e)\geq \eta & \forall e\in E\\
             & \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\leq \textcolor{blue}\alpha c_e & \forall e\in E\\
@@ -172,6 +172,8 @@ Assume that the traffic usage patterns of each tenant follow a Gaussian distribu
 	\end{aligned}
 	\label{tab:robust_optimization_model}
 \end{equation}	
+
+The first constraint stipulates that \textbf{the probability that the traffic on link \(e\) does not exceed its capacity must be greater than the constant \(\eta\)}. In our experiments, we set \(\eta = 0.9\). The second constraint ensures that link utilization does not exceed the maximum allowable utilization. If this constraint were omitted, \(\alpha\) would be unconstrained. The third constraint enforces \textbf{flow conservation}. Since \(d_{st}\) is a random variable, the demand is replaced by its mean, \(\mu_{st}\). The final constraint addresses the \textbf{non-negativity} of the decision variables, ensuring that \(f_{st}(e) \geq 0\).
 
 \subsection{Data Analysis}
 

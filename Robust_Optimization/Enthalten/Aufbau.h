@@ -21,7 +21,7 @@
 #define MAX_NAME_LÄNGE          1024
 #define MAX_BEFEHL_LÄNGE        4096
 #define MAX_PUFFER_LÄNGE        4096
-#define MAXIMALE_NUTZLASTGRÖßE  1048576
+#define MAXIMALE_NUTZLASTGRÖßE  6629466
 
 #ifndef _DEBUG_COLOR_
 #define _DEBUG_COLOR_

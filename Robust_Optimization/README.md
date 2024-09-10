@@ -42,3 +42,17 @@ $$
     & f_{st}(e) \geq 0 & \forall s, t \in N \text{ with } s \neq t \text{ and } e \in E
 \end{aligned}
 $$
+
+## CPLEX
+### The first constraint
+$$
+\begin{aligned}
+\Phi^{-1}(\eta)\Vert \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\sigma_{st}\Vert_2&\leq c_e- \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st}\\
+\Phi^{-1}(\eta)\sqrt{\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}^2\sigma_{st}^2}&\leq c_e- \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st}\\
+(\Phi^{-1}(\eta)\sqrt{\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}^2\sigma_{st}^2})^2&\leq (c_e- \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st})^2\\
+\Phi^{-1}(\eta)^2\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}^2\sigma_{st}^2&\leq c_e^2-2c_e\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st}+\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}^2\mu_{st}^2\\
+\Phi^{-1}(\eta)^2\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}^2\sigma_{st}^2-\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}^2\mu_{st}^2+2c_e\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st}&\leq c_e^2\\
+\sum_{s,t\in N, s\neq t}(\Phi^{-1}(\eta)^2\textcolor{blue}{f_{st}(e)}^2\sigma_{st}^2-\textcolor{blue}{f_{st}(e)}^2\mu_{st}^2)+2c_e\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st}&\leq c_e^2\\
+\sum_{s,t\in N, s\neq t}(\Phi^{-1}(\eta)^2\sigma_{st}^2-\mu_{st}^2)\textcolor{blue}{f_{st}(e)}^2+2c_e\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st}&\leq c_e^2\\
+\end{aligned}
+$$

@@ -14,8 +14,9 @@
 #define PSD_VARIABLE "f_%02d_%02d(e%02d)"
 
 //Show the data
-#define STREIT_DRUCKEN                              "[Haupt.c] main Display the detail of the topology"
+// #define STREIT_DRUCKEN                              "[Haupt.c] main Display the detail of the topology"
 // #define DRUCKEN_ETA_MIT_UMGEKEHRT_GAUSSIAN          "[Haupt.c] main Print the inserve Gaussian function of defined η "
+// #define DRUCKEN_WAHRSCHEINLICHKEITSKOEFFIZIENT      "[Haupt.c] main Display the coefficient of the first constraint"
 
 // #define DRUCKEN_DATEI_LÄNGE                         "[Netz.h] lesenDatei Print the length of the file."
 // #define DRUCKEN_DATEI_INHALT                        "[Netz.h] pfostenHaupt Show the content in the file"

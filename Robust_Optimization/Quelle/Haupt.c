@@ -74,6 +74,7 @@ int main(int argc, char *argv[]){
     int einschränkungszähler = 1;
 
     // Konstante
+    double** mu_bedeutung = erhaltenBedeutung(streit);
 
     // Öffnen Sie die Textdatei
 	FILE *dateizeiger;
@@ -117,7 +118,7 @@ int main(int argc, char *argv[]){
     fclose(dateizeiger);
 
     // Erhalten Sie die Lösung
-    pfostenHaupt(streit);
+    // pfostenHaupt(streit);
     
     return ERFOLG;
 }

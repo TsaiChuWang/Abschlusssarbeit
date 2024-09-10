@@ -3,24 +3,25 @@
 #include <string.h>
 #include <errno.h>
 
-#define ERFOLG 0
+#define ERFOLG          0
 #define FEHLGESCHLAGEN -1
-#define RICHTIG 1
-#define FALSCH -1
+#define RICHTIG         1
+#define FALSCH         -1
 
-#define DRUCKEN_MODELL "%18s"
-#define DRUCKEN_INTEGER "%3d"
-#define DRUCKEN_DOUBLE  "%12.7lf"
-#define DRUCKEN_DATEI_NAME "%10s"
-#define DRUCKEN_ZWANG_ZAHL "\tc%-6d : "
+#define DRUCKEN_MODELL                  "%18s"
+#define DRUCKEN_INTEGER                 "%3d"
+#define DRUCKEN_DOUBLE                  "%12.7lf"
+#define DRUCKEN_DATEI_NAME              "%10s"
+#define DRUCKEN_ZWANG_ZAHL              "\tc%-6d : "
+#define DRUCKEN_QUADRATISCH_ZWANG_ZAHL  "\tq%-6d : ["
 
-#define ANZEIGEN 1
-#define AUSBLENDEN 0
+#define ANZEIGEN    1
+#define AUSBLENDEN  0
 
-#define MAX_NAME_LÄNGE 1024
-#define MAX_BEFEHL_LÄNGE 4096
-#define MAX_PUFFER_LÄNGE 4096
-#define MAXIMALE_NUTZLASTGRÖßE 1048576
+#define MAX_NAME_LÄNGE          1024
+#define MAX_BEFEHL_LÄNGE        4096
+#define MAX_PUFFER_LÄNGE        4096
+#define MAXIMALE_NUTZLASTGRÖßE  1048576
 
 #ifndef _DEBUG_COLOR_
 #define _DEBUG_COLOR_

@@ -73,9 +73,11 @@ int main(int argc, char *argv[]){
     // Scalter
     int einschränkungszähler = 1;
     int schalter = 0;
+    int quadratischschalter =1;
 
     // Konstante
     double** mu_bedeutung = erhaltenBedeutung(streit);
+    double** sigma_kovarianz = erhaltenKovarianz(streit);
 
     // Öffnen Sie die Textdatei
 	FILE *dateizeiger;
@@ -92,6 +94,20 @@ int main(int argc, char *argv[]){
     fprintf(dateizeiger, "\tobj: "OBJEKTIV"\n");
     
     fprintf(dateizeiger, "\nSubject to \n\n");
+
+    // // P(\sum_{s,t\in N, s\neq t}d_{st}\textcolor{blue}{f_{st}(e)}\leq c_e)\geq \eta & \forall e\in E
+    // for(int kant=1;kant<=ANZAHL_KANTEN;kant++){
+    //     fprintf(dateizeiger, DRUCKEN_QUADRATISCH_ZWANG_ZAHL, quadratischschalter);
+    //     for(int quelle=1;quelle<=ANZAHL_KNOTEN;quelle++)
+    //         for(int ziel=1;ziel<=ANZAHL_KNOTEN;ziel++)
+    //             if(quelle!=ziel){
+    //                 fprintf(dateizeiger, DRUCKEN_DOUBLE PSD_VARIABLE"^2 ",  
+    //             }
+
+    //     quadratischschalter++;
+    //     fprintf(dateizeiger, "\n");
+    // }
+    // fprintf(dateizeiger, "\n");
 
     // \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\leq \textcolor{blue}\alpha c_e & \forall e\in E
     for(int kant=1;kant<=ANZAHL_KANTEN;kant++){
@@ -166,7 +182,7 @@ int main(int argc, char *argv[]){
     fclose(dateizeiger);
 
     // Erhalten Sie die Lösung
-    pfostenHaupt(streit);
+    // pfostenHaupt(streit);
 
     for(int index=0;index<ANZAHL_KNOTEN;index++)
         free(*(mu_bedeutung+index));

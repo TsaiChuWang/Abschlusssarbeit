@@ -126,7 +126,7 @@ int main(int argc, char *argv[]){
                             if(schalter == 0)
                                 schalter = 1;
                             else if(schalter == 1)
-                                fprintf(dateizeiger," + ");
+                                fprintf(dateizeiger, " + ");
                             
                             fprintf(dateizeiger, " "PSD_VARIABLE, quelle, ziel, kant_index+1);
                         }
@@ -135,16 +135,16 @@ int main(int argc, char *argv[]){
                             if(schalter == 0)
                                 schalter = 1;
                             
-                            fprintf(dateizeiger," - ");
+                            fprintf(dateizeiger, " - ");
                             fprintf(dateizeiger, " "PSD_VARIABLE, quelle, ziel, kant_index+1);
                         } 
                     }
 
                     if(knote==quelle)
-                        fprintf(dateizeiger," =  "DRUCKEN_DOUBLE"\n", mu_bedeutung[quelle-1][ziel-1]);
+                        fprintf(dateizeiger, " =  "DRUCKEN_DOUBLE"\n", mu_bedeutung[quelle-1][ziel-1]);
                     else if(knote==ziel)
-                        fprintf(dateizeiger," = -"DRUCKEN_DOUBLE"\n", mu_bedeutung[quelle-1][ziel-1]);
-                    else  fprintf(dateizeiger," = 0\n");
+                        fprintf(dateizeiger, " = -"DRUCKEN_DOUBLE"\n", mu_bedeutung[quelle-1][ziel-1]);
+                    else  fprintf(dateizeiger, " = 0\n");
                     
                     schalter = 0;
                     einschränkungszähler++;
@@ -152,8 +152,17 @@ int main(int argc, char *argv[]){
     fprintf(dateizeiger, "\n");
 	
     fprintf(dateizeiger, "\nBounds\n\n"); 
-    fprintf(dateizeiger,"\nEnd\n");
 
+    // \textcolor{blue}{f_{st}(e)}\geq0 & \forall s,t\in N\ s\neq t\ ,e\in E
+    for(int kant=0;kant<ANZAHL_KANTEN;kant++)
+        for(int quelle=1;quelle<=ANZAHL_KNOTEN;quelle++)
+            for(int ziel=1;ziel<=ANZAHL_KNOTEN;ziel++)
+                if(quelle!=ziel)
+                    fprintf(dateizeiger, "\t"PSD_VARIABLE" >= 0\n", quelle, ziel, kant);
+    fprintf(dateizeiger, "\n");
+    fprintf(dateizeiger, "\t"OBJEKTIV" >= 0\n");
+
+    fprintf(dateizeiger, "\nEnd\n");
     fclose(dateizeiger);
 
     // Erhalten Sie die Lösung

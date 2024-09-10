@@ -27,6 +27,8 @@
 	twoside, % Two side traditional mode where headers and footers change between odd and even pages, comment this option to make them fixed
 ]{LTJournalArticle}
 
+\usepackage{amsmath}
+
 \addbibresource{sample.bib} % BibLaTeX bibliography file
 
 \runninghead{Shortened Running Article Title} % A shortened article title to appear in the running head, leave this command empty for no running head
@@ -118,6 +120,58 @@ This is a numbered list:
 Proin lobortis efficitur dictum. Pellentesque vitae pharetra eros, quis dignissim magna. Sed tellus leo, semper non vestibulum vel, tincidunt eu mi. Aenean pretium ut velit sed facilisis. Ut placerat urna facilisis dolor suscipit vehicula. Ut ut auctor nunc. Nulla non massa eros. Proin rhoncus arcu odio, eu lobortis metus sollicitudin eu. Duis maximus ex dui, id bibendum diam dignissim id. Aliquam quis lorem lorem. Phasellus sagittis aliquet dolor, vulputate cursus dolor convallis vel. Suspendisse eu tellus feugiat, bibendum lectus quis, fermentum nunc. Nunc euismod condimentum magna nec bibendum. Curabitur elementum nibh eu sem cursus, eu aliquam leo rutrum. Sed bibendum augue sit amet pharetra ullamcorper. Aenean congue sit amet tortor vitae feugiat.
 
 Mauris interdum porttitor fringilla. Proin tincidunt sodales leo at ornare. Donec tempus magna non mauris gravida luctus. Cras vitae arcu vitae mauris eleifend scelerisque. Nam sem sapien, vulputate nec felis eu, blandit convallis risus. Pellentesque sollicitudin venenatis tincidunt. In et ipsum libero. Nullam tempor ligula a massa convallis pellentesque.
+
+\subsection{Robust Optimization}
+
+Assume that the traffic usage patterns of each tenant follow a Gaussian distribution. We can then represent the problem using the model outlined in Equation \ref{tab:robust_optimization_model}. The constant values used in this formulation are provided in Table \ref{tab:robust_optimization_symbols}.
+
+\begin{table} % Full width table (notice the starred environment)
+	\caption{Symbols and Their Descriptions Used in the Robust Optimization Model}
+	\centering % Horizontally center the table
+	\begin{tabular}{L{0.15\linewidth} L{0.85\linewidth} } % Manually specify column alignments with L{}, R{} or C{} and widths as a fixed amount, usually as a proportion of \linewidth
+		\toprule
+		\multicolumn{2}{c}{ \textbf{Constant}} \\
+		\cmidrule(r){1-2}
+		Symbol 			& Description \\
+		\midrule
+		$E$ 			& The set of physical network links. \\
+        $N$ 			& The set of physical network nodes. \\
+        $E^{OUT}_n$ 	& The set of links emanating from node $n$. \\
+        $E^{IN}_n$ 		& The set of links terminating at node $n$. \\
+        $d_{st}$		& A Gaussian random variable representing the traffic demand between origin-destination pair $st$, where $d_{st} \sim \mathcal{N}(\mu_{st}, \sigma^2_{st})$. \\
+        $\mu_{st}$ 		& The mean of the Gaussian random variable $d_{st}$, indicating the average traffic demand for the pair $st$. \\
+        $\sigma^2_{st}$ & The variance of the Gaussian random variable $d_{st}$, reflecting the uncertainty in the traffic demand for the pair $st$. \\
+        $c_e$ 			& The capacity of link $e$, which represents the maximum allowable traffic flow on the link. \\
+        $\eta$ 			& The probability threshold ensuring that the traffic does not exceed the link capacity, serving as a reliability measure. \\
+        \hline
+		\multicolumn{2}{c}{\textbf{Decision Variables}} \\
+        \cmidrule(r){1-2}
+        Symbol 			& Description \\
+        \midrule
+        $\alpha$ 		& The maximum allowable link utilization, where $\alpha \geq 0$. \\
+        $f_{st}(e)$ 	& The traffic flow from node $s$ to node $t$ through link $e$. \\
+        \bottomrule
+		\bottomrule
+	\end{tabular}
+	\label{tab:robust_optimization_symbols}
+\end{table}
+
+\begin{equation}
+	\begin{aligned}
+		\min &\ \textcolor{blue}\alpha &&\\
+		& \text{subject to}&&\\
+		& P(\sum_{s,t\in N, s\neq t}d_{st}\textcolor{blue}{f_{st}(e)}\leq c_e)\geq \eta & \forall e\in E\\
+            & \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\leq \textcolor{blue}\alpha c_e & \forall e\in E\\
+        & \sum_{e\in E^{OUT}_n } \textcolor{blue}{f_{st}(e)} - \sum_{e\in E^{IN}_n} \textcolor{blue}{f_{st}(e)} =&\begin{cases}
+           \mu_{st} &\text{if } n=s \\
+           0 &\text{if } n\neq s, n\neq t \\
+           -\mu_{st} &\text{if } n=t \\
+        \end{cases} \\
+		& \forall n,s,t\in N\ s\neq t\\
+		& \textcolor{blue}{f_{st}(e)}\geq0 & \forall s,t\in N\ s\neq t\ ,e\in E
+	\end{aligned}
+	\label{tab:robust_optimization_model}
+\end{equation}	
 
 \subsection{Data Analysis}
 

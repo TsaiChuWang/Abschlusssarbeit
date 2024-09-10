@@ -72,6 +72,7 @@ int main(int argc, char *argv[]){
 
     // Scalter
     int einschränkungszähler = 1;
+    int schalter = 0;
 
     // Konstante
     double** mu_bedeutung = erhaltenBedeutung(streit);
@@ -94,7 +95,7 @@ int main(int argc, char *argv[]){
 
     // \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\leq \textcolor{blue}\alpha c_e & \forall e\in E
     for(int kant=1;kant<=ANZAHL_KANTEN;kant++){
-        fprintf(dateizeiger, "\tc%-4d : ", einschränkungszähler);
+        fprintf(dateizeiger, DRUCKEN_ZWANG_ZAHL, einschränkungszähler);
         for(int quelle=1;quelle<=ANZAHL_KNOTEN;quelle++)
             for(int ziel=1;ziel<=ANZAHL_KNOTEN;ziel++)
                 if(quelle!=ziel){
@@ -111,14 +112,56 @@ int main(int argc, char *argv[]){
         return FEHLGESCHLAGEN;
 #endif
     }
+    fprintf(dateizeiger, "\n");
     
+    // Flow conservation : constraints
+    schalter = 0;
+    for(int knote=1;knote<=ANZAHL_KNOTEN;knote++)
+        for(int quelle=1;quelle<=ANZAHL_KNOTEN;quelle++)
+            for(int ziel=1;ziel<=ANZAHL_KNOTEN;ziel++)
+                if(quelle!=ziel){
+                    fprintf(dateizeiger, DRUCKEN_ZWANG_ZAHL, einschränkungszähler);
+                    for(int kant_index=0;kant_index<ANZAHL_KANTEN;kant_index++){
+                        if(suchenHeaderKnoten(streit,kant_index)==knote-1){
+                            if(schalter == 0)
+                                schalter = 1;
+                            else if(schalter == 1)
+                                fprintf(dateizeiger," + ");
+                            
+                            fprintf(dateizeiger, " "PSD_VARIABLE, quelle, ziel, kant_index+1);
+                        }
+
+                        if(suchenSchwanzKnoten(streit,kant_index)==knote-1){
+                            if(schalter == 0)
+                                schalter = 1;
+                            
+                            fprintf(dateizeiger," - ");
+                            fprintf(dateizeiger, " "PSD_VARIABLE, quelle, ziel, kant_index+1);
+                        } 
+                    }
+
+                    if(knote==quelle)
+                        fprintf(dateizeiger," =  "DRUCKEN_DOUBLE"\n", mu_bedeutung[quelle-1][ziel-1]);
+                    else if(knote==ziel)
+                        fprintf(dateizeiger," = -"DRUCKEN_DOUBLE"\n", mu_bedeutung[quelle-1][ziel-1]);
+                    else  fprintf(dateizeiger," = 0\n");
+                    
+                    schalter = 0;
+                    einschränkungszähler++;
+                }
+    fprintf(dateizeiger, "\n");
+	
     fprintf(dateizeiger, "\nBounds\n\n"); 
     fprintf(dateizeiger,"\nEnd\n");
 
     fclose(dateizeiger);
 
     // Erhalten Sie die Lösung
-    // pfostenHaupt(streit);
+    pfostenHaupt(streit);
+
+    for(int index=0;index<ANZAHL_KNOTEN;index++)
+        free(*(mu_bedeutung+index));
+    free(mu_bedeutung);
     
     return ERFOLG;
 }

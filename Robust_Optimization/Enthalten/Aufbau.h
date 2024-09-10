@@ -12,6 +12,7 @@
 #define DRUCKEN_INTEGER "%3d"
 #define DRUCKEN_DOUBLE  "%12.7lf"
 #define DRUCKEN_DATEI_NAME "%10s"
+#define DRUCKEN_ZWANG_ZAHL "\tc%-6d : "
 
 #define ANZEIGEN 1
 #define AUSBLENDEN 0

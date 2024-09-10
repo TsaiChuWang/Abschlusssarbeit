@@ -3,6 +3,20 @@
 
 #ifdef GAUSSIAN
 
+/**
+ * @brief Prints the matrix of mu values for each source and destination node.
+ * 
+ * This function prints the matrix `mu_bedeutung`, which represents some values associated
+ * with the nodes in the graph or network defined by the `Streit` structure. Each value in the 
+ * matrix corresponds to the relationship or significance between a source node (`quelle_index`) 
+ * and a destination node (`ziel_index`).
+ * 
+ * @param streit A structure of type `Streit` containing network information, including the 
+ * number of nodes (`ANZAHL_KNOTEN`).
+ * @param mu_bedeutung A double pointer representing a 2D array (matrix) of size 
+ * [ANZAHL_KNOTEN][ANZAHL_KNOTEN], which holds the significance or importance values 
+ * between nodes.
+ */
 void druckenMuBedeutung(struct Streit streit, double** mu_bedeutung){
     int ANZAHL_KNOTEN = streit.ANZAHL_KNOTEN;
     for(int quelle_index=0;quelle_index<ANZAHL_KNOTEN;quelle_index++){
@@ -12,6 +26,26 @@ void druckenMuBedeutung(struct Streit streit, double** mu_bedeutung){
     }
 }
 
+/**
+ * @brief Allocates and calculates the mean significance matrix (mu_bedeutung) for Gaussian-distributed traffic demands.
+ * 
+ * This function initializes and calculates a matrix (`mu_bedeutung`) that stores the mean values of Gaussian-distributed 
+ * random variables representing traffic demands (`d_{st}`) between nodes in a network. The mean is computed as the 
+ * average of the traffic demand interval (`GRENZE_VERKHERSEICHWITE`) provided in the `Streit` structure.
+ * 
+ * The interval is assumed to represent a boundary for the random variables, and the mean is calculated for each 
+ * origin-destination pair. If the source and destination nodes are the same, the value in the matrix is set to 0.
+ * 
+ * @param streit A structure of type `Streit` that contains:
+ *   - The number of nodes (`ANZAHL_KNOTEN`)
+ *   - The traffic demand interval (`GRENZE_VERKHERSEICHWITE`) for each node pair
+ *   - A file name (`DATEI_NAME`) for reference or debugging purposes.
+ * 
+ * @return A double pointer representing a 2D array (matrix) of size [ANZAHL_KNOTEN][ANZAHL_KNOTEN],
+ * which holds the mean values of the Gaussian random variables between nodes.
+ * 
+ * The matrix is dynamically allocated using `malloc` and will need to be freed later.
+ */
 double** erhaltenBedeutung(struct Streit streit){
     int ANZAHL_KNOTEN = streit.ANZAHL_KNOTEN;
     double** mu_bedeutung = (double**)malloc(sizeof(double*)*ANZAHL_KNOTEN);

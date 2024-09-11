@@ -28,4 +28,7 @@
 // #define DRUCKEN_MU_BEDEUTUNG_IM_ERHALTEN            "[Gaussian.h] erhaltenBedeutung Print the matrix consists of mean of dst."
 // #define DRUCKEN_SIGMA_KOVARIANZ_IM_ERHALTEN         "[Gaussian.h] erhaltenBedeutung Print the matrix consists of covariance of dst."
 
-// #define DRUCKEN_ERHALTET_ALPHA                      "[Parser.h] " erhaltenALPHA Print the alpha value
+#define DRUCKEN_ERHALTET_ALPHA                      "[Parser.h] erhaltenALPHA Print the alpha value." 
+// #define DRUCKEN_ERHALTENPSDBRUCH_WERT               "[Parser.h] erhaltenPSDBurch Print the routing fractions." 
+// #define DRUCKEN_ERHALTENWERT_WERT_SCHNUR            "[Parser.h] erhaltenWert Print the extracted substring." 
+// #define DRUCKEN_ERHALTENWERT_WERT                   "[Parser.h] erhaltenWert Print the extracted value from the substring."

@@ -6,6 +6,7 @@
 #include "../Enthalten/Streit.h"
 #include "../Enthalten/Netz.h"
 #include "../Enthalten/Guassian.h"
+#include "../Enthalten/Parser.h"
 
 // gcc ./Haupt.c -o ../Ausführung/Haupt -lcurl -lgsl -lgslcblas -lm
 // ../Ausführung/Haupt USA-26
@@ -224,9 +225,30 @@ int main(int argc, char *argv[]){
     // Erhalten Sie die Lösung
     pfostenHaupt(streit);
 
-    for(int index=0;index<ANZAHL_KNOTEN;index++)
+    // Analysieren
+    double alpha = erhaltenALPHA(streit);
+    double*** bruchsarray = erhaltenPSDBurch(streit);
+
+    // Speicher freigeben
+
+    for(int index=0;index<ANZAHL_KNOTEN;index++){
         free(*(mu_bedeutung+index));
+        free(*(BOGEN+index));
+        free(*(LISTE+index));
+    }
+    free(BOGEN);
+    free(LISTE);
     free(mu_bedeutung);
+
+    for(int quelle_index=0;quelle_index<streit.ANZAHL_KNOTEN;quelle_index++){
+        free(GRENZE_VERKHERSEICHWITE[0][quelle_index]);
+        free(GRENZE_VERKHERSEICHWITE[1][quelle_index]);
+    }
+    
+    free(GRENZE_VERKHERSEICHWITE[0]);
+    free(GRENZE_VERKHERSEICHWITE[1]);
+
+    free(GRENZE_VERKHERSEICHWITE);
     
     return ERFOLG;
 }

@@ -10,8 +10,9 @@
 #define MODUS_GRENZE_VERKHERSEICHWITE 1
 
 // Decision Variable Name
-#define OBJEKTIV "ALPHA"
-#define PSD_VARIABLE "f_%02d_%02d(e%02d)"
+#define OBJEKTIV        "ALPHA"
+#define PSD_VARIABLE    "f_%02d_%02d(e%02d)"
+#define DELTA_VARIABLE  "delta_e%02d"
 
 //Show the data
 // #define STREIT_DRUCKEN                              "[Haupt.c] main Display the detail of the topology"
@@ -25,6 +26,6 @@
 // #define DRUCKEN_LÖSUNG_ERSTELLTMODELLFORTSCHRITT    "[Netz.h] pfostenHaupt Reminder the solution has been saved."
 
 // #define DRUCKEN_MU_BEDEUTUNG_IM_ERHALTEN            "[Gaussian.h] erhaltenBedeutung Print the matrix consists of mean of dst."
-#define DRUCKEN_SIGMA_KOVARIANZ_IM_ERHALTEN         "[Gaussian.h] erhaltenBedeutung Print the matrix consists of covariance of dst."
+// #define DRUCKEN_SIGMA_KOVARIANZ_IM_ERHALTEN         "[Gaussian.h] erhaltenBedeutung Print the matrix consists of covariance of dst."
 
-#define DRUCKEN_ERHALTET_ALPHA                      "[Parser.h] "
+// #define DRUCKEN_ERHALTET_ALPHA                      "[Parser.h] " erhaltenALPHA Print the alpha value

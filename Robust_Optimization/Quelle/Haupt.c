@@ -95,6 +95,19 @@ int main(int argc, char *argv[]){
     
     fprintf(dateizeiger, "\nSubject to \n\n");
 
+    // \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st}  = \delta_e & \forall e\in E
+    for(int kant=1;kant<=ANZAHL_KANTEN;kant++){
+        fprintf(dateizeiger, DRUCKEN_ZWANG_ZAHL, einschränkungszähler);
+        for(int quelle=1;quelle<=ANZAHL_KNOTEN;quelle++)
+            for(int ziel=1;ziel<=ANZAHL_KNOTEN;ziel++)
+                if(quelle!=ziel)
+                    if(quelle == ANZAHL_KNOTEN && ziel == ANZAHL_KNOTEN-1)
+                        fprintf(dateizeiger, DRUCKEN_DOUBLE" "PSD_VARIABLE" ", mu_bedeutung[quelle-1][ziel-1], quelle, ziel, kant);
+                    else fprintf(dateizeiger, DRUCKEN_DOUBLE" "PSD_VARIABLE" + ", mu_bedeutung[quelle-1][ziel-1], quelle, ziel, kant);
+                
+        fprintf(dateizeiger, " - "DELTA_VARIABLE" = 0\n", kant);
+        einschränkungszähler++;
+    }
     // P(\sum_{s,t\in N, s\neq t}d_{st}\textcolor{blue}{f_{st}(e)}\leq c_e)\geq \eta & \forall e\in E
 //     for(int kant=1;kant<=ANZAHL_KANTEN;kant++){
 //         fprintf(dateizeiger, DRUCKEN_QUADRATISCH_ZWANG_ZAHL, quadratischschalter);

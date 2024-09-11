@@ -25,4 +25,6 @@
 // #define DRUCKEN_LÖSUNG_ERSTELLTMODELLFORTSCHRITT    "[Netz.h] pfostenHaupt Reminder the solution has been saved."
 
 // #define DRUCKEN_MU_BEDEUTUNG_IM_ERHALTEN            "[Gaussian.h] erhaltenBedeutung Print the matrix consists of mean of dst."
-// #define DRUCKEN_SIGMA_KOVARIANZ_IM_ERHALTEN         "[Gaussian.h] erhaltenBedeutung Print the matrix consists of covariance of dst."
+#define DRUCKEN_SIGMA_KOVARIANZ_IM_ERHALTEN         "[Gaussian.h] erhaltenBedeutung Print the matrix consists of covariance of dst."
+
+#define DRUCKEN_ERHALTET_ALPHA                      "[Parser.h] "

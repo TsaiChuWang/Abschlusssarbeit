@@ -96,46 +96,46 @@ int main(int argc, char *argv[]){
     fprintf(dateizeiger, "\nSubject to \n\n");
 
     // P(\sum_{s,t\in N, s\neq t}d_{st}\textcolor{blue}{f_{st}(e)}\leq c_e)\geq \eta & \forall e\in E
-    for(int kant=1;kant<=ANZAHL_KANTEN;kant++){
-        fprintf(dateizeiger, DRUCKEN_QUADRATISCH_ZWANG_ZAHL, quadratischschalter);
-        for(int quelle=1;quelle<=ANZAHL_KNOTEN;quelle++)
-            for(int ziel=1;ziel<=ANZAHL_KNOTEN;ziel++)
-                if(quelle!=ziel){
-                    double koeffizient = (umgekehrt_Gaussian*umgekehrt_Gaussian*sigma_kovarianz[quelle-1][ziel-1]*sigma_kovarianz[quelle-1][ziel-1]-mu_bedeutung[quelle-1][ziel-1]*mu_bedeutung[quelle-1][ziel-1]);
-                    if(koeffizient>=0.0 && !(quelle==1 && ziel==2))
-                        fprintf(dateizeiger, "+ "DRUCKEN_DOUBLE" "PSD_VARIABLE"^2 ", koeffizient, quelle, ziel, kant);
-                    else fprintf(dateizeiger, DRUCKEN_DOUBLE" "PSD_VARIABLE"^2 ", koeffizient, quelle, ziel, kant);
+//     for(int kant=1;kant<=ANZAHL_KANTEN;kant++){
+//         fprintf(dateizeiger, DRUCKEN_QUADRATISCH_ZWANG_ZAHL, quadratischschalter);
+//         for(int quelle=1;quelle<=ANZAHL_KNOTEN;quelle++)
+//             for(int ziel=1;ziel<=ANZAHL_KNOTEN;ziel++)
+//                 if(quelle!=ziel){
+//                     double koeffizient = (umgekehrt_Gaussian*umgekehrt_Gaussian*sigma_kovarianz[quelle-1][ziel-1]*sigma_kovarianz[quelle-1][ziel-1]-mu_bedeutung[quelle-1][ziel-1]*mu_bedeutung[quelle-1][ziel-1]);
+//                     if(koeffizient>=0.0 && !(quelle==1 && ziel==2))
+//                         fprintf(dateizeiger, "+ "DRUCKEN_DOUBLE" "PSD_VARIABLE"^2 ", koeffizient, quelle, ziel, kant);
+//                     else fprintf(dateizeiger, DRUCKEN_DOUBLE" "PSD_VARIABLE"^2 ", koeffizient, quelle, ziel, kant);
 
-#ifdef DRUCKEN_WAHRSCHEINLICHKEITSKOEFFIZIENT
-                    printf("Für OD-Parr "DRUCKEN_INTEGER" ~ "DRUCKEN_INTEGER", koeffiient ist "DRUCKEN_DOUBLE"= umgekehrt_Gaussian("DRUCKEN_DOUBLE")^2*sigma("DRUCKEN_DOUBLE")^2-mu("DRUCKEN_DOUBLE")^2 \n", quelle, ziel, koeffizient, umgekehrt_Gaussian, sigma_kovarianz[quelle-1][ziel-1], mu_bedeutung[quelle-1][ziel-1]);
-#endif
+// #ifdef DRUCKEN_WAHRSCHEINLICHKEITSKOEFFIZIENT
+//                     printf("Für OD-Parr "DRUCKEN_INTEGER" ~ "DRUCKEN_INTEGER", koeffiient ist "DRUCKEN_DOUBLE"= umgekehrt_Gaussian("DRUCKEN_DOUBLE")^2*sigma("DRUCKEN_DOUBLE")^2-mu("DRUCKEN_DOUBLE")^2 \n", quelle, ziel, koeffizient, umgekehrt_Gaussian, sigma_kovarianz[quelle-1][ziel-1], mu_bedeutung[quelle-1][ziel-1]);
+// #endif
 
-                    if(quelle==ANZAHL_KNOTEN && ziel == ANZAHL_KNOTEN-1)
-                        fprintf(dateizeiger, " ] ");
-                }
+//                     if(quelle==ANZAHL_KNOTEN && ziel == ANZAHL_KNOTEN-1)
+//                         fprintf(dateizeiger, " ] ");
+//                 }
         
-        for(int quelle=1;quelle<=ANZAHL_KNOTEN;quelle++)
-            for(int ziel=1;ziel<=ANZAHL_KNOTEN;ziel++)
-                if(quelle!=ziel){
+//         for(int quelle=1;quelle<=ANZAHL_KNOTEN;quelle++)
+//             for(int ziel=1;ziel<=ANZAHL_KNOTEN;ziel++)
+//                 if(quelle!=ziel){
                     
-#ifdef ALLE_GLEICHE_KAPAZITÄT
-                    double koeffizient = 2.0*KAPAZITÄT*mu_bedeutung[quelle-1][ziel-1];
-#else
-                    printf(KRED_L"FEHLER: FEHLT DIESES MODELL IST NOCH NICHT VOLLSTÄNDIG!\n"RESET);
-                    return FEHLGESCHLAGEN;
-#endif  
+// #ifdef ALLE_GLEICHE_KAPAZITÄT
+//                     double koeffizient = 2.0*KAPAZITÄT*mu_bedeutung[quelle-1][ziel-1];
+// #else
+//                     printf(KRED_L"FEHLER: FEHLT DIESES MODELL IST NOCH NICHT VOLLSTÄNDIG!\n"RESET);
+//                     return FEHLGESCHLAGEN;
+// #endif  
 
-#ifdef DRUCKEN_WAHRSCHEINLICHKEITSKOEFFIZIENT
-                    printf("Für OD-Parr "DRUCKEN_INTEGER" ~ "DRUCKEN_INTEGER", koeffiient ist "DRUCKEN_DOUBLE"= 2*mu("DRUCKEN_DOUBLE")*ce("DRUCKEN_DOUBLE") \n", quelle, ziel, koeffizient,  mu_bedeutung[quelle-1][ziel-1], KAPAZITÄT);
-#endif       
-                    if(koeffizient>=0.0)
-                        fprintf(dateizeiger, "+ "DRUCKEN_DOUBLE" "PSD_VARIABLE" ", koeffizient, quelle, ziel, kant);
-                    else fprintf(dateizeiger, " "DRUCKEN_DOUBLE" "PSD_VARIABLE" ", koeffizient, quelle, ziel, kant);
-                }
+// #ifdef DRUCKEN_WAHRSCHEINLICHKEITSKOEFFIZIENT
+//                     printf("Für OD-Parr "DRUCKEN_INTEGER" ~ "DRUCKEN_INTEGER", koeffiient ist "DRUCKEN_DOUBLE"= 2*mu("DRUCKEN_DOUBLE")*ce("DRUCKEN_DOUBLE") \n", quelle, ziel, koeffizient,  mu_bedeutung[quelle-1][ziel-1], KAPAZITÄT);
+// #endif       
+//                     if(koeffizient>=0.0)
+//                         fprintf(dateizeiger, "+ "DRUCKEN_DOUBLE" "PSD_VARIABLE" ", koeffizient, quelle, ziel, kant);
+//                     else fprintf(dateizeiger, " "DRUCKEN_DOUBLE" "PSD_VARIABLE" ", koeffizient, quelle, ziel, kant);
+//                 }
 
-        quadratischschalter++;
-        fprintf(dateizeiger, " <= "DRUCKEN_DOUBLE"\n", KAPAZITÄT*KAPAZITÄT);
-    }
+//         quadratischschalter++;
+//         fprintf(dateizeiger, " <= "DRUCKEN_DOUBLE"\n", KAPAZITÄT*KAPAZITÄT);
+//     }
     fprintf(dateizeiger, "\n");
 
     // \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\leq \textcolor{blue}\alpha c_e & \forall e\in E
@@ -211,7 +211,7 @@ int main(int argc, char *argv[]){
     fclose(dateizeiger);
 
     // Erhalten Sie die Lösung
-    // pfostenHaupt(streit);
+    pfostenHaupt(streit);
 
     for(int index=0;index<ANZAHL_KNOTEN;index++)
         free(*(mu_bedeutung+index));

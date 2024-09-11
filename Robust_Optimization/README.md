@@ -44,15 +44,22 @@ $$
 $$
 
 ## CPLEX
+
+$$
+\begin{aligned}		\min &\ \textcolor{blue}\alpha &&\\		& \text{subject to}&&\\
+& \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st}  = \delta_e & \forall e\in E\\
+&[\sum_{s,t\in N, s\neq t}\Phi^{-1}(\eta)^2\sigma_{st}^2\textcolor{blue}{f_{st}(e)}^2-\delta_e^2]+2c_e\delta_e\leq c_e^2 & \forall e\in E\\            & \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}-\textcolor{blue}\alpha c_e\leq 0 & \forall e\in E\\        & \sum_{e\in E^{OUT}_n } \textcolor{blue}{f_{st}(e)} - \sum_{e\in E^{IN}_n} \textcolor{blue}{f_{st}(e)} =\begin{cases}           \mu_{st} &\text{if } n=s \\           0 &\text{if } n\neq s, n\neq t \\           -\mu_{st} &\text{if } n=t \\        \end{cases} & \forall n,s,t\in N\ s\neq t\\		& \textcolor{blue}{f_{st}(e)}\geq0 & \forall s,t\in N\ s\neq t\ ,e\in E	\end{aligned}
+$$
+
 ### The first constraint
 $$
 \begin{aligned}
-\Phi^{-1}(\eta)\Vert \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\sigma_{st}\Vert_2&\leq c_e- \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st}\\
-\Phi^{-1}(\eta)\sqrt{\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}^2\sigma_{st}^2}&\leq c_e- \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st}\\
-(\Phi^{-1}(\eta)\sqrt{\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}^2\sigma_{st}^2})^2&\leq (c_e- \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st})^2\\
-\Phi^{-1}(\eta)^2\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}^2\sigma_{st}^2&\leq c_e^2-2c_e\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st}+\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}^2\mu_{st}^2\\
-\Phi^{-1}(\eta)^2\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}^2\sigma_{st}^2-\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}^2\mu_{st}^2+2c_e\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st}&\leq c_e^2\\
-\sum_{s,t\in N, s\neq t}(\Phi^{-1}(\eta)^2\textcolor{blue}{f_{st}(e)}^2\sigma_{st}^2-\textcolor{blue}{f_{st}(e)}^2\mu_{st}^2)+2c_e\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st}&\leq c_e^2\\
-\sum_{s,t\in N, s\neq t}(\Phi^{-1}(\eta)^2\sigma_{st}^2-\mu_{st}^2)\textcolor{blue}{f_{st}(e)}^2+2c_e\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st}&\leq c_e^2\\
+&\Phi^{-1}(\eta)\Vert \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\sigma_{st}\Vert_2 & \leq c_e- \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st}\\
+=&\Phi^{-1}(\eta)\sqrt{\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}^2\sigma_{st}^2} & \leq c_e- \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st}\\
+\text{set } & \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st}  = \delta_e\\
+& (\Phi^{-1}(\eta)\sqrt{\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}^2\sigma_{st}^2})^2 & \leq (c_e- \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\mu_{st})^2\\
+& \Phi^{-1}(\eta)^2(\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}^2\sigma_{st}^2) & \leq (c_e- \delta_e)^2\\
+&\Phi^{-1}(\eta)^2\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}^2\sigma_{st}^2 & \leq c_e^2-2c_e\delta_e+\delta_e^2\\
+&\Phi^{-1}(\eta)^2\sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}^2\sigma_{st}^2-\delta_e^2+2c_e\delta_e&\leq c_e^2\\
 \end{aligned}
 $$

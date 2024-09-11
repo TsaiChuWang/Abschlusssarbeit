@@ -104,52 +104,45 @@ int main(int argc, char *argv[]){
                     if(quelle == ANZAHL_KNOTEN && ziel == ANZAHL_KNOTEN-1)
                         fprintf(dateizeiger, DRUCKEN_DOUBLE" "PSD_VARIABLE" ", mu_bedeutung[quelle-1][ziel-1], quelle, ziel, kant);
                     else fprintf(dateizeiger, DRUCKEN_DOUBLE" "PSD_VARIABLE" + ", mu_bedeutung[quelle-1][ziel-1], quelle, ziel, kant);
-                
-        fprintf(dateizeiger, " - "DELTA_VARIABLE" = 0\n", kant);
+
+#ifdef ALLE_GLEICHE_KAPAZITÄT  
+        fprintf(dateizeiger, " - "DELTA_VARIABLE" = "DRUCKEN_DOUBLE"\n", kant, KAPAZITÄT);
+#else
+        printf(KRED_L"FEHLER: FEHLT DIESES MODELL IST NOCH NICHT VOLLSTÄNDIG!\n"RESET);
+        return FEHLGESCHLAGEN;
+#endif
         einschränkungszähler++;
     }
-    
-    // P(\sum_{s,t\in N, s\neq t}d_{st}\textcolor{blue}{f_{st}(e)}\leq c_e)\geq \eta & \forall e\in E
-//     for(int kant=1;kant<=ANZAHL_KANTEN;kant++){
-//         fprintf(dateizeiger, DRUCKEN_QUADRATISCH_ZWANG_ZAHL, quadratischschalter);
-//         for(int quelle=1;quelle<=ANZAHL_KNOTEN;quelle++)
-//             for(int ziel=1;ziel<=ANZAHL_KNOTEN;ziel++)
-//                 if(quelle!=ziel){
-//                     double koeffizient = (umgekehrt_Gaussian*umgekehrt_Gaussian*sigma_kovarianz[quelle-1][ziel-1]*sigma_kovarianz[quelle-1][ziel-1]-mu_bedeutung[quelle-1][ziel-1]*mu_bedeutung[quelle-1][ziel-1]);
-//                     if(koeffizient>=0.0 && !(quelle==1 && ziel==2))
-//                         fprintf(dateizeiger, "+ "DRUCKEN_DOUBLE" "PSD_VARIABLE"^2 ", koeffizient, quelle, ziel, kant);
-//                     else fprintf(dateizeiger, DRUCKEN_DOUBLE" "PSD_VARIABLE"^2 ", koeffizient, quelle, ziel, kant);
+    fprintf(dateizeiger, "\n");
 
-// #ifdef DRUCKEN_WAHRSCHEINLICHKEITSKOEFFIZIENT
-//                     printf("Für OD-Parr "DRUCKEN_INTEGER" ~ "DRUCKEN_INTEGER", koeffiient ist "DRUCKEN_DOUBLE"= umgekehrt_Gaussian("DRUCKEN_DOUBLE")^2*sigma("DRUCKEN_DOUBLE")^2-mu("DRUCKEN_DOUBLE")^2 \n", quelle, ziel, koeffizient, umgekehrt_Gaussian, sigma_kovarianz[quelle-1][ziel-1], mu_bedeutung[quelle-1][ziel-1]);
-// #endif
+    // [\sum_{s,t\in N, s\neq t}\Phi^{-1}(\eta)^2\sigma_{st}^2\textcolor{blue}{f_{st}(e)}^2-\delta_e^2]+2c_e\delta_e\leq c_e^2 & \forall e\in E
+    for(int kant=1;kant<=ANZAHL_KANTEN;kant++){
+        fprintf(dateizeiger, DRUCKEN_QUADRATISCH_ZWANG_ZAHL, quadratischschalter);
+        for(int quelle=1;quelle<=ANZAHL_KNOTEN;quelle++)
+            for(int ziel=1;ziel<=ANZAHL_KNOTEN;ziel++)
+                if(quelle!=ziel){
+                    double koeffizient = (umgekehrt_Gaussian*umgekehrt_Gaussian*sigma_kovarianz[quelle-1][ziel-1]*sigma_kovarianz[quelle-1][ziel-1]);
+                    if(koeffizient>=0.0 && !(quelle==1 && ziel==2))
+                        fprintf(dateizeiger, "+ "DRUCKEN_DOUBLE" "PSD_VARIABLE"^2 ", koeffizient, quelle, ziel, kant);
+                    else fprintf(dateizeiger, DRUCKEN_DOUBLE" "PSD_VARIABLE"^2 ", koeffizient, quelle, ziel, kant);
 
-//                     if(quelle==ANZAHL_KNOTEN && ziel == ANZAHL_KNOTEN-1)
-//                         fprintf(dateizeiger, " ] ");
-//                 }
-        
-//         for(int quelle=1;quelle<=ANZAHL_KNOTEN;quelle++)
-//             for(int ziel=1;ziel<=ANZAHL_KNOTEN;ziel++)
-//                 if(quelle!=ziel){
-                    
-// #ifdef ALLE_GLEICHE_KAPAZITÄT
-//                     double koeffizient = 2.0*KAPAZITÄT*mu_bedeutung[quelle-1][ziel-1];
-// #else
-//                     printf(KRED_L"FEHLER: FEHLT DIESES MODELL IST NOCH NICHT VOLLSTÄNDIG!\n"RESET);
-//                     return FEHLGESCHLAGEN;
-// #endif  
+#ifdef DRUCKEN_WAHRSCHEINLICHKEITSKOEFFIZIENT
+                    printf("Für OD-Parr "DRUCKEN_INTEGER" ~ "DRUCKEN_INTEGER", koeffiient ist "DRUCKEN_DOUBLE"= umgekehrt_Gaussian("DRUCKEN_DOUBLE")^2*sigma("DRUCKEN_DOUBLE")^2\n", quelle, ziel, koeffizient, umgekehrt_Gaussian, sigma_kovarianz[quelle-1][ziel-1]);
+#endif
 
-// #ifdef DRUCKEN_WAHRSCHEINLICHKEITSKOEFFIZIENT
-//                     printf("Für OD-Parr "DRUCKEN_INTEGER" ~ "DRUCKEN_INTEGER", koeffiient ist "DRUCKEN_DOUBLE"= 2*mu("DRUCKEN_DOUBLE")*ce("DRUCKEN_DOUBLE") \n", quelle, ziel, koeffizient,  mu_bedeutung[quelle-1][ziel-1], KAPAZITÄT);
-// #endif       
-//                     if(koeffizient>=0.0)
-//                         fprintf(dateizeiger, "+ "DRUCKEN_DOUBLE" "PSD_VARIABLE" ", koeffizient, quelle, ziel, kant);
-//                     else fprintf(dateizeiger, " "DRUCKEN_DOUBLE" "PSD_VARIABLE" ", koeffizient, quelle, ziel, kant);
-//                 }
+                    if(quelle==ANZAHL_KNOTEN && ziel == ANZAHL_KNOTEN-1)
+                        fprintf(dateizeiger, " - "DELTA_VARIABLE"^2 ] ", kant);
+                }
 
-//         quadratischschalter++;
-//         fprintf(dateizeiger, " <= "DRUCKEN_DOUBLE"\n", KAPAZITÄT*KAPAZITÄT);
-//     }
+        quadratischschalter++;
+
+#ifdef ALLE_GLEICHE_KAPAZITÄT
+        fprintf(dateizeiger, " <= 0\n");
+#else
+        printf(KRED_L"FEHLER: FEHLT DIESES MODELL IST NOCH NICHT VOLLSTÄNDIG!\n"RESET);
+        return FEHLGESCHLAGEN;
+#endif
+    }
     fprintf(dateizeiger, "\n");
 
     // \sum_{s,t\in N, s\neq t}\textcolor{blue}{f_{st}(e)}\leq \textcolor{blue}\alpha c_e & \forall e\in E
@@ -213,19 +206,23 @@ int main(int argc, char *argv[]){
     fprintf(dateizeiger, "\nBounds\n\n"); 
 
     // \textcolor{blue}{f_{st}(e)}\geq0 & \forall s,t\in N\ s\neq t\ ,e\in E
-    for(int kant=0;kant<ANZAHL_KANTEN;kant++)
+    for(int kant=1;kant<=ANZAHL_KANTEN;kant++)
         for(int quelle=1;quelle<=ANZAHL_KNOTEN;quelle++)
             for(int ziel=1;ziel<=ANZAHL_KNOTEN;ziel++)
                 if(quelle!=ziel)
                     fprintf(dateizeiger, "\t"PSD_VARIABLE" >= 0\n", quelle, ziel, kant);
     fprintf(dateizeiger, "\n");
+
+    for(int kant=1;kant<=ANZAHL_KANTEN;kant++)
+        fprintf(dateizeiger, "\t"DELTA_VARIABLE" >= 0\n", kant);
+
     fprintf(dateizeiger, "\t"OBJEKTIV" >= 0\n");
 
     fprintf(dateizeiger, "\nEnd\n");
     fclose(dateizeiger);
 
     // Erhalten Sie die Lösung
-    // pfostenHaupt(streit);
+    pfostenHaupt(streit);
 
     for(int index=0;index<ANZAHL_KNOTEN;index++)
         free(*(mu_bedeutung+index));

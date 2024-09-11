@@ -108,6 +108,7 @@ int main(int argc, char *argv[]){
         fprintf(dateizeiger, " - "DELTA_VARIABLE" = 0\n", kant);
         einschränkungszähler++;
     }
+    
     // P(\sum_{s,t\in N, s\neq t}d_{st}\textcolor{blue}{f_{st}(e)}\leq c_e)\geq \eta & \forall e\in E
 //     for(int kant=1;kant<=ANZAHL_KANTEN;kant++){
 //         fprintf(dateizeiger, DRUCKEN_QUADRATISCH_ZWANG_ZAHL, quadratischschalter);
@@ -224,7 +225,7 @@ int main(int argc, char *argv[]){
     fclose(dateizeiger);
 
     // Erhalten Sie die Lösung
-    pfostenHaupt(streit);
+    // pfostenHaupt(streit);
 
     for(int index=0;index<ANZAHL_KNOTEN;index++)
         free(*(mu_bedeutung+index));

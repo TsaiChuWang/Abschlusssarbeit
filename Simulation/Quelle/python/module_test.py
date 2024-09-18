@@ -122,6 +122,8 @@ def line_chart_tenant(index):
         color = 'r'
 
     plt.plot([index for index in range(len(data))], [float(row[index]) for row in data], linestyle='-', color=color, label=label)
+    plt.plot([index for index in range(len(data))], [80 for row in data], linestyle='-', color='yellow', label='lower bound')
+    plt.plot([index for index in range(len(data))], [160 for row in data], linestyle='-', color='yellow', label='upper bound')
 
     plt.title('Tenant Traffic :'+label)
     plt.xlabel('X Axis')
@@ -162,10 +164,10 @@ def line_chart_utilization():
 #     drawATimestampPicture(index)
 # generateTheGIF(IMAGE_FOLDER_PATH, GIF_PATH)
 
-# line_chart_tenants()
-# line_chart_tenant(0)
-# line_chart_tenant(1)
-# line_chart_tenant(2)
+line_chart_tenants()
+line_chart_tenant(0)
+line_chart_tenant(1)
+line_chart_tenant(2)
 
-line_chart_traffic()
-line_chart_utilization()
+# line_chart_traffic()
+# line_chart_utilization()

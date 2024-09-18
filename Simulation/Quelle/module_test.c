@@ -45,7 +45,7 @@ int main(int argc, char *argv[]){
 
     for(int time_stamp = 0;time_stamp<TIME_INTERVAL;time_stamp++){
         double link_traffic = 0;
-        // printf("mean = "INFORM_TRAFFIC_FORMAT", standard deviration = "INFORM_TRAFFIC_FORMAT"\n", mean, standard_deviation);
+        printf("mean = "INFORM_TRAFFIC_FORMAT", standard deviration = "INFORM_TRAFFIC_FORMAT"\n", mean, standard_deviation);
 
         printTrafficATimestamp(*(tenants), destination, time_stamp, &link_traffic, mean, standard_deviation);
         printTrafficATimestamp(*(tenants+1), destination, time_stamp, &link_traffic, mean, standard_deviation);

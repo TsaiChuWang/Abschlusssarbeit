@@ -43,7 +43,6 @@ int main(int argc, char *argv[]){
     *(tenants+1) = createATenant(&tenant_number, TEST_CONFIGURATION_TIME_INTERVAL, mean, standard_deviation, COMBINE_MIDDLE_INTERVAL, source);
     *(tenants+2) = createATenant(&tenant_number, TEST_CONFIGURATION_TIME_INTERVAL, mean, standard_deviation, DROPPED, source);
 
-
     for(int time_stamp = 0;time_stamp<TIME_INTERVAL;time_stamp++){
         double link_traffic = 0;
         // printf("mean = "INFORM_TRAFFIC_FORMAT", standard deviration = "INFORM_TRAFFIC_FORMAT"\n", mean, standard_deviation);
@@ -55,5 +54,7 @@ int main(int argc, char *argv[]){
         printf("traffic on link : "INFORM_TRAFFIC_FORMAT", utilization : "INFORM_TRAFFIC_FORMAT"\n", link_traffic, link_traffic/TEST_CONFIGURATION_LINK_CAPACITY);
         printf("\n");
     }
+
+    recordTrafficEntireInterval(tenants, tenant_number, TEST_CONFIGURATION_TIME_INTERVAL, TEST_CONFIGURATION_LINK_CAPACITY, mean, standard_deviation);
     return  SUCCESS;
 }

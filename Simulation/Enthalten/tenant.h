@@ -6,6 +6,8 @@
     #define UNKNOWN_PUNISHMENT      2   /** @brief Tag for unknown punishment traffic type. **/
     #define DROPPED                 3   /** @brief Tag for dropped traffic type. **/
     #define COMBINE_MIDDLE_INTERVAL 4   /** @brief Tag for combined middle interval traffic type. **/      
+
+    #define DATA_STORED_PATH   "../Datei/module_test/module_test.csv"
 #endif
 
 #define TENANT  /** @brief Macro to enable tenant-related functionalities. */
@@ -197,5 +199,30 @@ void printTrafficATimestamp(struct Tenant tenant, struct Node destination, int t
         printf("[KEEPED_PROBABLE]\n");
     }
 }
+
+// Record
+#ifdef SINPLE_V1_00_918
+void recordTrafficEntireInterval(struct Tenant* tenants, unsigned int tenant_number, long time_interval, double link_capacity, double mean, double standard_deviation){
+    system("rm "DATA_STORED_PATH"\n");
+    FILE *file_pointer;
+    file_pointer = fopen(DATA_STORED_PATH, "w+");
+    for(int time_stamp = 0;time_stamp<time_interval;time_stamp++){
+        double link_traffic = 0.0;
+        for(int index = 0;index<tenant_number;index++){
+            if(tenants[index].traffic[time_stamp]<=mean-standard_deviation)
+                link_traffic += tenants[index].traffic[time_stamp];
+            
+            if(tenants[index].traffic[time_stamp]<=mean+standard_deviation && tenants[index].traffic[time_stamp]>mean-standard_deviation && DECIDE_DROPPED_OR_NOT==0)
+                link_traffic += tenants[index].traffic[time_stamp];
+            
+            if(index==tenant_number-1)
+                fprintf(file_pointer, INFORM_TRAFFIC_FORMAT", "INFORM_TRAFFIC_FORMAT", "INFORM_TRAFFIC_FORMAT"\n", tenants[index].traffic[time_stamp], link_traffic, link_traffic/link_capacity);
+            else fprintf(file_pointer, INFORM_TRAFFIC_FORMAT", ",tenants[index].traffic[time_stamp]);
+        }
+    }
+
+    fclose(file_pointer);
+}
+#endif
 
 #endif

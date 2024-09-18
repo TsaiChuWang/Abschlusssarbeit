@@ -16,6 +16,7 @@
 
 #endif
 
+#define RECORD
 
 #ifdef SINPLE_V1_00_918
     #define TEST_CONFIGURATION_LINK_CAPACITY    360 /** @brief Link capacity for test configuration **/

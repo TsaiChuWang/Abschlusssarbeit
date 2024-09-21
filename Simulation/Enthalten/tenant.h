@@ -1,6 +1,6 @@
 #include <math.h>
 
-#ifdef SINPLE_V1_00_918
+#ifdef SIMPLE_V1_00_918
     #define GUARDED_TRAFFIC         0   /** @brief Tag for guarded traffic type. **/
     #define MIDDLE_INTERVAL         1   /** @brief Tag for combined middle interval traffic type. **/ 
     #define DROPPED                 2   /** @brief Tag for dropped traffic type. **/      
@@ -83,7 +83,7 @@ double* generateNormalDistribution(long time_interval, double mean, double stand
  * @var Tenant::connected_node
  * Node to which the tenant is connected.
  * 
- * @ifdef SINPLE_V1_00_918
+ * @ifdef SIMPLE_V1_00_918
  * @var Tenant::tag
  * Tag indicating the type of traffic.
  * @endif
@@ -94,7 +94,7 @@ struct Tenant{
     double* traffic;
     struct Node connected_node;
 
-#ifdef SINPLE_V1_00_918
+#ifdef SIMPLE_V1_00_918
     int tag;
 #endif
 
@@ -102,7 +102,7 @@ struct Tenant{
 
 // Create a tenant
 
-#ifdef SINPLE_V1_00_918
+#ifdef SIMPLE_V1_00_918
     /**
      * @brief Creates a new tenant with specified parameters.
      * 
@@ -184,7 +184,7 @@ void printTrafficATimestamp(struct Tenant tenant, struct Node destination, int t
 }
 
 // Record
-#ifdef SINPLE_V1_00_918
+#ifdef SIMPLE_V1_00_918
 void recordTrafficEntireInterval(struct Tenant* tenants, unsigned int tenant_number, long time_interval, double link_capacity, double mean, double standard_deviation){
     system("rm "DATA_STORED_PATH"\n");
     FILE *file_pointer;

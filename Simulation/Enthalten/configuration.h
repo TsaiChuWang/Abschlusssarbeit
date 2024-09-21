@@ -18,7 +18,7 @@
 
 #define RECORD
 
-#ifdef SINPLE_V1_00_918
+#ifdef SIMPLE_V1_00_918
     #define TEST_CONFIGURATION_LINK_CAPACITY    360 /** @brief Link capacity for test configuration **/
     #define TEST_CONFIGURATION_TIME_INTERVAL    100 /** @brief Time interval for the test configuration **/
     #define TEST_CONFIGURATION_TENANT_NUMBER    3   /** @brief Number of tenants in the test configuration **/

@@ -16,7 +16,7 @@
  * @endcode
  */
 
-#define SINPLE_V1_00_918  /** @brief Version identifier, **/ 
+#define SIMPLE_V1_00_918  /** @brief Version identifier, **/ 
 
 #include "../Enthalten/include.h"
 #include "../Enthalten/configuration.h"

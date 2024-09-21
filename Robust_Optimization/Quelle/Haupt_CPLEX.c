@@ -8,8 +8,8 @@
 #include "../Enthalten/Guassian.h"
 #include "../Enthalten/Parser.h"
 
-// gcc ./Haupt.c -o ../Ausführung/Haupt -lcurl -lgsl -lgslcblas -lm
-// ../Ausführung/Haupt USA-26
+// gcc ./Haupt_CPLEX.c -o ../Ausführung/Haupt_CPLEX -lcurl -lgsl -lgslcblas -lm
+// ../Ausführung/Haupt_CPLEX USA-26
 
 int main(int argc, char *argv[]){
 	// Drucken Sie die Streiten und Fehlgeschlagen

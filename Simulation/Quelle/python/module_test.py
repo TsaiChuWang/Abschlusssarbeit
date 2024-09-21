@@ -102,8 +102,8 @@ def line_chart_tenants():
     plt.plot([index for index in range(len(data))], [float(row[2]) for row in data], linestyle='-', color='r', label='C')
 
     plt.title('Different tenants')
-    plt.xlabel('X Axis')
-    plt.ylabel('Y Axis')
+    plt.xlabel('Timestamp')
+    plt.ylabel('Traffic')
     plt.legend()
     plt.grid(True)
 
@@ -126,8 +126,8 @@ def line_chart_tenant(index):
     plt.plot([index for index in range(len(data))], [160 for row in data], linestyle='-', color='yellow', label='upper bound')
 
     plt.title('Tenant Traffic :'+label)
-    plt.xlabel('X Axis')
-    plt.ylabel('Y Axis')
+    plt.xlabel('Timestamp')
+    plt.ylabel('Traffic')
     plt.legend()
     plt.grid(True)
 
@@ -139,8 +139,8 @@ def line_chart_traffic():
     plt.plot([index for index in range(len(data))], [link_capacity for row in data], linestyle='-', color='r', label='link capacity')
 
     plt.title('Link traffic')
-    plt.xlabel('X Axis')
-    plt.ylabel('Y Axis')
+    plt.xlabel('Timestamp')
+    plt.ylabel('Traffic')
     plt.legend()
     plt.grid(True)
 
@@ -151,9 +151,9 @@ def line_chart_utilization():
     plt.plot([index for index in range(len(data))], [float(row[4]) for row in data], linestyle='-', color='black', label='traffic')
     plt.plot([index for index in range(len(data))], [1 for row in data], linestyle='-', color='r', label='link capacity')
 
-    plt.title('Link traffic')
-    plt.xlabel('X Axis')
-    plt.ylabel('Y Axis')
+    plt.title('Link Utilization')
+    plt.xlabel('Timestamp')
+    plt.ylabel('Utilization')
     plt.legend()
     plt.grid(True)
 
@@ -169,18 +169,22 @@ def analyzeTraffic(data):
             max = float(row[4])
         mean_traffic += float(row[3])
         mean_utilization += float(row[4])
-    print("Max utilization = {:12f}".format(max))
+    mean_traffic = mean_traffic/len(data)
+    mean_utilization = mean_utilization/len(data)
+    print("Max  utilization = {:12f}".format(max))
+    print("Mean traffic     = {:12f}".format(mean_traffic))
+    print("Mean utilization = {:12f}".format(mean_utilization))
 
 # for index in range(time_interval):
 #     drawATimestampPicture(index)
 # generateTheGIF(IMAGE_FOLDER_PATH, GIF_PATH)
 
-line_chart_tenants()
-line_chart_tenant(0)
-line_chart_tenant(1)
-line_chart_tenant(2)
+# line_chart_tenants()
+# line_chart_tenant(0)
+# line_chart_tenant(1)
+# line_chart_tenant(2)
 
-# line_chart_traffic()
-# line_chart_utilization()
+line_chart_traffic()
+line_chart_utilization()
 
-analyzeTraffic
+analyzeTraffic(data)

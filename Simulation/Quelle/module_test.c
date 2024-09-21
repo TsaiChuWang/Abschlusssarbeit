@@ -24,7 +24,6 @@
 #include "../Enthalten/link.h"
 #include "../Enthalten/tenant.h"
 
-
 int main(int argc, char *argv[]){
     // Initialize random number generator
     srand(time(NULL));

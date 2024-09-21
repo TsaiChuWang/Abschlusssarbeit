@@ -4,7 +4,8 @@
         "include.h": "c",
         "configuration.h": "c",
         "tenant.h": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "token_bucket.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

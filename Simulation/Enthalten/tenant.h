@@ -1,11 +1,24 @@
 #include <math.h>
 
-#ifdef SIMPLE_V1_00_918
+#ifdef SIMPLE_V2_925_GCRA
+    #ifndef TOKEN_BUCKET_H
+        #include "../Enthalten/token_bucket.h"
+    #endif 
+#endif
+
+#if (defined SIMPLE_V1_00_918) || (defined SIMPLE_V2_925_GCRA)
     #define GUARDED_TRAFFIC         0   /** @brief Tag for guarded traffic type. **/
     #define MIDDLE_INTERVAL         1   /** @brief Tag for combined middle interval traffic type. **/ 
     #define DROPPED                 2   /** @brief Tag for dropped traffic type. **/      
 
+#ifdef SIMPLE_V1_00_918
     #define DATA_STORED_PATH   "../Datei/module_test/module_test.csv"
+#endif
+
+#ifdef SIMPLE_V2_925_GCRA
+    #define DATA_STORED_PATH   "../Datei/module_test/module_test.csv"
+#endif
+
 #endif
 
 #define TENANT  /** @brief Macro to enable tenant-related functionalities. */
@@ -94,15 +107,18 @@ struct Tenant{
     double* traffic;
     struct Node connected_node;
 
-#ifdef SIMPLE_V1_00_918
+#if (defined SIMPLE_V1_00_918) || (defined SIMPLE_V2_925_GCRA)
     int tag;
 #endif
 
+#ifdef SIMPLE_V2_925_GCRA
+    struct Token_Bucket bucket;
+#endif
 };
 
 // Create a tenant
 
-#ifdef SIMPLE_V1_00_918
+#if (defined SIMPLE_V1_00_918) || (defined SIMPLE_V2_925_GCRA)
     /**
      * @brief Creates a new tenant with specified parameters.
      * 
@@ -154,10 +170,14 @@ struct Tenant{
         }
         tenant.connected_node = connected_node;
 
+#ifdef SIMPLE_V2_925_GCRA
+        tenant.bucket = createATokenBucket(BUCKET_DEPTH, LEAKAGE_RATE);
+#endif
         return tenant;
     }
 #endif
 
+#ifdef SIMPLE_V1_00_918
 // Show the traffic
 /**
  * @brief Prints the traffic data for a tenant at a specific timestamp.
@@ -182,6 +202,67 @@ void printTrafficATimestamp(struct Tenant tenant, struct Node destination, int t
         printf("[DROPPED]\n");
     else printf("[MIDDLE INTERVAL]\n");
 }
+#endif
+
+#ifdef SIMPLE_V2_925_GCRA
+// Show the traffic
+/**
+ * @brief Prints the traffic data for a tenant at a specific timestamp.
+ * 
+ * This function prints the traffic data for a given tenant at a specific timestamp, 
+ * including the type of traffic handling (guarded, dropped, or kept). It also updates 
+ * the total link traffic based on the tenant's traffic data.
+ * 
+ * @param tenant The tenant whose traffic data is to be printed.
+ * @param destination The destination node for the traffic.
+ * @param time_stamp The timestamp of the traffic data.
+ * @param link_traffic Pointer to the total link traffic, which will be updated.
+ * @param mean The mean of the normal distribution for traffic data.
+ * @param standard_deviation The standard deviation of the normal distribution for traffic data.
+ */
+void printTrafficATimestamp(struct Tenant* tenant, struct Node destination, int time_stamp, double* link_traffic, double mean, double standard_deviation){
+#ifdef _DEBUG_PRINTTRAFFICATIMESTAMP
+    printf("tenant["INFORM_IDENTIFIER_FORMAT"] input "INFORM_TRAFFIC_FORMAT" in node["INFORM_IDENTIFIER_FORMAT"] to node["INFORM_IDENTIFIER_FORMAT"] at time["INFORM_TIME_FORMAT"].", tenant.identifier, tenant.traffic[time_stamp], tenant.connected_node.identifier, destination.identifier, time_stamp);
+#endif
+    if(tenant->traffic[time_stamp]<=mean-standard_deviation){
+        *link_traffic += tenant->traffic[time_stamp];
+        updateTokenBucketATimestamp(&(tenant->bucket), 0.0);
+#ifdef _DEBUG_PRINTTRAFFICATIMESTAMP
+        printf("[GUARDED]\n");
+#endif
+    }else if (tenant->traffic[time_stamp]>mean+standard_deviation){
+        updateTokenBucketATimestamp(&(tenant->bucket), 0.0);
+#ifdef _DEBUG_PRINTTRAFFICATIMESTAMP
+        printf("[DROPPED]\n");
+#endif
+    }
+    else{
+        double leakage_traffic = updateTokenBucketATimestamp(&(tenant->bucket), tenant->traffic[time_stamp]);
+        if(leakage_traffic == 0){
+#ifdef _DEBUG_PRINTTRAFFICATIMESTAMP
+            printf("[DROPPED GCRA]\n");
+#endif
+        }
+        else{
+            *link_traffic += leakage_traffic;
+#ifdef _DEBUG_PRINTTRAFFICATIMESTAMP
+            printf("[MIDDLE INTERVAL GCRA]\n");
+#endif
+        }
+    }
+
+#ifdef RECORD
+    FILE *file_pointer;
+    file_pointer = fopen(DATA_STORED_PATH, "a+");
+    fprintf(file_pointer, INFORM_TRAFFIC_FORMAT", ", tenant->traffic[time_stamp]);
+    fclose(file_pointer);
+#endif
+
+}
+#endif
+
+#ifdef SIMPLE_V1_00_918
+#endif
 
 // Record
 #ifdef SIMPLE_V1_00_918

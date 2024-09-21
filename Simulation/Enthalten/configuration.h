@@ -18,7 +18,7 @@
 
 #define RECORD
 
-#ifdef SIMPLE_V1_00_918
+#if (defined SIMPLE_V1_00_918) || (defined SIMPLE_V2_925_GCRA)
     #define TEST_CONFIGURATION_LINK_CAPACITY    360 /** @brief Link capacity for test configuration **/
     #define TEST_CONFIGURATION_TIME_INTERVAL    100 /** @brief Time interval for the test configuration **/
     #define TEST_CONFIGURATION_TENANT_NUMBER    3   /** @brief Number of tenants in the test configuration **/
@@ -41,4 +41,12 @@
     #define SCALE_MIDDLE_INTERVAL               (0.5 + ((double)rand()/RAND_MAX)*(0.95-0.5))        /** Scale factor for middle interval traffic. **/
     #define SCALE_DROPPED_TRAFFIC               (1.05 + ((double)rand()/RAND_MAX)*(1.25-1.05))      /** Scale factor for dropped traffic. **/
 
+#ifdef SIMPLE_V2_925_GCRA
+    #define BUCKET_DEPTH 200
+    #define LEAKAGE_RATE 120
+
+    #define _DEBUG_UPDATETOKENBUCKETATIMESTAMP
+#endif
+    
+    // #define _DEBUG_PRINTTRAFFICATIMESTAMP
 #endif

@@ -160,6 +160,17 @@ def line_chart_utilization():
     plt.savefig('../../Datei/module_test/link_traffic_utilization.png')
     plt.cla()
 
+def analyzeTraffic(data):
+    max = -1
+    mean_traffic = 0
+    mean_utilization = 0
+    for row in data:
+        if(float(row[4]) > max):
+            max = float(row[4])
+        mean_traffic += float(row[3])
+        mean_utilization += float(row[4])
+    print("Max utilization = {:12f}".format(max))
+
 # for index in range(time_interval):
 #     drawATimestampPicture(index)
 # generateTheGIF(IMAGE_FOLDER_PATH, GIF_PATH)
@@ -171,3 +182,5 @@ line_chart_tenant(2)
 
 # line_chart_traffic()
 # line_chart_utilization()
+
+analyzeTraffic

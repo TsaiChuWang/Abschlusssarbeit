@@ -40,7 +40,7 @@ int main(int argc, char *argv[]){
     unsigned int tenant_number =0;
     struct Tenant* tenants = (struct Tenant*)malloc(sizeof(struct Tenant)*TEST_CONFIGURATION_TENANT_NUMBER);
     *(tenants) = createATenant(&tenant_number, TEST_CONFIGURATION_TIME_INTERVAL, mean, standard_deviation, GUARDED_TRAFFIC, source);
-    *(tenants+1) = createATenant(&tenant_number, TEST_CONFIGURATION_TIME_INTERVAL, mean, standard_deviation, COMBINE_MIDDLE_INTERVAL, source);
+    *(tenants+1) = createATenant(&tenant_number, TEST_CONFIGURATION_TIME_INTERVAL, mean, standard_deviation, MIDDLE_INTERVAL, source);
     *(tenants+2) = createATenant(&tenant_number, TEST_CONFIGURATION_TIME_INTERVAL, mean, standard_deviation, DROPPED, source);
 
     for(int time_stamp = 0;time_stamp<TIME_INTERVAL;time_stamp++){
@@ -56,5 +56,6 @@ int main(int argc, char *argv[]){
     }
 
     recordTrafficEntireInterval(tenants, tenant_number, TEST_CONFIGURATION_TIME_INTERVAL, TEST_CONFIGURATION_LINK_CAPACITY, mean, standard_deviation);
+
     return  SUCCESS;
 }

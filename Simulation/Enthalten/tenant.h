@@ -7,9 +7,9 @@
 #endif
 
 #if (defined SIMPLE_V1_00_918) || (defined SIMPLE_V2_925_GCRA)
-    #define GUARDED_TRAFFIC         0   /** @brief Tag for guarded traffic type. **/
-    #define MIDDLE_INTERVAL         1   /** @brief Tag for combined middle interval traffic type. **/ 
-    #define DROPPED                 2   /** @brief Tag for dropped traffic type. **/      
+    #define GUARDED_TRAFFIC 0   /**< @brief Tag for guarded traffic type. */
+    #define MIDDLE_INTERVAL 1   /**< @brief Tag for combined middle interval traffic type. */
+    #define DROPPED         2   /**< @brief Tag for dropped traffic type. */
 
 #ifdef SIMPLE_V1_00_918
     #define DATA_STORED_PATH   "../Datei/module_test/module_test.csv"
@@ -21,9 +21,9 @@
 
 #endif
 
-#define TENANT  /** @brief Macro to enable tenant-related functionalities. */
+#define _TENANT_H /**< @brief Macro to enable tenant-related functionalities. */
 
-#ifdef TENANT
+#ifdef _TENANT_H
 
 // About the traffic generation
 /**
@@ -83,8 +83,9 @@ double* generateNormalDistribution(long time_interval, double mean, double stand
 }
 
 
-/** @struct Tenant
- *  @brief Represents a network tenant.
+/**
+ * @struct Tenant
+ * @brief Represents a network tenant.
  * 
  * This structure represents a network tenant with associated traffic data and
  * connection information.
@@ -117,7 +118,6 @@ struct Tenant{
 };
 
 // Create a tenant
-
 #if (defined SIMPLE_V1_00_918) || (defined SIMPLE_V2_925_GCRA)
     /**
      * @brief Creates a new tenant with specified parameters.
@@ -266,6 +266,21 @@ void printTrafficATimestamp(struct Tenant* tenant, struct Node destination, int 
 
 // Record
 #ifdef SIMPLE_V1_00_918
+/**
+ * @brief Records traffic data for all tenants over an entire time interval.
+ * 
+ * This function calculates the total link traffic for all tenants at each timestamp 
+ * within the specified time interval. It writes the traffic data to a CSV file, 
+ * including individual tenant traffic, total link traffic, and the traffic ratio 
+ * to link capacity.
+ * 
+ * @param tenants Pointer to an array of Tenant structures.
+ * @param tenant_number The number of tenants.
+ * @param time_interval The total number of timestamps to record.
+ * @param link_capacity The maximum capacity of the link.
+ * @param mean The mean of the normal distribution used for traffic generation.
+ * @param standard_deviation The standard deviation of the normal distribution used for traffic generation.
+ */
 void recordTrafficEntireInterval(struct Tenant* tenants, unsigned int tenant_number, long time_interval, double link_capacity, double mean, double standard_deviation){
     system("rm "DATA_STORED_PATH"\n");
     FILE *file_pointer;

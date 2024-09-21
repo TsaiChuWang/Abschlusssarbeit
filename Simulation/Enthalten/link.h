@@ -1,10 +1,9 @@
 #define LINK
 #ifdef LINK
 
-
 /** @struct Link
  * @brief Represents a network link.
- * 
+ *
  * @var Link::identifier
  * Link identifier.
  * @var Link::capacity
@@ -14,12 +13,12 @@
  * @var Link::tail_node
  * Tail node of the link.
  */
-struct Link{
-    unsigned int identifier;
+struct Link {
+  unsigned int identifier;
 
-    double capacity;
-    struct Node head_node;
-    struct Node tail_node;
+  double capacity;
+  struct Node head_node;
+  struct Node tail_node;
 };
 
 #endif

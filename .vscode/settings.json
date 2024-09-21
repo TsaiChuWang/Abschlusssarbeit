@@ -5,7 +5,10 @@
         "configuration.h": "c",
         "tenant.h": "c",
         "math.h": "c",
-        "token_bucket.h": "c"
+        "token_bucket.h": "c",
+        "link.h": "c",
+        "node.h": "c"
     },
-    "C_Cpp.errorSquiggles": "disabled"
+    "C_Cpp.errorSquiggles": "disabled",
+    "editor.formatOnSave": true
 }

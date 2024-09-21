@@ -38,8 +38,7 @@
     #define DECIDE_DROPPED_OR_NOT               (int)((rand()%100)+1)>PROBABILITY_DROPPED?0:1
 
     #define SCALE_GUARDED_TRAFFIC               (-1)*(1.05 + ((double)rand()/RAND_MAX)*(1.25-1.05)) /** @brief Scale factor for guarded traffic. **/
-    #define SCALE_PROBABLE_DROPPED_TRAFFIC      (-1)*(0.5 + ((double)rand()/RAND_MAX)*(0.95-0.5))   /** Scale factor for probable dropped traffic. **/
-    #define SCALE_UNKNOWN_PUNISHMENT_TRAFFIC    (0.5 + ((double)rand()/RAND_MAX)*(0.95-0.5))        /** Scale factor for unknown punishment traffic. **/
+    #define SCALE_MIDDLE_INTERVAL               (0.5 + ((double)rand()/RAND_MAX)*(0.95-0.5))        /** Scale factor for middle interval traffic. **/
     #define SCALE_DROPPED_TRAFFIC               (1.05 + ((double)rand()/RAND_MAX)*(1.25-1.05))      /** Scale factor for dropped traffic. **/
 
 #endif

@@ -1,11 +1,9 @@
 #include <math.h>
 
 #ifdef SINPLE_V1_00_918
-    #define GUARDED_TRAFFIC         0   /** @brief Tag for guarded traffic type. **/ 
-    #define PROBABLE_DROPPED        1   /** @brief Tag for probable dropped traffic type. **/
-    #define UNKNOWN_PUNISHMENT      2   /** @brief Tag for unknown punishment traffic type. **/
-    #define DROPPED                 3   /** @brief Tag for dropped traffic type. **/
-    #define COMBINE_MIDDLE_INTERVAL 4   /** @brief Tag for combined middle interval traffic type. **/      
+    #define GUARDED_TRAFFIC         0   /** @brief Tag for guarded traffic type. **/
+    #define MIDDLE_INTERVAL         1   /** @brief Tag for combined middle interval traffic type. **/ 
+    #define DROPPED                 2   /** @brief Tag for dropped traffic type. **/      
 
     #define DATA_STORED_PATH   "../Datei/module_test/module_test.csv"
 #endif
@@ -137,28 +135,18 @@ struct Tenant{
                         tenant.traffic[time_stamp] = mean + standard_deviation*SCALE_GUARDED_TRAFFIC;
                 break;
             
-            case PROBABLE_DROPPED:
-                for(int time_stamp = 0;time_stamp<time_interval;time_stamp++)
-                    if(COMPLY_MODULE_OR_NORMALDISTRIBUTION>0)
-                        tenant.traffic[time_stamp] = mean + standard_deviation*SCALE_PROBABLE_DROPPED_TRAFFIC ;
-                break;
-
-            case UNKNOWN_PUNISHMENT:
-                for(int time_stamp = 0;time_stamp<time_interval;time_stamp++)
-                    if(COMPLY_MODULE_OR_NORMALDISTRIBUTION>0)
-                        tenant.traffic[time_stamp] = mean + standard_deviation*SCALE_UNKNOWN_PUNISHMENT_TRAFFIC;
-                break;
-
             case DROPPED:
                 for(int time_stamp = 0;time_stamp<time_interval;time_stamp++)
                     if(COMPLY_MODULE_OR_NORMALDISTRIBUTION>0)
                         tenant.traffic[time_stamp] = mean + standard_deviation*SCALE_DROPPED_TRAFFIC;
                 break;
 
-            case COMBINE_MIDDLE_INTERVAL:
+            case MIDDLE_INTERVAL:
                 for(int time_stamp = 0;time_stamp<time_interval;time_stamp++)
                     if(COMPLY_MODULE_OR_NORMALDISTRIBUTION>0)
-                        tenant.traffic[time_stamp] = mean + standard_deviation*SCALE_DROPPED_TRAFFIC;
+                        if(GENERATE_BINARY>0)
+                            tenant.traffic[time_stamp] = mean + standard_deviation*SCALE_MIDDLE_INTERVAL;
+                        else tenant.traffic[time_stamp] = mean - standard_deviation*SCALE_MIDDLE_INTERVAL;
                 break;
 
             default:
@@ -192,12 +180,7 @@ void printTrafficATimestamp(struct Tenant tenant, struct Node destination, int t
         printf("[GUARDED]\n");
     }else if (tenant.traffic[time_stamp]>mean+standard_deviation)
         printf("[DROPPED]\n");
-    else if(DECIDE_DROPPED_OR_NOT>0)
-        printf("[DROPPED_PROBABLE]\n");
-    else{
-        *link_traffic += tenant.traffic[time_stamp];
-        printf("[KEEPED_PROBABLE]\n");
-    }
+    else printf("[MIDDLE INTERVAL]\n");
 }
 
 // Record
@@ -213,13 +196,9 @@ void recordTrafficEntireInterval(struct Tenant* tenants, unsigned int tenant_num
             if(tenants[index].traffic[time_stamp]<=mean-standard_deviation)
                 link_traffic += tenants[index].traffic[time_stamp];
             
-            if(tenants[index].traffic[time_stamp]<=mean+standard_deviation && tenants[index].traffic[time_stamp]>mean-standard_deviation){
-                int decide = DECIDE_DROPPED_OR_NOT;
-                if(decide==0)
-                    link_traffic += tenants[index].traffic[time_stamp];
-            }
+            if(tenants[index].traffic[time_stamp]<=mean+standard_deviation && tenants[index].traffic[time_stamp]>mean-standard_deviation)
+                link_traffic += tenants[index].traffic[time_stamp];
                 
-            
             if(index==tenant_number-1)
                 fprintf(file_pointer, INFORM_TRAFFIC_FORMAT", "INFORM_TRAFFIC_FORMAT", "INFORM_TRAFFIC_FORMAT"\n", tenants[index].traffic[time_stamp], link_traffic, link_traffic/link_capacity);
             else fprintf(file_pointer, INFORM_TRAFFIC_FORMAT", ",tenants[index].traffic[time_stamp]);

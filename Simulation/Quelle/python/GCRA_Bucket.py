@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import os
 from PIL import Image
+import sys
 
 DATA_PATH ="../../Datei/token_bucket/token_bucket.csv"
 IMAGE_PATH = "../../Datei/GCRA/images/GCRA_bucket{}.png"
@@ -33,6 +34,23 @@ def drawATimestampPicture(index):
     plt.savefig(IMAGE_PATH.format(index))
     plt.cla()
 
+def drawATimestampPictureWithTitle(index, bucket_size, leakage_rate):
+    values = data[index][:-1]
+    # Define colors for each bar
+    colors = ['#7ED957', '#0CC0DF', '#FF5757']
+
+    # Create bar chart
+    plt.bar(categories, values, color=colors)
+
+    # Add labels and title
+    plt.xlabel('Tenant')
+    plt.ylabel('Bucket Capacity')
+    plt.title('Bucket : '+str(bucket_size)+" Leakage : "+str(leakage_rate))
+
+    # Show plot
+    plt.savefig(IMAGE_PATH.format(index))
+    plt.cla()
+
 def generateTheGIF( images_folder_path, gif_path):
     # Get all PNG files from the folder
     png_files = [f for f in os.listdir(images_folder_path) if f.endswith('.png')]
@@ -51,6 +69,10 @@ def generateTheGIF( images_folder_path, gif_path):
     else:
         print("No PNG files found in the folder.")
 
-# for index in range(time_interval):
-#     drawATimestampPicture(index)
+if(len(sys.argv)>1):
+    for index in range(time_interval):
+        drawATimestampPictureWithTitle(index, sys.argv[1], sys.argv[2])
+else:
+    for index in range(time_interval):
+        drawATimestampPicture(index)
 generateTheGIF(IMAGE_FOLDER_PATH, GIF_PATH)

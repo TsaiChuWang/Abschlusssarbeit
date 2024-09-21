@@ -184,7 +184,7 @@ def analyzeTraffic(data):
 # line_chart_tenant(1)
 # line_chart_tenant(2)
 
-line_chart_traffic()
-line_chart_utilization()
+# line_chart_traffic()
+# line_chart_utilization()
 
 analyzeTraffic(data)

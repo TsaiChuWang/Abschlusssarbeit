@@ -222,7 +222,7 @@ void printTrafficATimestamp(struct Tenant tenant, struct Node destination, int t
  */
 void printTrafficATimestamp(struct Tenant* tenant, struct Node destination, int time_stamp, double* link_traffic, double mean, double standard_deviation){
 #ifdef _DEBUG_PRINTTRAFFICATIMESTAMP
-    printf("tenant["INFORM_IDENTIFIER_FORMAT"] input "INFORM_TRAFFIC_FORMAT" in node["INFORM_IDENTIFIER_FORMAT"] to node["INFORM_IDENTIFIER_FORMAT"] at time["INFORM_TIME_FORMAT"].", tenant.identifier, tenant.traffic[time_stamp], tenant.connected_node.identifier, destination.identifier, time_stamp);
+    printf("tenant["INFORM_IDENTIFIER_FORMAT"] input "INFORM_TRAFFIC_FORMAT" in node["INFORM_IDENTIFIER_FORMAT"] to node["INFORM_IDENTIFIER_FORMAT"] at time["INFORM_TIME_FORMAT"].", tenant->identifier, tenant->traffic[time_stamp], tenant->connected_node.identifier, destination.identifier, time_stamp);
 #endif
     if(tenant->traffic[time_stamp]<=mean-standard_deviation){
         *link_traffic += tenant->traffic[time_stamp];

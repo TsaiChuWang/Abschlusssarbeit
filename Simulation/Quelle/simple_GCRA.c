@@ -29,6 +29,17 @@ int main(int argc, char *argv[]){
     // Initialize random number generator
     srand(time(NULL));
 
+    double bucket_depth, leakage_rate;
+	if(argc<2){
+		bucket_depth = BUCKET_DEPTH;
+        leakage_rate = LEAKAGE_RATE;
+	}else{
+        char* end_pointer;
+        bucket_depth = strtod(argv[1], &end_pointer);
+        leakage_rate = strtod(argv[2], &end_pointer);
+    }
+    
+
     double mean = TEST_CONFIGURATION_LINK_CAPACITY/TEST_CONFIGURATION_TENANT_NUMBER;
     double standard_deviation = mean/TEST_CONFIGURATION_TENANT_NUMBER;
 
@@ -37,7 +48,7 @@ int main(int argc, char *argv[]){
 
     struct Link link = {0, TEST_CONFIGURATION_LINK_CAPACITY, source, destination};
 
-    struct Token_Bucket* buckets = createMultipleTokenBucket_SameParamter(BUCKET_DEPTH, LEAKAGE_RATE, TEST_CONFIGURATION_TENANT_NUMBER);
+    struct Token_Bucket* buckets = createMultipleTokenBucket_SameParamter(bucket_depth, leakage_rate, TEST_CONFIGURATION_TENANT_NUMBER);
 
     unsigned int tenant_number =0;
     struct Tenant* tenants = (struct Tenant*)malloc(sizeof(struct Tenant)*TEST_CONFIGURATION_TENANT_NUMBER);
@@ -73,6 +84,5 @@ int main(int argc, char *argv[]){
         printf("\n");
     }
 
-    // recordTrafficEntireInterval(tenants, tenant_number, TEST_CONFIGURATION_TIME_INTERVAL, TEST_CONFIGURATION_LINK_CAPACITY, mean, standard_deviation);
     return  SUCCESS;
 }

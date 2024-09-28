@@ -9,7 +9,23 @@
 #include <sys/types.h>
 #include <sched.h>
 #include <string.h>
+#include <dirent.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
+// sudo su
+// gcc test.c -o ../Ausführung/test
+// ../Ausführung/test
+
+#define COMMAND_EXIT "exit"
+#define COMMAND_CREATE_NETWORK_NAMESPACE "createns"
+
+#define NETNAMESPACE_DICTIONARY "/var/run/netns"
+#define SIGN_SINGLE_SPLIT '-'
+#define INFORM_INDEX "%3d"
+#define INFORM_NAME "%80s"
+
+#define MAX_COMMAND 2
 // // 執行指定的命令
 int execute_command(char *command[]) {
     pid_t pid = fork();
@@ -23,22 +39,34 @@ int execute_command(char *command[]) {
         perror("Execvp failed");
         exit(EXIT_FAILURE);
     } else {
-        int status;
-        waitpid(pid, &status, 0);
-        return WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+        int status_code;
+        waitpid(pid, &status_code, 0);
+        return WIFEXITED(status_code) ? WEXITSTATUS(status_code) : FAILED;
     }
 }
 
-// // 創建網路命名空間
-// int create_network_namespace(const char *net_namespace) {
-//     char *command[] = {"ip", "netns", "add", (char *)net_namespace, NULL};
-//     return execute_command(command);
-// }
+void print_split_line(char sign){
+    struct winsize window_size;
+    if(ioctl(STDOUT_FILENO, TIOCGWINSZ, &window_size) == FAILED){
+        perror("IOCTL failed.");
+        exit(EXIT_FAILURE);
+    }
 
-// int delete_network_namespace(const char *net_namespace){
-//     char *command[] = {"ip", "netns", "delete", (char *)net_namespace, NULL};
-//     return execute_command(command);
-// }
+    int width = window_size.ws_col;
+
+    for(int index=0;index<width;index++)
+        putchar(sign);
+    
+    putchar('\n');
+}
+
+void print_network_namespaces(int* status_code){
+    printf("Network Namespace :\n");
+    char *command[] = {"ip", "netns", "list", NULL};    // If remove NULL will happen "Execvp failed: Bad address"
+    print_split_line(SIGN_SINGLE_SPLIT);
+    *status_code = execute_command(command);
+}
+
 
 // // 設置 veth 連接
 // int setup_veth_pair(const char *veth1, const char *veth2) {
@@ -71,29 +99,66 @@ int execute_command(char *command[]) {
 //     };
 //     return execute_command(command);
 // }
-
-// // 刪除網路命名空間
-// int delete_network_namespace(const char *ns_name) {
-//     char *command[] = {"ip", "netns", "delete", (char *)ns_name, NULL};
-//     return execute_command(command);
-// }
+#define INFORM_NETWORK_NAMESPACE_CREATED
 
 #define MAX_NET_NAMESPACE 100
+
+char** split_commands(const char* input, int* count){
+    char* command_buffer = strdup(input);
+    char* command;
+    char** commands = malloc(MAX_COMMAND*sizeof(char*));
+    *count = 0;
+
+    command = strtok(command_buffer, " ");
+    while (command != NULL){
+        
+        if(*count >= MAX_COMMAND)
+            break;
+
+        commands[*count] = malloc((strlen(command)+1)*sizeof(char));
+        if(commands[*count] ==NULL){
+            perror("Memory allocation failed");
+            exit(EXIT_FAILURE);
+        }
+
+        strcpy(commands[*count], command);
+        (*count)++;
+
+        command = strtok(NULL, " ");
+    }
+
+    free(command_buffer);
+    return commands;
+}
 
 struct Netnamespace{
     const char* name;
 };
 
-struct Netnamespace create_network_namespace(const char *net_namespace_name, int* status_code){
-    char *command[] = {"ip", "netns", "add", (char *)net_namespace_name, NULL};
+struct Netnamespace create_network_namespace(const char *network_namespace_name, int* status_code){
+    char *command[] = {"ip", "netns", "add", (char *)network_namespace_name, NULL};
     *status_code = execute_command(command);
     struct Netnamespace netnamespace;
-    netnamespace.name = net_namespace_name;
+    netnamespace.name = network_namespace_name;
     if(*status_code != 0){
         fprintf(stderr, "Failed to create network namespaces\n");
         exit(EXIT_FAILURE);
     }
+
+#ifdef INFORM_NETWORK_NAMESPACE_CREATED
+    printf("Network namespace has created : "INFORM_NAME"\n");
+    print_network_namespaces(status_code);
+    if(*status_code != 0){
+        fprintf(stderr, "List network namespace failed\n");
+        exit(EXIT_FAILURE);
+    }
+#endif
+
     return netnamespace;
+}
+
+void append_new_network_namespace(struct Netnamespace** netnamespaces, int* number_netnamespace, char *network_namespace_name, int* status_code){
+    (*network
 }
 
 void delete_network_namespace(struct Netnamespace netnamespace, int* status_code){
@@ -105,26 +170,57 @@ void delete_network_namespace(struct Netnamespace netnamespace, int* status_code
     }
 }
 
-void 
-
 // 主函數
 int main() {
-    const char* net_namespace_1 = "net_namespace_1";
+    // const char* network_namespace_1 = "network_namespace_1";
 
     int status_code = 0;
-    struct Netnamespace netnamespace = create_network_namespace(net_namespace_1, &status_code);
+    
+    int number_netnamespace = 0;
+    struct Netnamespace* netnamespaces = (struct Netnamespace*)malloc(sizeof(struct Netnamespace)*MAX_NET_NAMESPACE);
 
 
-    delete_network_namespace(netnamespace, &status_code);
+    // struct Netnamespace netnamespace = create_network_namespace(network_namespace_1, &status_code);
 
-    // if(create_network_namespace(net_namespace_1) != 0){
+    // print_network_namespaces(&status_code);
+
+    // delete_network_namespace(netnamespace, &status_code);
+    // print_network_namespaces(&status_code);
+
+    
+    
+    while (TRUE)
+    {
+        char command[MAX_COMMAND_LENGTH];
+
+        printf(">> ");
+        scanf("%[^\n]", &command);
+        int number_commands = 0;
+        char** commands = split_commands(command, &number_commands);
+
+        if(strcmp(commands[0], COMMAND_EXIT) == COMPARE_TRUE){
+            for(int index=0;index<number_netnamespace;index++)
+                delete_network_namespace(*(netnamespaces+index), &status_code);
+            
+            free(netnamespaces);
+            break;
+        }
+            
+        
+        if(strcmp(commands[0], COMMAND_CREATE_NETWORK_NAMESPACE) == COMPARE_TRUE)
+            if(number_commands<2){
+            }
+    }
+    printf("a\n");
+    
+    // if(create_network_namespace(network_namespace_1) != 0){
     //     fprintf(stderr, "Failed to create network namespaces\n");
     //     return EXIT_FAILURE;
     // }
-    // // const char* net_namespace_2 = "net_namespace_2";
-    // // const char* net_namespace_3 = "net_namespace_3";
+    // // const char* network_namespace_2 = "network_namespace_2";
+    // // const char* network_namespace_3 = "network_namespace_3";
     
-    // if(delete_network_namespace(net_namespace_1) != 0){
+    // if(delete_network_namespace(network_namespace_1) != 0){
     //     fprintf(stderr, "Failed to delete network namespaces\n");
     //     return EXIT_FAILURE;
     // }

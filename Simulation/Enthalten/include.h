@@ -5,6 +5,9 @@
 #define SUCCESS 0
 #define FAILED -1
 #define UNFOUND -1
+#define COMPARE_TRUE 0
+#define TRUE 1
+#define FALSE -1
 
 #define INFORM_IDENTIFIER_FORMAT    "%03u"
 #define INFORM_TRAFFIC_FORMAT       "%12.7lf"

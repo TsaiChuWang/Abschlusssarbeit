@@ -86,15 +86,17 @@ int main(int argc, char *argv[]) {
      */
     struct Tenant *tenants = (struct Tenant *)malloc(
         sizeof(struct Tenant) * TEST_CONFIGURATION_TENANT_NUMBER);
-    
-    *(tenants) = createATenant(&tenant_number, TEST_CONFIGURATION_TIME_INTERVAL,
-                               mean, standard_deviation, GUARDED_TRAFFIC, source);
-    *(tenants + 1) = createATenant(
-        &tenant_number, TEST_CONFIGURATION_TIME_INTERVAL, mean,
-        standard_deviation, MIDDLE_INTERVAL, source); /**< Tenant with MIDDLE_INTERVAL traffic pattern. */
-    *(tenants + 2) =
-        createATenant(&tenant_number, TEST_CONFIGURATION_TIME_INTERVAL, mean,
-                      standard_deviation, DROPPED, source); /**< Tenant with DROPPED traffic pattern. */
+    for(int index=0;index<TEST_CONFIGURATION_TENANT_NUMBER;index++)
+        *(tenants+index) = createATenant(&tenant_number, TEST_CONFIGURATION_TIME_INTERVAL,
+                               mean, standard_deviation, GAUSSIAN_MODE, source);
+    // *(tenants) = createATenant(&tenant_number, TEST_CONFIGURATION_TIME_INTERVAL,
+    //                            mean, standard_deviation, GUARDED_TRAFFIC, source);
+    // *(tenants + 1) = createATenant(
+    //     &tenant_number, TEST_CONFIGURATION_TIME_INTERVAL, mean,
+    //     standard_deviation, MIDDLE_INTERVAL, source); /**< Tenant with MIDDLE_INTERVAL traffic pattern. */
+    // *(tenants + 2) =
+    //     createATenant(&tenant_number, TEST_CONFIGURATION_TIME_INTERVAL, mean,
+    //                   standard_deviation, DROPPED, source); /**< Tenant with DROPPED traffic pattern. */
 
     printf(INFORM_TRAFFIC_FORMAT "\n", (double)((*tenants).bucket.bucket_depth));
 

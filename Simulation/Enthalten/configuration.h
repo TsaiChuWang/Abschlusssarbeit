@@ -49,6 +49,9 @@
     #define _DEBUG_PRINTTRAFFICATIMESTAMP
 
     #define GENERATE_GIF
+
+    #define OVER_CAPACITY_LIMIT
+    // #define OVER_CAPACITY_DROP
 #endif
     
     // #define _DEBUG_PRINTTRAFFICATIMESTAMP

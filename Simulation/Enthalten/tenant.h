@@ -10,6 +10,7 @@
     #define GUARDED_TRAFFIC 0   /**< @brief Tag for guarded traffic type. */
     #define MIDDLE_INTERVAL 1   /**< @brief Tag for combined middle interval traffic type. */
     #define DROPPED         2   /**< @brief Tag for dropped traffic type. */
+    #define GAUSSIAN_MODE   3
 
 #ifdef SIMPLE_V1_00_918
     #define DATA_STORED_PATH   "../Datei/module_test/module_test.csv"
@@ -221,26 +222,56 @@ void printTrafficATimestamp(struct Tenant tenant, struct Node destination, int t
  * @param standard_deviation The standard deviation of the normal distribution for traffic data.
  */
 void printTrafficATimestamp(struct Tenant* tenant, struct Node destination, int time_stamp, double* link_traffic, double mean, double standard_deviation){
+#ifdef RECORD
+    FILE *file_pointer;
+    file_pointer = fopen(DATA_STORED_PATH, "a+");
+    fprintf(file_pointer, INFORM_TRAFFIC_FORMAT", ", tenant->traffic[time_stamp]);
+    fclose(file_pointer);
+#endif
+
 #ifdef _DEBUG_PRINTTRAFFICATIMESTAMP
     printf("tenant["INFORM_IDENTIFIER_FORMAT"] input "INFORM_TRAFFIC_FORMAT" in node["INFORM_IDENTIFIER_FORMAT"] to node["INFORM_IDENTIFIER_FORMAT"] at time["INFORM_TIME_FORMAT"].", tenant->identifier, tenant->traffic[time_stamp], tenant->connected_node.identifier, destination.identifier, time_stamp);
 #endif
     if(tenant->traffic[time_stamp]<=mean-standard_deviation){
         *link_traffic += tenant->traffic[time_stamp];
-        updateTokenBucketATimestamp(&(tenant->bucket), 0.0);
+        updateTokenBucketATimestamp(&(tenant->bucket), tenant->traffic[time_stamp]);
+#ifdef RECORD
+    FILE *file_pointer;
+    file_pointer = fopen(DATA_STORED_PATH, "a+");
+    fprintf(file_pointer, INFORM_TRAFFIC_FORMAT", ", tenant->traffic[time_stamp]);
+    fclose(file_pointer);
+#endif
 #ifdef _DEBUG_PRINTTRAFFICATIMESTAMP
         printf("[GUARDED]\n");
 #endif
     }else if (tenant->traffic[time_stamp]>mean+standard_deviation){
-        updateTokenBucketATimestamp(&(tenant->bucket), 0.0);
+        updateTokenBucketATimestamp(&(tenant->bucket), tenant->traffic[time_stamp]);
 #ifdef _DEBUG_PRINTTRAFFICATIMESTAMP
         printf("[DROPPED]\n");
+#endif
+#ifdef RECORD
+    FILE *file_pointer;
+    file_pointer = fopen(DATA_STORED_PATH, "a+");
+    fprintf(file_pointer, INFORM_TRAFFIC_FORMAT", ", 0);
+    fclose(file_pointer);
 #endif
     }
     else{
         double leakage_traffic = updateTokenBucketATimestamp(&(tenant->bucket), tenant->traffic[time_stamp]);
-        if(leakage_traffic == 0){
+#ifdef OVER_CAPACITY_DROP
+        if(leakage_traffic == 0)
+#elif (defined OVER_CAPACITY_LIMIT)
+        if(leakage_traffic <tenant->traffic[time_stamp])
+#endif
+        {
 #ifdef _DEBUG_PRINTTRAFFICATIMESTAMP
             printf("[DROPPED GCRA]\n");
+#endif
+#ifdef RECORD
+    FILE *file_pointer;
+    file_pointer = fopen(DATA_STORED_PATH, "a+");
+    fprintf(file_pointer, INFORM_TRAFFIC_FORMAT", ", 0);
+    fclose(file_pointer);
 #endif
         }
         else{
@@ -248,15 +279,14 @@ void printTrafficATimestamp(struct Tenant* tenant, struct Node destination, int 
 #ifdef _DEBUG_PRINTTRAFFICATIMESTAMP
             printf("[MIDDLE INTERVAL GCRA]\n");
 #endif
-        }
-    }
-
 #ifdef RECORD
     FILE *file_pointer;
     file_pointer = fopen(DATA_STORED_PATH, "a+");
-    fprintf(file_pointer, INFORM_TRAFFIC_FORMAT", ", tenant->traffic[time_stamp]);
+    fprintf(file_pointer, INFORM_TRAFFIC_FORMAT", ", leakage_traffic);
     fclose(file_pointer);
 #endif
+        }
+    }
 
 }
 #endif

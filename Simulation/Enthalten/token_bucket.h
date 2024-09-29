@@ -9,6 +9,9 @@
 #ifndef TOKEN_BUCKET_H
 #define TOKEN_BUCKET_H
 
+// #define OVER_CAPACITY_DROP
+// #define OVER_CAPACITY_LIMIT
+
 #define TOKEN_BUCKET_DATA_STORED_PATH "../Datei/token_bucket/token_bucket.csv"
 
 /**
@@ -76,10 +79,20 @@ double updateTokenBucketATimestamp(struct Token_Bucket* bucket, double traffic) 
 #endif
 
     if (bucket->bucket_capacity - traffic < 0) {
+#ifdef OVER_CAPACITY_DROP
         bucket->bucket_capacity = bucket->bucket_capacity + bucket->leakage_rate;
         if (bucket->bucket_capacity >= bucket->bucket_depth) {
             bucket->bucket_capacity = bucket->bucket_depth;
         }
+#endif
+
+#ifdef OVER_CAPACITY_LIMIT
+        double leakage_traffic = bucket->bucket_capacity;
+        bucket->bucket_capacity = bucket->leakage_rate;
+        if (bucket->bucket_capacity >= bucket->bucket_depth) {
+            bucket->bucket_capacity = bucket->bucket_depth;
+        }
+#endif
 
 #ifdef _DEBUG_UPDATETOKENBUCKETATIMESTAMP
         printf("Dropped : " INFORM_TRAFFIC_FORMAT "\n", bucket->bucket_capacity);
@@ -90,7 +103,14 @@ double updateTokenBucketATimestamp(struct Token_Bucket* bucket, double traffic) 
         fprintf(file_pointer, INFORM_TRAFFIC_FORMAT ", ", bucket->bucket_capacity);
         fclose(file_pointer);
 #endif
+
+#ifdef OVER_CAPACITY_DROP
         return 0.0;
+#endif
+
+#ifdef OVER_CAPACITY_LIMIT
+    return leakage_traffic;
+#endif
     }
 
     if (bucket->bucket_capacity - traffic + bucket->leakage_rate < bucket->bucket_depth) {

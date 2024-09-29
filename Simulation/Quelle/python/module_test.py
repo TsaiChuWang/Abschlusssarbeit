@@ -39,9 +39,9 @@ def drawATimestampPicture(index):
     node_colors = ['#7ED957', '#0CC0DF', '#FF5757', 'skyblue', 'skyblue']
     graph.add_nodes_from(['A', 'B', 'C', 'source', 'dest.'])
     graph.add_edge('A', 'source',  weight=data[index][0])
-    graph.add_edge('B', 'source',  weight=data[index][1])
-    graph.add_edge('C', 'source',  weight=data[index][2])
-    graph.add_edge('source', 'dest.',  weight=data[index][3])
+    graph.add_edge('B', 'source',  weight=data[index][2])
+    graph.add_edge('C', 'source',  weight=data[index][4])
+    graph.add_edge('source', 'dest.',  weight=data[index][6])
     position = {
         'A': (-1, 1),  
         'B': (-1, 0),  
@@ -71,7 +71,7 @@ def drawATimestampPicture(index):
             horizontalalignment='right', 
             verticalalignment='bottom', 
             transform=plt.gcf().transFigure)
-    plt.text(0.95, 0.1, '{:<16s} : {:<12.7f}'.format('Link-utilization', data[index][4]), 
+    plt.text(0.95, 0.1, '{:<16s} : {:<12.7f}'.format('Link-utilization', data[index][7]), 
             horizontalalignment='right', 
             verticalalignment='bottom', 
             transform=plt.gcf().transFigure)
@@ -98,8 +98,8 @@ def generateTheGIF( images_folder_path, gif_path):
 
 def line_chart_tenants():
     plt.plot([index for index in range(len(data))], [float(row[0]) for row in data], linestyle='-', color='g', label='A')
-    plt.plot([index for index in range(len(data))], [float(row[1]) for row in data], linestyle='-', color='b', label='B')
-    plt.plot([index for index in range(len(data))], [float(row[2]) for row in data], linestyle='-', color='r', label='C')
+    plt.plot([index for index in range(len(data))], [float(row[2]) for row in data], linestyle='-', color='b', label='B')
+    plt.plot([index for index in range(len(data))], [float(row[4]) for row in data], linestyle='-', color='r', label='C')
 
     plt.title('Different tenants')
     plt.xlabel('Timestamp')
@@ -135,7 +135,7 @@ def line_chart_tenant(index):
     plt.cla()
 
 def line_chart_traffic():
-    plt.plot([index for index in range(len(data))], [float(row[3]) for row in data], linestyle='-', color='black', label='traffic')
+    plt.plot([index for index in range(len(data))], [float(row[-2]) for row in data], linestyle='-', color='black', label='traffic')
     plt.plot([index for index in range(len(data))], [link_capacity for row in data], linestyle='-', color='r', label='link capacity')
 
     plt.title('Link traffic')
@@ -148,7 +148,7 @@ def line_chart_traffic():
     plt.cla()
 
 def line_chart_utilization():
-    plt.plot([index for index in range(len(data))], [float(row[4]) for row in data], linestyle='-', color='black', label='traffic')
+    plt.plot([index for index in range(len(data))], [float(row[-1]) for row in data], linestyle='-', color='black', label='traffic')
     plt.plot([index for index in range(len(data))], [1 for row in data], linestyle='-', color='r', label='link capacity')
 
     plt.title('Link Utilization')
@@ -165,15 +165,52 @@ def analyzeTraffic(data):
     mean_traffic = 0
     mean_utilization = 0
     for row in data:
-        if(float(row[4]) > max):
-            max = float(row[4])
-        mean_traffic += float(row[3])
-        mean_utilization += float(row[4])
+        if(float(row[-1]) > max):
+            max = float(row[-1])
+        mean_traffic += float(row[-2])
+        mean_utilization += float(row[-1])
     mean_traffic = mean_traffic/len(data)
     mean_utilization = mean_utilization/len(data)
     print("Max  utilization = {:12f}".format(max))
     print("Mean traffic     = {:12f}".format(mean_traffic))
     print("Mean utilization = {:12f}".format(mean_utilization))
+
+def secondVersionLineChart(index):
+    if(index==0):
+        label = 'A'
+        color = 'g'
+    elif(index==2):
+        label ='B'
+        color = 'b'
+    else:
+        label = 'C'
+        color = 'r'
+
+    plt.plot([index for index in range(len(data))], [float(row[index]) for row in data], linestyle='-', color=color, label=label)
+    plt.plot([index for index in range(len(data))], [float(row[index+1]) for row in data], linestyle='-', color='yellow', label="GCRA")
+    plt.plot([index for index in range(len(data))], [80 for row in data], linestyle='dotted', color='grey', label='lower bound')
+    plt.plot([index for index in range(len(data))], [160 for row in data], linestyle='dotted', color='grey', label='upper bound')
+
+    plt.title('Tenant Traffic :'+label)
+    plt.xlabel('Timestamp')
+    plt.ylabel('Traffic')
+    plt.legend()
+    plt.grid(True)
+
+    plt.savefig('../../Datei/module_test/tenants_linechart_'+label+'.png')
+    plt.cla()
+
+def analyzeGap(index):
+    if(index==0):
+        label = 'A'
+    elif(index==2):
+        label ='B'
+    else:
+        label = 'C'
+    print(label)
+    print("Mean Gap   : ", sum([float(row[index])- float(row[index+1]) for row in data])/len(data))
+    print("Max Gap    : ", max([float(row[index])- float(row[index+1]) for row in data if float(row[index])<=160]))
+    print("Percentage : ", sum([float(row[index+1]) for row in data])*100/sum([float(row[index]) for row in data]))
 
 # for index in range(time_interval):
 #     drawATimestampPicture(index)
@@ -184,7 +221,15 @@ def analyzeTraffic(data):
 # line_chart_tenant(1)
 # line_chart_tenant(2)
 
+# secondVersionLineChart(0)
+# secondVersionLineChart(2)
+# secondVersionLineChart(4)
+
 # line_chart_traffic()
 # line_chart_utilization()
 
 analyzeTraffic(data)
+
+analyzeGap(0)
+analyzeGap(2)
+analyzeGap(4)

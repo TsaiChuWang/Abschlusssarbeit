@@ -16,10 +16,9 @@ W = 3
 C = 60
 N = 5
 
+% x = sdpvar(P); 
+% y = sdpvar(W, E); 
 f_st = sdpvar(N, N, E); 
-x = sdpvar(P); 
-y = sdpvar(W, E); 
-% f_st = sdpvar(N, N, E); 
 alpha = sdpvar(1); 
 
 Objective = alpha;
@@ -28,27 +27,40 @@ Constraints = [];
 % Constraints = [Constraints, f_st(0, 0) == mu(p)];
 mu = [10.365820, 9.65275435, 8.4787278]
 
-for p = 1:P
-	% disp(p)
-	Constraints = [Constraints, x(p) == mu(p)];
-end
+Constraints = [Constraints, f_st(1,5,1) == mu(1)];
+Constraints = [Constraints, f_st(1,5,4) == mu(1)];
 
-for w=1:W
-	for e=1:E
-		if e == w
-			Constraints = [Constraints, y(w,e) == x(w)]
-		elseif e== E
-			Constraints = [Constraints, y(w,e) == x(w)]
-		else
-			Constraints = [Constraints, y(w,e) == 0]
-		end
-	end
-end
+Constraints = [Constraints, f_st(2,5,2) == mu(2)];
+Constraints = [Constraints, f_st(2,5,4) == mu(2)];
 
-Constraints = [Constraints, 2.145966026289347*norm((y(1,1)*(3.1658205/10.3658205)), 2) <= alpha*C - y(1,1)]
-Constraints = [Constraints, 2.145966026289347*norm((y(2,2)*(3.6270764/9.65275)), 2) <= alpha*C - y(2,2)]
+Constraints = [Constraints, f_st(3,5,3) == mu(3)];
+Constraints = [Constraints, f_st(3,5,4) == mu(3)];
+% for p = 1:P
+% 	% disp(p)
+% 	Constraints = [Constraints, x(p) == mu(p)];
+% end
+
+% for w=1:W
+% 	for e=1:E
+% 		if e == w
+% 			Constraints = [Constraints, y(w,e) == x(w)]
+% 		elseif e== E
+% 			Constraints = [Constraints, y(w,e) == x(w)]
+% 		else
+% 			Constraints = [Constraints, y(w,e) == 0]
+% 		end
+% 	end
+% end
+
+% Constraints = [Constraints, 2.145966026289347*norm((y(1,1)*(3.1658205/10.3658205)), 2) <= alpha*C - y(1,1)]
+% Constraints = [Constraints, 2.145966026289347*norm((y(2,2)*(3.6270764/9.65275)), 2) <= alpha*C - y(2,2)]
+% Constraints = [Constraints, 2.145966026289347*norm((y(3,3)*(3.6193458/8.478727)), 2) <= alpha*C - y(3,3)]
+% Constraints = [Constraints, 2.145966026289347*norm((y(1,4)*(3.1658205/10.3658205))+(y(2,4)*(3.6270764/9.65275))+(y(3,4)*(3.6193458/8.478727)), 2) <= alpha*C - (y(1,4)+y(2,4)+y(3,4))]
+
+Constraints = [Constraints, 2.145966026289347*norm((f_st(1,5,1)*(3.1658205/10.3658205)), 2) <= alpha*C - f_st(1,5,1)]
+Constraints = [Constraints, 2.145966026289347*norm((f_st(2,5,2)*(3.6270764/9.65275)), 2) <= alpha*C - f_st(2,5,2)]
 Constraints = [Constraints, 2.145966026289347*norm((y(3,3)*(3.6193458/8.478727)), 2) <= alpha*C - y(3,3)]
-Constraints = [Constraints, 2.145966026289347*norm((y(1,4)*(3.1658205/10.3658205))+(y(2,4)*(3.6270764/9.65275))+(y(3,4)*(3.6193458/8.478727)), 2) <= alpha*C - (y(1,4)+y(2,4)+y(3,4))]
+Constraints = [Constraints, 2.145966026289347*norm((f_st(1,5,1)*(3.1658205/10.3658205))+(f_st(2,5,2)*(3.6270764/9.65275))+(f_st(3,5,3)*(3.6193458/8.478727)), 2) <= alpha*C - (f_st(1,5,1)+f_st(2,5,2)+f_st(3,5,3))]
 
 
 Constraints = [Constraints, alpha >= 0];

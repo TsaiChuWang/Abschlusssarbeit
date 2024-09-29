@@ -25,8 +25,8 @@
 // #define DRUCKEN_GEPOSTETE_INHALTE                   "[Netz.h] pfostenHaupt Posted content."
 // #define DRUCKEN_LÖSUNG_ERSTELLTMODELLFORTSCHRITT    "[Netz.h] pfostenHaupt Reminder the solution has been saved."
 
-// #define DRUCKEN_MU_BEDEUTUNG_IM_ERHALTEN            "[Gaussian.h] erhaltenBedeutung Print the matrix consists of mean of dst."
-// #define DRUCKEN_SIGMA_KOVARIANZ_IM_ERHALTEN         "[Gaussian.h] erhaltenBedeutung Print the matrix consists of covariance of dst."
+#define DRUCKEN_MU_BEDEUTUNG_IM_ERHALTEN            "[Gaussian.h] erhaltenBedeutung Print the matrix consists of mean of dst."
+#define DRUCKEN_SIGMA_KOVARIANZ_IM_ERHALTEN         "[Gaussian.h] erhaltenBedeutung Print the matrix consists of covariance of dst."
 
 #define DRUCKEN_ERHALTET_ALPHA                      "[Parser.h] erhaltenALPHA Print the alpha value." 
 // #define DRUCKEN_ERHALTENPSDBRUCH_WERT               "[Parser.h] erhaltenPSDBurch Print the routing fractions." 

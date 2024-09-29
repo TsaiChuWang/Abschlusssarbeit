@@ -3,7 +3,7 @@
 #include <time.h>
 #include "./Aufbau.h"
 
-#define MAXIMALE_TOPOLOGIE_ZÄHL 45
+#define MAXIMALE_TOPOLOGIE_ZÄHL 46
 
 // Modus auf grenze der Verkhersreichwite
 // 0 : With index : min(i,j) <= d_{ij} <= max(i,j)
@@ -1647,6 +1647,27 @@ struct Streit nehmenStreit(int code){
 
 		break;
 
+	case 45:	// Minimal topology(3 Tenants)
+		streit.DATEI_NAME = "MINTOPO3ENANTS";
+
+		streit.ANZAHL_KANTEN = 8;
+		streit.ANZAHL_KNOTEN = 5;
+
+		streit.GLEICHE_KAPAZITÄT = 360;
+
+		int topology_45[5][5] =
+			{{0,0,0,1,0},
+			 {0,0,0,1,0},
+			 {0,0,0,1,0},
+			 {1,1,1,0,1},
+			 {0,0,0,1,0}};
+
+		streit.BOGEN = bereichkopieren(streit.ANZAHL_KNOTEN, topology_45);
+		streit.LISTE = bereichkopieren(streit.ANZAHL_KNOTEN, topology_45);
+
+		streit.SYMMETRISCH = RICHTIG;
+
+		break;
     }
 
 	streit.GRENZE_VERKHERSEICHWITE = initialisierenGrenzeVerkherseichwite(streit.ANZAHL_KNOTEN);
@@ -1790,6 +1811,9 @@ int zuordnungCode(char* name){
 
 	if(strcmp(name, "BULGARIA") == ERFOLG)
 		return 44;
+
+	if(strcmp(name, "MINTOPO3ENANTS") == ERFOLG)
+		return 45;
 
     return FEHLGESCHLAGEN;
 }

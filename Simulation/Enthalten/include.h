@@ -15,4 +15,5 @@
 #define INFORM_TIME_FORMAT          "%6d"
 
 #define MAX_COMMAND_LENGTH  1024
+#define MAX_PATH_LENGTH     2048
 #define GENERATE_BINARY (int)(rand()%2) /* @brief Generate a binary random value (0 or 1) */ 

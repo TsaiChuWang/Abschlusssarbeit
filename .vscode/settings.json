@@ -10,7 +10,8 @@
         "node.h": "c",
         "guassian.h": "c",
         "parser.h": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "curl.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true

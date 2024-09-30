@@ -78,9 +78,31 @@ double generateGaussian(double mean, double standard_deviation) {
  */
 double* generateNormalDistribution(long time_interval, double mean, double standard_deviation) {
     double* traffic = (double*)malloc(sizeof(double)*time_interval);
-    for(int time_stamp = 0;time_stamp<TIME_INTERVAL;time_stamp++)
+    for(int time_stamp = 0;time_stamp<time_interval;time_stamp++)
         *(traffic+time_stamp) = generateGaussian(mean, standard_deviation);
     return traffic;
+}
+
+double* generateRegularTraffic(long time_interval, double mean, double standard_deviation){
+    double* traffic = (double*)malloc(sizeof(double)*time_interval);
+    double sum = 0;
+
+    for(int time_stamp = 0;time_stamp<time_interval;time_stamp++){
+        *(traffic+time_stamp) = ((double)rand()/RAND_MAX)*2-1;
+        sum+=*(traffic+time_stamp);
+    }
+
+    double _mean = sum/time_interval;
+    for(int time_stamp = 0;time_stamp<time_interval;time_stamp++)
+        *(traffic+time_stamp) -= _mean;
+
+    for(int time_stamp = 0;time_stamp<time_interval;time_stamp++)
+        *(traffic+time_stamp) = *(traffic+time_stamp)*standard_deviation + mean;
+    
+    // for(int time_stamp = 0;time_stamp<time_interval;time_stamp++)
+    //     printf("%3d : "INFORM_DOUBLE_FORMAT"\n", time_stamp, *(traffic+time_stamp));
+        // printf("%f\n", *(traffic+time_stamp));
+    return (double*)traffic;
 }
 
 
@@ -107,7 +129,10 @@ struct Tenant{
     unsigned int identifier;
 
     double* traffic;
+
+#ifdef _NODE_H
     struct Node connected_node;
+#endif
 
 #if (defined SIMPLE_V1_00_918) || (defined SIMPLE_V2_925_GCRA)
     int tag;

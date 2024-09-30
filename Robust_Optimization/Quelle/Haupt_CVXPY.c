@@ -8,7 +8,9 @@
 #include "../Enthalten/Guassian.h"
 #include "../Enthalten/Parser.h"
 
-#define PYTHON_SKRIPT_WEG "../Quelle/Haupt_CVXPY.py"
+#define PYTHON_SKRIPT_WEG   "../Quelle/Haupt_CVXPY.py"
+#define DATEI_OBJECTIVE_WEG "../Datei/objective.txt"
+#define DATEI_FRACTION_WEG  "../Datei/fraction.csv"
 
 #define SOLVER_CVXOPT   "CVXOPT"    // LP || SOCP || SDP        General-purpose convex optimization solver
 #define SOLVER_SCS      "SCS"       // LP || SOCP || SDP || QP  Splitting Conic Solver
@@ -20,6 +22,60 @@
 // ../Ausführung/Haupt_CVXPY USA-26 
 // ../Ausführung/Haupt_CVXPY OR 
 // ../Ausführung/Haupt_CVXPY MINTOPO3ENANTS
+
+double lesenObjektiv(){
+    FILE *dateizeiger;
+    double wert;
+
+    dateizeiger = fopen(DATEI_OBJECTIVE_WEG, "r");
+    if (dateizeiger == NULL) {
+        perror("Error opening file");
+        return -1.0;
+    }
+
+    if (fscanf(dateizeiger, "%lf", &wert) != 1) {
+        perror("Error reading value from file");
+        fclose(dateizeiger);  // Close the file if reading fails
+        return -1.0;   // Return an error value
+    }
+
+    // Close the file
+    fclose(dateizeiger);
+
+    // Return the double value
+    return wert;
+}
+
+double** lesenFraktion(int OD_paar_zahl, int ANZAHL_KANTEN){
+    char puffer[MAX_PUFFER_LÄNGE];
+    char *record,*linie;
+    int index = 0, jndex = 0;
+
+    double** fraktion = (double**)calloc(sizeof(double*), OD_paar_zahl);
+    for(int index=0;index<OD_paar_zahl;index++)
+        *(fraktion+index) = (double*)calloc(sizeof(double), ANZAHL_KANTEN);
+
+    FILE *dateizeiger = fopen(DATEI_FRACTION_WEG,"r");
+    if(dateizeiger == NULL){
+        printf("\n file opening failed ");
+        return NULL;
+    }
+    while((linie=fgets(puffer,sizeof(puffer),dateizeiger))!=NULL){
+        record = strtok(linie,",");
+        while(record != NULL){
+            fraktion[index][jndex] = atof(record) ;
+            // printf("i=%2d j=%2d record = %f\n", index, jndex, fraktion[index][jndex]);
+            
+            jndex++;
+            record = strtok(NULL, ",");
+        }
+        jndex = 0;
+        ++index ;
+    }
+    fclose(dateizeiger);
+
+    return fraktion;
+}
 
 int main(int argc, char *argv[]){
 	// Drucken Sie die Streiten und Fehlgeschlagen
@@ -102,6 +158,7 @@ int main(int argc, char *argv[]){
             }
 #endif
 
+
     double umgekehrt_Gaussian = gsl_cdf_gaussian_Pinv(ETA, 1.0);
     int OD_paar_zahl;
 
@@ -111,7 +168,12 @@ int main(int argc, char *argv[]){
 
     // Import library
     fprintf(dateizeiger, "import cvxpy\n");
+    fprintf(dateizeiger, "import numpy\n");
     fprintf(dateizeiger, "\n");
+    fprintf(dateizeiger, "DATEI_OBJECTIVE_WEG = \""DATEI_OBJECTIVE_WEG"\"\n");
+    fprintf(dateizeiger, "DATEI_FRACTION_WEG = \""DATEI_FRACTION_WEG"\"\n");
+    fprintf(dateizeiger, "\n");
+
 
     // Constant definition
     fprintf(dateizeiger, "nodes = %d\n", streit.ANZAHL_KNOTEN);
@@ -173,22 +235,63 @@ int main(int argc, char *argv[]){
     fprintf(dateizeiger, "\n");
 
     // Flow conservation
+#ifdef NUR_TRANSFER_VERKEHR_BEOBACHTUNG
+    schalter = 0;
+    for(int knote_index=0;knote_index<=ANZAHL_KNOTEN;knote_index++)
+        for(int index=0;index<OD_paar_zahl;index++){
+            int quelle_index = streit.OD_paar[index][0];
+            int ziele_index =  streit.OD_paar[index][1];
+
+            for(int kant_index=0;kant_index<streit.ANZAHL_KANTEN;kant_index++){
+                if(istInAusgehendKant(kant_index,streit)==RICHTIG){
+                    if(suchenHeaderKnoten(streit,kant_index)==knote_index){
+                        if(schalter == 0){
+                            fprintf(dateizeiger, "\t");
+                            schalter = 1;
+                        }else fprintf(dateizeiger, " + ");
+                        fprintf(dateizeiger, "fst[%d][%d]", index, kant_index);                       
+                    }
+
+                    if(suchenSchwanzKnoten(streit,kant_index)==knote_index){
+                        if(schalter == 0){
+                            fprintf(dateizeiger, "\t");
+                            schalter = 1;
+                        }
+                        fprintf(dateizeiger, " - fst[%d][%d]", index, kant_index);
+                    }
+                }
+            }
+            if(knote_index==streit.OD_paar[index][0])
+                    fprintf(dateizeiger, " == "DRUCKEN_DOUBLE, mu_bedeutung[streit.OD_paar[index][0]][streit.OD_paar[index][1]]);
+                else if(knote_index==streit.OD_paar[index][1])
+                    fprintf(dateizeiger, "== -"DRUCKEN_DOUBLE, mu_bedeutung[streit.OD_paar[index][0]][streit.OD_paar[index][1]]);
+                else if(schalter!=0)
+                    fprintf(dateizeiger, "== 0");
+
+                if(knote_index==ANZAHL_KNOTEN-1 && index==OD_paar_zahl-1)
+                    fprintf(dateizeiger, "\n");
+                else if(schalter!=0)
+                    fprintf(dateizeiger, ",\n");
+                schalter = 0;
+        }
+#else
     schalter = 0;
     for(int knote_index=0;knote_index<=ANZAHL_KNOTEN;knote_index++){
         for(int index=0;index<OD_paar_zahl;index++){
-            fprintf(dateizeiger, "\t");
             for(int kant_index=0;kant_index<streit.ANZAHL_KANTEN;kant_index++){
                 if(suchenHeaderKnoten(streit,kant_index)==knote_index){
-                    if(schalter == 0)
+                    if(schalter == 0){
+                        fprintf(dateizeiger, "\t");
                         schalter = 1;
-                    else fprintf(dateizeiger, " + ");
+                    }else fprintf(dateizeiger, " + ");
                     fprintf(dateizeiger, "fst[%d][%d]", index, kant_index);
                 }
 
                 if(suchenSchwanzKnoten(streit,kant_index)==knote_index){
-                    if(schalter == 0)
+                    if(schalter == 0){
+                        fprintf(dateizeiger, "\t");
                         schalter = 1;
-
+                    }
                     fprintf(dateizeiger, " - fst[%d][%d]", index, kant_index);
                 }
             }
@@ -207,6 +310,7 @@ int main(int argc, char *argv[]){
             schalter = 0;
         }
     }
+#endif
     fprintf(dateizeiger, "]\n");
     fprintf(dateizeiger, "\n");
 
@@ -236,11 +340,33 @@ int main(int argc, char *argv[]){
             fprintf(dateizeiger, "problem.solve(solver=cvxpy.%s)\n", SOLVER_CVXOPT);
             fprintf(dateizeiger, "print(\"optimal value with %s:\", problem.value)\n", SOLVER_CVXOPT);
     }
+    fprintf(dateizeiger, "with open(DATEI_OBJECTIVE_WEG, 'w') as file:\n");
+    fprintf(dateizeiger, "\tfile.write(str(alpha.value))\n");
+    fprintf(dateizeiger, "file.close()\n");
+    fprintf(dateizeiger, "\n");
 
+    fprintf(dateizeiger, "fraction = numpy.array(fst.value)\n");
+    fprintf(dateizeiger, "numpy.savetxt(DATEI_FRACTION_WEG, fst.value, delimiter=',')\n");
+    fprintf(dateizeiger, "\n");
+
+    fclose(dateizeiger);
     system("python3 "PYTHON_SKRIPT_WEG"\n");
 
-    fprintf(dateizeiger, "\n");
-    fclose(dateizeiger);
+    printf("alpha = "DRUCKEN_DOUBLE"\n", lesenObjektiv());
+    double** fraction = lesenFraktion(OD_paar_zahl, ANZAHL_KANTEN);
+#ifdef NUR_TRANSFER_VERKEHR_BEOBACHTUNG
+    for(int kant_index=0;kant_index<streit.ANZAHL_KANTEN/2;kant_index++)
+        printf("%12d", *(streit.AUSGEHEND_KANTEN+kant_index));
+    printf("\n");
+#endif
+    for(int index=0;index<OD_paar_zahl;index++){
+        for(int kant_index=0;kant_index<streit.ANZAHL_KANTEN;kant_index++)
+#ifdef NUR_TRANSFER_VERKEHR_BEOBACHTUNG
+            if(istInAusgehendKant(kant_index, streit)==RICHTIG)
+#endif
+                printf(DRUCKEN_DOUBLE, fraction[index][kant_index]);
+        printf("\n");
+    }
 
     free(BOGEN);
     free(LISTE);

@@ -9,7 +9,8 @@
         "link.h": "c",
         "node.h": "c",
         "guassian.h": "c",
-        "parser.h": "c"
+        "parser.h": "c",
+        "type_traits": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true

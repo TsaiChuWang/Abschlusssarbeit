@@ -1929,6 +1929,13 @@ int istInODPaar(int quelle_index, int ziele_index, struct Streit streit){
 			return RICHTIG;
 	return FALSCH;
 }
+
+int istInAusgehendKant(int kant_index, struct Streit streit){
+	for(int index = 0;index<streit.ANZAHL_KANTEN/2;index++)
+		if(*(streit.AUSGEHEND_KANTEN+index) == kant_index+1)
+			return RICHTIG;
+	return FALSCH;
+}
 #endif
 
 // Externer Anruf : Suchen Sie den Header- oder Tail-Knoten

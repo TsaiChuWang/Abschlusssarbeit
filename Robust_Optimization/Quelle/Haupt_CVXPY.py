@@ -1,4 +1,8 @@
 import cvxpy
+import numpy
+
+DATEI_OBJECTIVE_WEG = "../Datei/objective.txt"
+DATEI_FRACTION_WEG = "../Datei/fraction.csv"
 
 nodes = 5
 edges = 8
@@ -22,24 +26,30 @@ constraints = [
 	   1.2815516*cvxpy.norm(   0.3054095*fst[0][6] +    0.3757556*fst[1][6] +    0.4268737*fst[2][6], 2) <= capacity*alpha - (fst[0][6] + fst[1][6] + fst[2][6]),
 	   1.2815516*cvxpy.norm(   0.3054095*fst[0][7] +    0.3757556*fst[1][7] +    0.4268737*fst[2][7], 2) <= capacity*alpha - (fst[0][7] + fst[1][7] + fst[2][7]),
 
-	fst[0][0] - fst[0][3] ==   10.3658205,
-	fst[1][0] - fst[1][3]== 0,
-	fst[2][0] - fst[2][3]== 0,
-	fst[0][1] - fst[0][4]== 0,
-	fst[1][1] - fst[1][4] ==    9.6527543,
-	fst[2][1] - fst[2][4]== 0,
-	fst[0][2] - fst[0][5]== 0,
-	fst[1][2] - fst[1][5]== 0,
-	fst[2][2] - fst[2][5] ==    8.4787278,
-	 - fst[0][0] - fst[0][1] - fst[0][2] + fst[0][3] + fst[0][4] + fst[0][5] + fst[0][6] - fst[0][7]== 0,
-	 - fst[1][0] - fst[1][1] - fst[1][2] + fst[1][3] + fst[1][4] + fst[1][5] + fst[1][6] - fst[1][7]== 0,
-	 - fst[2][0] - fst[2][1] - fst[2][2] + fst[2][3] + fst[2][4] + fst[2][5] + fst[2][6] - fst[2][7]== 0,
-	 - fst[0][6] + fst[0][7]== -  10.3658205,
-	 - fst[1][6] + fst[1][7]== -   9.6527543,
-	 - fst[2][6] + fst[2][7]== -   8.4787278
-			]
+	fst[0][0] ==   10.3658205,
+	fst[1][0]== 0,
+	fst[2][0]== 0,
+	fst[0][1]== 0,
+	fst[1][1] ==    9.6527543,
+	fst[2][1]== 0,
+	fst[0][2]== 0,
+	fst[1][2]== 0,
+	fst[2][2] ==    8.4787278,
+	 - fst[0][0] - fst[0][1] - fst[0][2] + fst[0][6]== 0,
+	 - fst[1][0] - fst[1][1] - fst[1][2] + fst[1][6]== 0,
+	 - fst[2][0] - fst[2][1] - fst[2][2] + fst[2][6]== 0,
+	 - fst[0][6]== -  10.3658205,
+	 - fst[1][6]== -   9.6527543,
+	 - fst[2][6]== -   8.4787278
+]
 
 problem = cvxpy.Problem(objective, constraints)
-problem.solve(solver=cvxpy.GLPK)
-print("optimal value with GLPK:", problem.value)
+problem.solve(solver=cvxpy.SCS)
+print("optimal value with SCS:", problem.value)
+with open(DATEI_OBJECTIVE_WEG, 'w') as file:
+	file.write(str(alpha.value))
+file.close()
+
+fraction = numpy.array(fst.value)
+numpy.savetxt(DATEI_FRACTION_WEG, fst.value, delimiter=',')
 

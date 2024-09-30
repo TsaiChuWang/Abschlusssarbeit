@@ -40,6 +40,12 @@ struct Streit{
 	int SYMMETRISCH;	// Directed or not
 
 	double*** GRENZE_VERKHERSEICHWITE;	
+
+#ifdef NUR_TRANSFER_VERKEHR_BEOBACHTUNG	// Starten von eins
+	int*  AUSGEHEND_KANTEN;
+	int OD_paar_zahl;
+	int** OD_paar;
+#endif
 };
 
 // Interner Anruf
@@ -1665,6 +1671,38 @@ struct Streit nehmenStreit(int code){
 		streit.BOGEN = bereichkopieren(streit.ANZAHL_KNOTEN, topology_45);
 		streit.LISTE = bereichkopieren(streit.ANZAHL_KNOTEN, topology_45);
 
+#ifdef NUR_TRANSFER_VERKEHR_BEOBACHTUNG
+		streit.AUSGEHEND_KANTEN = (int*)malloc(sizeof(int)*(streit.ANZAHL_KANTEN/2));
+		int ausgehend_index = 0;
+		int kant_zahl = 0;
+		for(int index=0;index<=streit.ANZAHL_KNOTEN;index++){
+			for(int jndex=0;jndex<=streit.ANZAHL_KNOTEN;jndex++){
+				if(ausgehend_index==(streit.ANZAHL_KANTEN/2))
+					break;
+
+				if(streit.BOGEN[index][jndex]==1)
+					kant_zahl += 1;
+					
+				if(jndex>index && streit.BOGEN[index][jndex]==1){
+					*(streit.AUSGEHEND_KANTEN+ausgehend_index) = kant_zahl;
+					ausgehend_index++;
+				}
+			}
+			if(ausgehend_index==(streit.ANZAHL_KANTEN/2))
+				break;
+		}
+
+		streit.OD_paar_zahl = 3;
+		int OD_paar_45[3][2] = {{0,4},{1,4},{2,4}};
+		streit.OD_paar = (int**)malloc(sizeof(int*)*3);
+		for(int index=0;index<3;index++){
+			*(streit.OD_paar+index) = (int*)malloc(sizeof(int)*2);
+			streit.OD_paar[index][0] = OD_paar_45[index][0];
+			streit.OD_paar[index][1] = OD_paar_45[index][1];
+		}
+			
+#endif
+
 		streit.SYMMETRISCH = RICHTIG;
 
 		break;
@@ -1884,6 +1922,15 @@ void erhaltenGrenzeVerkhersreichwite_STABILGRENZE(struct Streit *streit, double*
 			}
 }
 
+#ifdef NUR_TRANSFER_VERKEHR_BEOBACHTUNG
+int istInODPaar(int quelle_index, int ziele_index, struct Streit streit){
+	for(int index = 0;index<streit.OD_paar_zahl;index++)
+		if(quelle_index==streit.OD_paar[index][0] && ziele_index==streit.OD_paar[index][1])
+			return RICHTIG;
+	return FALSCH;
+}
+#endif
+
 // Externer Anruf : Suchen Sie den Header- oder Tail-Knoten
 
 int suchenHeaderKnoten(struct Streit streit, int kant_index){
@@ -2016,5 +2063,14 @@ void druckenKantenmitMatrix(struct Streit streit){
 void druckenKantKnoten(struct Streit streit, int kant_index){
 	printf("Kant "DRUCKEN_INTEGER" = ("DRUCKEN_INTEGER", "DRUCKEN_INTEGER")\n", kant_index+1, suchenHeaderKnoten(streit, kant_index), suchenSchwanzKnoten(streit, kant_index));
 }
+
+#ifdef NUR_TRANSFER_VERKEHR_BEOBACHTUNG
+void druckenAusgehendKanten(struct Streit streit){
+	printf("Ausgehend Kanten : ");
+	for(int index = 0;index<streit.ANZAHL_KANTEN/2;index++)
+		printf("%d ",*(streit.AUSGEHEND_KANTEN+index));
+	printf("\n");
+}
+#endif
 
 # endif

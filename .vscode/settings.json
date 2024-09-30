@@ -7,7 +7,9 @@
         "math.h": "c",
         "token_bucket.h": "c",
         "link.h": "c",
-        "node.h": "c"
+        "node.h": "c",
+        "guassian.h": "c",
+        "parser.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true

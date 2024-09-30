@@ -1,6 +1,7 @@
 import cvxpy as cp
 import math
 import numpy as np
+import random
 
 m = 4
 n = 3
@@ -9,16 +10,49 @@ x = cp.Variable(p, nonneg=True)
 y = cp.Variable((n ,m), nonneg=True)
 a = cp.Variable(nonneg=True)
 
-c = 60
+c = 360
+error = 0.1
+
+def obtain_Gap(capacity, index, OD_pair_number):
+    mean_origin = capacity/OD_pair_number - capacity/(OD_pair_number*OD_pair_number)
+    step_size = capacity/(OD_pair_number*OD_pair_number*OD_pair_number)
+    lower_bound = mean_origin - random.uniform(0, index)*step_size
+    upper_bound = mean_origin + random.uniform(0, index)*step_size
+    return lower_bound, upper_bound
+
+def obtain_mean(lower_bound, upper_bound):
+    return (lower_bound+upper_bound)/2
+
+def obtain_sigma(lower_bound, upper_bound):
+    return (upper_bound-lower_bound)/2
 
 objective = cp.Minimize(a)
 
 print(math.sqrt(2*np.log(1/0.1)))
 
+gap = [
+    obtain_Gap(c, 1, 3),
+    obtain_Gap(c, 2, 3),
+    obtain_Gap(c, 2, 3),
+]
+
+mean = [
+    obtain_mean(gap[0][0], gap[0][1]),
+    obtain_mean(gap[1][0], gap[1][1]),
+    obtain_mean(gap[2][0], gap[2][1])
+]
+
+sigma =[
+    obtain_sigma(gap[0][0], gap[0][1]),
+    obtain_sigma(gap[1][0], gap[1][1]),
+    obtain_sigma(gap[2][0], gap[2][1])
+]
+
+print(mean)
 constraints = [
-    x[0] == 10.365820,
-    x[1] == 9.65275435,
-    x[2] == 8.4787278,
+    x[0] == mean[0],
+    x[1] == mean[1],
+    x[2] == mean[2],
 
     y[0][0] == x[0],
     y[0][3] == x[0],
@@ -29,10 +63,10 @@ constraints = [
     y[2][2] == x[2],
     y[2][3] == x[2],
 
-    2.145966026289347*cp.norm((y[0][0]*(3.1658205/10.3658205)), 2) <= a*c - y[0][0],
-    2.145966026289347*cp.norm((y[1][1]*(3.6270764/9.6527543)), 2) <= a*c - y[1][1],
-    2.145966026289347*cp.norm((y[2][2]*(3.6193458/8.4787278)), 2) <= a*c - y[2][2],
-    2.145966026289347*cp.norm(((y[0][3]*(3.1658205/10.3658205))+(y[1][3]*(3.6270764/9.6527543))+(y[2][3]*(3.6193458/8.4787278))), 2) <= a*c - y[0][3] - y[1][3] -y[2][3]
+    math.sqrt(2*np.log(1/(1-error)))*cp.norm((y[0][0]*(sigma[0]/mean[0])), 2) <= a*c - y[0][0],
+    math.sqrt(2*np.log(1/(1-error)))*cp.norm((y[1][1]*(sigma[1]/mean[1])), 2) <= a*c - y[1][1],
+    math.sqrt(2*np.log(1/(1-error)))*cp.norm((y[2][2]*(sigma[2]/mean[2])), 2) <= a*c - y[2][2],
+    math.sqrt(2*np.log(1/(1-error)))*cp.norm(((y[0][3]*(sigma[0]/mean[0]))+(y[1][3]*(sigma[1]/mean[1]))+(y[2][3]*(sigma[2]/mean[2]))), 2) <= a*c - y[0][3] - y[1][3] -y[2][3]
 ]
 
 # 构建问题

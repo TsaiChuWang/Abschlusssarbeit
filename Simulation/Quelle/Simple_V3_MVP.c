@@ -3,7 +3,7 @@
 #include "../Enthalten/tenant.h"
 
 #define DATA_STORED_PATH "../Datei/Simple_V3_MVP/traffic_%d.csv"
-
+#define PYTHON_IMAGE_PATH "./Simgle_V3_MVP.py"
 // gcc ./Simple_V3_MVP.c -o ../Ausführung/Simple_V3_MVP -lcurl -lgsl -lgslcblas -lm
 // ../Ausführung/Simple_V3_MVP
 
@@ -31,8 +31,14 @@ int main(int argc, char *argv[]){
             fprintf(traffic_file, INFORM_DOUBLE_FORMAT"\n", (*(tenants+index)).traffic[time_stamp]);
         
         fclose(traffic_file);
+
+        char command[MAX_COMMAND_LENGTH];
+        sprintf(command, "python3 "PYTHON_IMAGE_PATH" 1 %d", index);
+        system(command);
 #endif
     }
+
+
         
     return EXIT_SUCCESS;
 }

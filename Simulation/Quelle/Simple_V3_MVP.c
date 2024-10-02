@@ -9,6 +9,7 @@
 #define PYTHON_IMAGE_PATH "./Simgle_V3_MVP.py"
 // gcc ./Simple_V3_MVP.c -o ../Ausführung/Simple_V3_MVP -lcurl -lgsl -lgslcblas -lm
 // ../Ausführung/Simple_V3_MVP
+// #define INFORM_BUCKET_SITUATION
 
 int main(int argc, char *argv[]){
 
@@ -87,17 +88,27 @@ end_distinguish :
             fprintf(traffic_file, INFORM_TRAFFIC_FORMAT", ", leakage_traffic);
             fprintf(traffic_file, INFORM_TRAFFIC_FORMAT", ",  (*(buckets+index)).bucket_capacity);
 #endif
+#ifdef INFORM_BUCKET_SITUATION
             printf(INFORM_TRAFFIC_FORMAT" ", (*(tenants+index)).traffic[time_stamp]);
             printf(INFORM_TRAFFIC_FORMAT" ", leakage_traffic);
             printf(INFORM_TRAFFIC_FORMAT" ",  (*(buckets+index)).bucket_capacity);
+#endif
         }
+#ifdef INFORM_BUCKET_SITUATION
         printf("\n");
+#endif
 #ifdef RECORD
         fprintf(traffic_file, "\n");
 #endif
     }
 #ifdef RECORD
     fclose(traffic_file);
+
+    for(int index=0;index<tenant_number;index++){
+        char command[MAX_COMMAND_LENGTH];
+        sprintf(command, "python3 "PYTHON_IMAGE_PATH" 2 %d", index);
+        system(command);
+    }
 #endif
     return EXIT_SUCCESS;
 }

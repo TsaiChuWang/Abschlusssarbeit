@@ -1,6 +1,7 @@
 import cvxpy
 import numpy
 import math
+import sys
 
 DATEI_OBJECTIVE_WEG = "../Datei/objective.txt"
 DATEI_FRACTION_WEG = "../Datei/fraction.csv"
@@ -8,7 +9,7 @@ DATEI_FRACTION_WEG = "../Datei/fraction.csv"
 nodes = 5
 edges = 4
 pairs = 3
-capacity = 360.000000 #*86.83*1.0000995174
+capacity = float(sys.argv[1])
 error = 0.100000
 mean_mu = 120
 standard_derivation_sigma = 40

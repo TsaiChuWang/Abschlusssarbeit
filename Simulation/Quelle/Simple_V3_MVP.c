@@ -11,9 +11,33 @@
 // ../Ausführung/Simple_V3_MVP
 // #define INFORM_BUCKET_SITUATION
 
+double read_double_from_file(const char *filename) {
+    FILE *file;
+    double value;
+
+    // Open the file in read mode
+    file = fopen(filename, "r");
+    if (file == NULL) {
+        perror("Error opening file");
+        return -1.0;  // Return an error value if file can't be opened
+    }
+
+    // Read the double value from the file
+    if (fscanf(file, "%lf", &value) != 1) {
+        perror("Error reading double from file");
+        fclose(file);
+        return -1.0;   // Return an error value if reading fails
+    }
+
+    // Close the file
+    fclose(file);
+
+    return value;
+}
+
 int main(int argc, char *argv[]){
 
-    double capacity = 260;
+    double capacity = 360;
     int tenant_number = 3;
     long time_interval = 100;
     double mean = 120;
@@ -115,8 +139,20 @@ end_distinguish :
     sprintf(command, "python3 "PYTHON_IMAGE_PATH" 3 %f", capacity);
     system(command);
 #endif
+#ifndef RECORD
+    char command[MAX_COMMAND_LENGTH];
+#endif
+    sprintf(command, "python3 ./CVXPY.py %f", capacity);
+    system(command);
+    printf("alpha = %f\n", read_double_from_file("../Datei/objective.txt"));
+    
+    capacity = read_double_from_file("../Datei/objective.txt")*capacity;
+    sprintf(command, "python3 "PYTHON_IMAGE_PATH" 3 %f", capacity);
+    system(command);
 
-    FILE* CVXPY_file;
-    CVXPY_file = fopen(BUCKET_DATA_STORED_PATH, "w+");
+    sprintf(command, "python3 ./CVXPY.py %f", capacity);
+    system(command);
+    printf("alpha = %f\n", read_double_from_file("../Datei/objective.txt"));
+
     return EXIT_SUCCESS;
 }

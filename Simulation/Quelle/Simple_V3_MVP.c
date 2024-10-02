@@ -13,6 +13,7 @@
 
 int main(int argc, char *argv[]){
 
+    double capacity = 260;
     int tenant_number = 3;
     long time_interval = 100;
     double mean = 120;
@@ -109,6 +110,10 @@ end_distinguish :
         sprintf(command, "python3 "PYTHON_IMAGE_PATH" 2 %d", index);
         system(command);
     }
+
+    char command[MAX_COMMAND_LENGTH];
+    sprintf(command, "python3 "PYTHON_IMAGE_PATH" 3 %f", capacity);
+    system(command);
 #endif
 
     FILE* CVXPY_file;

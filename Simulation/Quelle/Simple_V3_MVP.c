@@ -5,7 +5,7 @@
 
 #define DATA_STORED_PATH "../Datei/Simple_V3_MVP/traffic_%d.csv"
 #define BUCKET_DATA_STORED_PATH "../Datei/Simple_V3_MVP/traffic.csv"
-
+#define PYTHON_CVXPY_PATH "./CVXPY.py"
 #define PYTHON_IMAGE_PATH "./Simgle_V3_MVP.py"
 // gcc ./Simple_V3_MVP.c -o ../Ausführung/Simple_V3_MVP -lcurl -lgsl -lgslcblas -lm
 // ../Ausführung/Simple_V3_MVP
@@ -110,5 +110,8 @@ end_distinguish :
         system(command);
     }
 #endif
+
+    FILE* CVXPY_file;
+    CVXPY_file = fopen(BUCKET_DATA_STORED_PATH, "w+");
     return EXIT_SUCCESS;
 }

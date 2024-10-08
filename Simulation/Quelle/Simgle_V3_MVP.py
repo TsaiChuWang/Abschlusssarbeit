@@ -4,6 +4,8 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
 import sys
+import os
+term_size = os.get_terminal_size()
 
 MEAN = 120
 COVARIANCE = 40
@@ -21,9 +23,46 @@ def line_chart_tenant(index):
     elif(index==1):
         label ='B'
         color = 'b'
-    else:
+    elif(index==2):
         label = 'C'
         color = 'r'
+    else:
+        label = str(index)
+        color = 'black'       
+
+    plt.plot([index for index in range(len(data))], [float(row[0]) for row in data], linestyle='-', color=color, label=label)
+    plt.plot([index for index in range(len(data))], [MEAN-COVARIANCE for row in data], linestyle='dotted', color='gray', label='lower bound')
+    plt.plot([index for index in range(len(data))], [MEAN for row in data], linestyle='dashed', color='black', label='lower bound')
+    plt.plot([index for index in range(len(data))], [MEAN-COVARIANCE for row in data], linestyle='dotted', color='gray', label='upper bound')
+
+    plt.title('Tenant Traffic :'+label)
+    plt.xlabel('Timestamp')
+    plt.ylabel('Traffic')
+    plt.legend()
+    plt.grid(True)
+
+    plt.savefig(IMAGE_PATH.format(index))
+    plt.cla()
+
+def _line_chart_tenant(index, MEAN, COVARIANCE):
+    DATA_PATH = "../Datei/Simple_V3_MVP/traffic_{}.csv"
+    IMAGE_PATH = "../Datei/Simple_V3_MVP/images/traffic_{}_linechart.png"
+
+    dataframe = pd.read_csv(DATA_PATH.format(index))
+    data = dataframe.values.tolist()
+
+    if(index==0):
+        label = 'A'
+        color = 'g'
+    elif(index==1):
+        label ='B'
+        color = 'b'
+    elif(index==2):
+        label = 'C'
+        color = 'r'
+    else:
+        label = str(index)
+        color = 'black'       
 
     plt.plot([index for index in range(len(data))], [float(row[0]) for row in data], linestyle='-', color=color, label=label)
     plt.plot([index for index in range(len(data))], [MEAN-COVARIANCE for row in data], linestyle='dotted', color='gray', label='lower bound')
@@ -79,6 +118,50 @@ def line_chart_gap(index):
     plt.cla()
     print("Trans. rate : ", transfer_rate)
 
+def _line_chart_gap(index, MEAN, COVARIANCE):
+    DATA_PATH = "../Datei/Simple_V3_MVP/traffic.csv"
+    IMAGE_PATH = "../Datei/Simple_V3_MVP/images/traffic_{}_linechart_gap.png"
+
+    dataframe = pd.read_csv(DATA_PATH)
+    data = dataframe.values.tolist()
+
+    if(index==0):
+        label = 'A'
+        color = '#99FF99'
+        real_color = 'g'
+    elif(index==1):
+        label ='B'
+        color = '#9999FF'
+        real_color = 'b'
+    elif(index==2):
+        label = 'C'
+        color = '#FF9999'
+        real_color = 'r'
+    else:
+        label = str(index)
+        color = 'gray'
+        real_color = 'black'
+
+    original_traffic = [float(row[index*3]) for row in data]
+    real_traffic = [float(row[index*3+1]) for row in data]
+    transfer_rate = sum(real_traffic)/sum(original_traffic)*100
+
+    plt.plot([index for index in range(len(data))], [float(row[index*3]) for row in data], linestyle='-', color=color, label=label+"(Transfer)")
+    plt.plot([index for index in range(len(data))], [float(row[index*3+1]) for row in data], linestyle='-', color=real_color, label=label+"(Real Flow)")
+    plt.plot([index for index in range(len(data))], [MEAN-COVARIANCE for row in data], linestyle='dotted', color='gray', label='lower bound')
+    plt.plot([index for index in range(len(data))], [MEAN for row in data], linestyle='dashed', color='black', label='lower bound')
+    plt.plot([index for index in range(len(data))], [MEAN-COVARIANCE for row in data], linestyle='dotted', color='gray', label='upper bound')
+
+    plt.title('Tenant Traffic :'+label)
+    plt.xlabel('Timestamp')
+    plt.ylabel('Traffic')
+    plt.legend()
+    plt.grid(True)
+
+    plt.savefig(IMAGE_PATH.format(index))
+    plt.cla()
+    print("Trans. rate : ", transfer_rate)
+
 def total_line_chart(capacity):
     DATA_PATH = "../Datei/Simple_V3_MVP/traffic.csv"
     IMAGE_PATH = "../Datei/Simple_V3_MVP/images/traffic_total_linechart.png"
@@ -107,20 +190,38 @@ def total_line_chart(capacity):
 
     plt.savefig(IMAGE_PATH)
     plt.cla()
+    print('=' * term_size.columns)
     print("Traffic    | {:10s} | {:10s}".format("Transfer", "Real Flow"))
     print("Mean       | {:10f} | {:10f}".format(original_mean_traffic, real_mean_traffic))
     print("Mean util. | {:10f} | {:10f}".format(original_mean_traffic/capacity, real_mean_traffic/capacity))
     print("Max        | {:10f} | {:10f}".format(original_max_traffic, real_max_traffic))
     print("Max util.  | {:10f} | {:10f}".format(original_max_traffic/capacity, real_max_traffic/capacity))
+    print('=' * term_size.columns)
+
+if(int(sys.argv[1])==0):
+    print('=' * term_size.columns)
 
 if(int(sys.argv[1])==1):
     index = int(sys.argv[2])
     line_chart_tenant(index)
 
+if(int(sys.argv[1])==4):
+    index = int(sys.argv[2])
+    mean = float(sys.argv[3])
+    covariance = float(sys.argv[4])
+    _line_chart_tenant(index, mean, covariance)
+
 if(int(sys.argv[1])==2):
     index = int(sys.argv[2])
     line_chart_gap(index)
 
+if(int(sys.argv[1])==5):
+    index = int(sys.argv[2])
+    mean = float(sys.argv[3])
+    covariance = float(sys.argv[4])
+    _line_chart_gap(index, mean, covariance)
+
 if(int(sys.argv[1])==3):
     capacity = float(sys.argv[2])
     total_line_chart(capacity)
+

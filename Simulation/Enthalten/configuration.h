@@ -17,6 +17,7 @@
 #endif
 
 #define RECORD
+// #define GENERATE_GAUSSIAN_TRAFFIC
 
 #if (defined SIMPLE_V1_00_918) || (defined SIMPLE_V2_925_GCRA)
     #define TEST_CONFIGURATION_LINK_CAPACITY    360 /** @brief Link capacity for test configuration **/

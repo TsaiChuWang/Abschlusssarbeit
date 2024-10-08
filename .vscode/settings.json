@@ -11,7 +11,9 @@
         "guassian.h": "c",
         "parser.h": "c",
         "type_traits": "c",
-        "curl.h": "c"
+        "curl.h": "c",
+        "ini.h": "c",
+        "typeinfo": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true

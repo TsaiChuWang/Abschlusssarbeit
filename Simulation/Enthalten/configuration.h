@@ -1,11 +1,8 @@
 #define TEST
 #define DEBUG
 
-
+#define _CONFIGURATION_H
 #ifdef TEST
-
-
-
 
 #define TIME_INTERVAL 100
 #define TIME_UNIT 0
@@ -56,4 +53,80 @@
 #endif
     
     // #define _DEBUG_PRINTTRAFFICATIMESTAMP
+#endif
+
+#ifdef _CONFIGURATION_H
+#include <string.h>
+
+    typedef struct{
+        double capacity; /** @brief The total capacity for the system (e.g., bandwidth or resource limit). **/
+        int tenant_number;  /** @brief The number of tenants in the system. **/
+        long time_interval; /** @brief The time interval for token bucket processing (in milliseconds). **/
+        double error;
+
+        int gaussian;
+        double mean;    /** @brief The mean value for traffic generation. **/
+        double standard_deviation;  /** @brief The standard deviation used for traffic generation. **/
+        
+        double bucket_depth;    /** @brief The maximum depth of the token bucket. **/
+        double leakage_rate;    /** @brief The rate at which tokens leak from the bucket (tokens per time interval). **/
+    }configuration;
+
+    static int handler(void* config, const char* section, const char* name, const char* value){
+        configuration* pconfig = (configuration*)config;
+    
+#define MATCH(sect, nam) strcmp(section, sect) == 0 && strcmp(name, nam) == 0
+     
+        if(MATCH("simulation", "capacity"))
+            pconfig->capacity = atof(value);
+        else if(MATCH("simulation", "tenant_number"))
+            pconfig->tenant_number = atoi(value);
+        else if(MATCH("simulation", "time_interval"))
+            pconfig->time_interval = (long)atoi(value);
+        else if(MATCH("simulation", "error"))
+            pconfig->error = atof(value);
+        else if(MATCH("traffic", "gaussian"))
+            pconfig->gaussian = atoi(value);
+        else if(MATCH("traffic", "mean"))
+            pconfig->mean = atof(value);
+        else if(MATCH("traffic", "standard_deviation"))
+            pconfig->standard_deviation = atof(value);
+        else if(MATCH("GCRA", "bucket_depth")) 
+            pconfig->bucket_depth = atof(value);
+        else if(MATCH("GCRA", "leakage_rate")) 
+            pconfig->leakage_rate = atof(value);
+        else return 0;  
+        
+        return SUCCESS;
+    }
+
+    /**
+     * @brief Implementation of read_double_from_file function.
+     *
+     * @param filename The name of the file to read the double value from.
+     * @return The double value from the file or -1.0 if an error occurs.
+     */
+    double read_double_from_file(const char *filename) {
+        FILE *file;
+        double value;
+
+        // Open the file in read mode
+        file = fopen(filename, "r");
+        if (file == NULL) {
+            perror("Error opening file");
+            return -1.0;  // Return an error value if file can't be opened
+        }
+
+        // Read the double value from the file
+        if (fscanf(file, "%lf", &value) != 1) {
+            perror("Error reading double from file");
+            fclose(file);
+            return -1.0;   // Return an error value if reading fails
+        }
+
+        // Close the file
+        fclose(file);
+
+        return value;
+    }
 #endif

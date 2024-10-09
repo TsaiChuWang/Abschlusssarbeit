@@ -129,4 +129,28 @@
 
         return value;
     }
+
+    void modify_ini_file(const char* filename, configuration* config) {
+        FILE* file = fopen(filename, "w");
+        if (!file) {
+            perror("Unable to open file for writing");
+            return;
+        }
+
+        fprintf(file, "[simulation]\n");
+        fprintf(file, "capacity = %f\n", config->capacity);
+        fprintf(file, "tenant_number = %d\n", config->tenant_number);
+        fprintf(file, "time_interval = %d\n", config->time_interval);
+        fprintf(file, "error = %f\n", config->error);
+
+        fprintf(file, "[traffic]\n");
+        fprintf(file, "gaussian = %d\n", config->gaussian);
+        fprintf(file, "mean = %f\n", config->mean);
+        fprintf(file, "standard_deviation = %f\n", config->standard_deviation);
+
+        fprintf(file, "[GCRA]\n");
+        fprintf(file, "bucket_depth = %f\n", config->gaussian);
+        fprintf(file, "leakage_rate = %f\n", config->mean);
+        fclose(file);
+    }
 #endif

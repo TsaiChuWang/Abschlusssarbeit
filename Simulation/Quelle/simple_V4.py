@@ -231,7 +231,24 @@ def _total_line_chart(capacity, number, IMAGE_PATH):
     print("Max util.  | {:10f} | {:10f}".format(original_max_traffic/capacity, real_max_traffic/capacity))
     print('=' * term_size.columns)
 
+def max_transfer_rate(number):
+    transfer_rate = 0.0
+    DATA_PATH = "../Datei/simple_V4/traffic.csv"
 
+    rate = []
+    dataframe = pd.read_csv(DATA_PATH)
+    data = dataframe.values.tolist()
+    for index in range(number):
+      original_traffic = [float(row[index*3]) for row in data]
+      real_traffic = [float(row[index*3+1]) for row in data]
+      rate.append(sum(real_traffic)/sum(original_traffic)*100)
+    transfer_rate = max(rate)
+
+    with open("../Datei/transrate.txt", "w") as file:
+	    file.write(str(transfer_rate))
+    file.close()
+    return transfer_rate
+    
 if(int(sys.argv[1])==0):
     print('=' * term_size.columns)
 
@@ -254,6 +271,10 @@ if(int(sys.argv[1])==5):
     mean = float(sys.argv[3])
     covariance = float(sys.argv[4])
     _line_chart_gap(index, mean, covariance)
+
+if(int(sys.argv[1])==8):
+    number = int(sys.argv[2])
+    max_transfer_rate(number)
 
 if(int(sys.argv[1])==3):
     IMAGE_PATH = "../Datei/simple_V4/images/traffic_total_linechart.png"

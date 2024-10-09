@@ -69,6 +69,39 @@ if(int(sys.argv[1]) == 2):
         file.write(str(alpha.value))
     file.close()
 
+if(int(sys.argv[1]) == 3):
+    config = configparser.ConfigParser()
+    config.read(sys.argv[2])
+    error = float(config['simulation']['error'])
+    standard_deviation = float(config['traffic']['standard_deviation'])
+    mean = float(config['traffic']['mean'])
+    tenant_number = int(config['simulation']['tenant_number'])
+    capacity = float(config['simulation']['capacity'])
+
+    constraints = [ math.sqrt(2*numpy.log((1/error)))*numpy.linalg.norm([(standard_deviation/mean)*mean for i in range(tenant_number)], ord = 2) + (mean*tenant_number) <=alpha*capacity ]
+    
+    problem = cvxpy.Problem(objective, constraints)
+    problem.solve(solver=cvxpy.CVXOPT)
+    with open(DATEI_OBJECTIVE_WEG, 'w') as file:
+        file.write(str(alpha.value))
+    file.close()
+
+if(int(sys.argv[1]) == 4):
+    config = configparser.ConfigParser()
+    config.read(sys.argv[2])
+    error = float(config['simulation']['error'])
+    standard_deviation = float(config['traffic']['standard_deviation'])
+    mean = float(config['traffic']['mean'])
+    tenant_number = int(config['simulation']['tenant_number'])
+    capacity = float(sys.argv[3])
+
+    constraints = [ math.sqrt(2*numpy.log((1/error)))*numpy.linalg.norm([(standard_deviation/mean)*mean for i in range(tenant_number)], ord = 2) + (mean*tenant_number) <=alpha*capacity ]
+    
+    problem = cvxpy.Problem(objective, constraints)
+    problem.solve(solver=cvxpy.CVXOPT)
+    with open(DATEI_OBJECTIVE_WEG, 'w') as file:
+        file.write(str(alpha.value))
+    file.close()
 # # nodes = 5
 # # edges = 4
 # # pairs = 3

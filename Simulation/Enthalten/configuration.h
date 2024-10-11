@@ -149,8 +149,8 @@
         fprintf(file, "standard_deviation = %f\n", config->standard_deviation);
 
         fprintf(file, "[GCRA]\n");
-        fprintf(file, "bucket_depth = %f\n", config->gaussian);
-        fprintf(file, "leakage_rate = %f\n", config->mean);
+        fprintf(file, "bucket_depth = %f\n", config->bucket_depth);
+        fprintf(file, "leakage_rate = %f\n", config->leakage_rate);
         fclose(file);
     }
 #endif

@@ -95,7 +95,6 @@ def validation(error, mean, standard_deviation, tenant_number, capacity):
     print("{:33s} = {:<14.10f} | {:<14.10f}".format("sum all = ", number, number))
     print("{:33s} = {:<14.10f} | {:<14.10f}".format("alpha = ", number/capacity, number/capacity))
 
-
 def line_chart_gap(index):
     DATA_PATH = "../Datei/simple_V5/traffic.csv"
     IMAGE_PATH = "../Datei/simple_V5/images/traffic_{}_linechart_gap.png"
@@ -250,10 +249,13 @@ def _total_line_chart(capacity, number, IMAGE_PATH):
     print("Max util.  | {:10f} | {:10f}".format(original_max_traffic/capacity, real_max_traffic/capacity))
     print('=' * term_size.columns)
 
-def min_transfer_rate(number):
+def min_transfer_rate(number, config_path):
     transfer_rate = 0.0
     DATA_PATH = "../Datei/simple_V5/traffic.csv"
+    config = configparser.ConfigParser()
+    config.read(config_path)
 
+    error = float(config['simulation']['error'])
     rate = []
     dataframe = pd.read_csv(DATA_PATH)
     data = dataframe.values.tolist()
@@ -267,6 +269,109 @@ def min_transfer_rate(number):
       file.write(str(transfer_rate))
     file.close()
     return transfer_rate
+
+def variation_line_chart(title, config_path):
+    DATA_PATH = "../Datei/simple_V5/important_data.csv"
+    IMAGE_PATH_MAX_TRANSFER_RATE ="../Datei/simple_V5/images/max_transfer_rate_variation.png"
+    IMAGE_PATH_ALPHA ="../Datei/simple_V5/images/alpha.png"
+    config = configparser.ConfigParser()
+    config.read(config_path)
+
+    error = float(config['simulation']['error'])
+    dataframe = pd.read_csv(DATA_PATH)
+    data = dataframe.values.tolist()
+
+    max_transfer_rate = [float(row[1]) for row in data]
+    alpha = [float(row[2]) for row in data]
+
+    plt.plot([float(row[0]) for row in data], max_transfer_rate, linestyle='-', color='red', label="Min transfer rate")
+    plt.plot([float(row[0]) for row in data], [100-(error*100) for row in data], linestyle='-', color='blue', label="Predicted Transfer")
+    plt.title('Min Transfer Rate : '+title+' Variation')
+    plt.xlabel(title)
+    plt.ylabel('Min Transfer Rate')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH_MAX_TRANSFER_RATE)
+    plt.clf()
+
+    plt.plot([float(row[0]) for row in data], alpha, linestyle='-', color='red', label="Capacity(Alpha)")
+    plt.title('Capacity(Alpha) : '+title+' Variation')
+    plt.xlabel(title)
+    plt.ylabel('Capacity(Alpha)')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH_ALPHA)
+    plt.clf()
+
+def variation_line_chart_tenant_number_variation(title, config_path):
+    config = configparser.ConfigParser()
+    config.read(config_path)
+    # print(config.keys)
+    error = float(config['simulation']['error'])
+    standard_deviation = float(config['traffic']['standard_deviation'])
+    mean = float(config['traffic']['mean'])
+
+    DATA_PATH = "../Datei/simple_V5/important_data.csv"
+    IMAGE_PATH_MAX_TRANSFER_RATE ="../Datei/simple_V5/images/max_transfer_rate_variation.png"
+    IMAGE_PATH_ALPHA ="../Datei/simple_V5/images/alpha.png"
+
+    dataframe = pd.read_csv(DATA_PATH)
+    data = dataframe.values.tolist()
+
+    max_transfer_rate = [float(row[1]) for row in data]
+    alpha = [float(row[2]) for row in data]
+
+    plt.plot([float(row[0]) for row in data], max_transfer_rate, linestyle='-', color='red', label="Min transfer rate")
+    plt.plot([float(row[0]) for row in data], [100-(error*100) for row in data], linestyle='-', color='blue', label="Predicted Transfer")
+    plt.title('Min Transfer Rate : '+title+' Variation')
+    plt.xlabel(title)
+    plt.ylabel('Min Transfer Rate')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH_MAX_TRANSFER_RATE)
+    plt.clf()
+
+    plt.plot([float(row[0]) for row in data], alpha, linestyle='-', color='red', label="Capacity(Alpha)")
+    plt.plot([float(row[0]) for row in data], [(standard_deviation+mean)*float(row[0]) for row in data], linestyle='-', color='blue', label="Capacity(Linear)")
+    plt.title('Capacity(Alpha) : '+title+' Variation')
+    plt.xlabel(title)
+    plt.ylabel('Capacity(Alpha)')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH_ALPHA)
+    plt.clf()
+
+def allocated_tenant_number_variation(title):
+    DATA_PATH = "../Datei/simple_V5/important_data.csv"
+    IMAGE_PATH_ALPHA_ALLOCATED ="../Datei/simple_V5/images/alpha_allocated.png"
+    dataframe = pd.read_csv(DATA_PATH)
+    data = dataframe.values.tolist()
+
+    alpha_allocated = [(float(row[2])/int(row[0])) for row in data]
+    plt.plot([float(row[0]) for row in data], alpha_allocated, linestyle='-', color='red', label="Alpha Each Tenant Allocated")
+    plt.title('Alpha Each Tenant Allocated')
+    plt.xlabel(title)
+    plt.ylabel('Alpha Each Tenant Allocated')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH_ALPHA_ALLOCATED)
+    plt.clf()
+
+def allocated_variation(title, number):
+    DATA_PATH = "../Datei/simple_V5/important_data.csv"
+    IMAGE_PATH_ALPHA_ALLOCATED ="../Datei/simple_V5/images/alpha_allocated.png"
+    dataframe = pd.read_csv(DATA_PATH)
+    data = dataframe.values.tolist()
+
+    alpha_allocated = [(float(row[2])/number) for row in data]
+    plt.plot([float(row[0]) for row in data], alpha_allocated, linestyle='-', color='red', label="Alpha Each Tenant Allocated")
+    plt.title('Alpha Each Tenant Allocated')
+    plt.xlabel(title)
+    plt.ylabel('Alpha Each Tenant Allocated')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH_ALPHA_ALLOCATED)
+    plt.clf()
 
 if(int(sys.argv[1]) == 0):
     config = configparser.ConfigParser()
@@ -321,4 +426,24 @@ if(int(sys.argv[1])==7):
 
 if(int(sys.argv[1])==8):
     number = int(sys.argv[2])
-    min_transfer_rate(number)
+    min_transfer_rate(number, sys.argv[3])
+
+if(int(sys.argv[1])==9):
+    # print(sys.argv)
+    variation_line_chart(sys.argv[2], sys.argv[3])
+
+if(int(sys.argv[1])==10):
+    variation_line_chart_tenant_number_variation(sys.argv[2], sys.argv[3])
+
+if(int(sys.argv[1])==11):
+    allocated_tenant_number_variation(sys.argv[2])
+
+if(int(sys.argv[1])==12):
+    allocated_variation(sys.argv[2], int(sys.argv[3]))
+
+if(int(sys.argv[1])==13):
+    num = int(sys.argv[2])
+    mean = float(sys.argv[3])
+    covariance = float(sys.argv[4])
+    for index in range(num):
+        _line_chart_gap(index, mean, covariance)

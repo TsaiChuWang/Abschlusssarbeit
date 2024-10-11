@@ -42,7 +42,7 @@ int main(int argc, char *argv[]){
       printf("Can't load configuration\"%s\"\n", CONFIGURATION_PATH);
       return EXIT_FAILURE;
     }
-    
+
     double min_transfer_rate = 0.0;
     double alpha = 0.0;
 
@@ -77,6 +77,7 @@ int main(int argc, char *argv[]){
         break;
     }
 
+
     tenant_number = config.tenant_number;      /** @brief 2 : Number of tenants **/
     time_interval = config.time_interval;     /** @brief 3 : Simulation time (with time units) **/
     error = config.error;  
@@ -85,6 +86,8 @@ int main(int argc, char *argv[]){
     standard_deviation = config.standard_deviation; /** @brief 6 : Standard derivation(Covariance) of the traffic **/
     bucket_depth = config.bucket_depth;       /** @brief 7 : GCRA bucket size(depth) **/
     leakage_rate = config.leakage_rate;       /** @brief 8 : GCRA leakage rate **/
+
+// printf("a= %f\n", bucket_depth);
 
     modify_ini_file(CONFIGURATION_PATH, &config);
 
@@ -131,7 +134,7 @@ int main(int argc, char *argv[]){
         // system(command);
 #endif
     }
-
+//printf("b= %f\n", bucket_depth);
 #ifdef RECORD
     /**
      * @brief Opens the file to record bucket traffic data if the RECORD flag is defined.
@@ -152,6 +155,7 @@ int main(int argc, char *argv[]){
              * If traffic is too high, tokens are added to the bucket, up to its maximum depth.
              */
             if(traffic > mean + standard_deviation) {
+                printf("a = %f\n", traffic);
                 (*(buckets + index)).bucket_capacity += (*(buckets + index)).leakage_rate;
                 if((*(buckets + index)).bucket_capacity > (*(buckets + index)).bucket_depth)
                     (*(buckets + index)).bucket_capacity = (*(buckets + index)).bucket_depth;
@@ -231,32 +235,35 @@ end_distinguish:
     //     sprintf(command, "python3 " PYTHON_PATH " 6 %f", capacity);
     // else sprintf(command, "python3 " PYTHON_PATH " 7 %f %d", capacity, tenant_number);
     // system(command);
-
+//printf("b= %f\n", bucket_depth);
 #endif
 
-    sprintf(command, "python3 " PYTHON_PATH " 8 %d", tenant_number);
+    sprintf(command, "python3 " PYTHON_PATH " 8 %d "CONFIGURATION_PATH, tenant_number);
     system(command);
     min_transfer_rate = read_double_from_file("../Datei/transrate.txt");
 
     FILE* data_file;
     data_file = fopen(IMPORTANT_DATA_STORED_PATH, "a+");
         fprintf(data_file, INFORM_DOUBLE_FORMAT", "INFORM_DOUBLE_FORMAT", "INFORM_DOUBLE_FORMAT"\n", atof(argv[2]), min_transfer_rate, alpha);
+        // printf(INFORM_DOUBLE_FORMAT", "INFORM_DOUBLE_FORMAT", "INFORM_DOUBLE_FORMAT"\n", atof(argv[2]), min_transfer_rate, alpha);
     fclose(data_file);
-
+//printf("b= %f\n", bucket_depth);
 #ifdef END_PRINT
     printf("min_rate = "INFORM_DOUBLE_FORMAT"\n", min_transfer_rate);
-    printf("alpha   = "INFORM_DOUBLE_FORMAT"\n", alpha);
+    printf("alpha    = "INFORM_DOUBLE_FORMAT"\n", alpha);
 #endif
+//printf("b= %f\n", bucket_depth);
 #ifdef REDUCTION
-    config.capacity = 360;
-            config.tenant_number = 3;
+            config.capacity = 360;
+            config.tenant_number = 14;
             config.time_interval = 100;
             config.error = 0.001;
             config.mean = 120;
             config.standard_deviation = 40;
-            config.bucket_depth = 200;
+            config.bucket_depth = 285.5160353;
             config.leakage_rate = 120;
     modify_ini_file(CONFIGURATION_PATH, &config);
+    
 #endif
     return EXIT_SUCCESS;
 }

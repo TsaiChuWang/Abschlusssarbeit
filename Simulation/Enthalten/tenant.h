@@ -90,18 +90,25 @@ double* generateRegularTraffic(long time_interval, double mean, double standard_
     for(int time_stamp = 0;time_stamp<time_interval;time_stamp++){
         *(traffic+time_stamp) = ((double)rand()/RAND_MAX)*2-1;
         sum+=*(traffic+time_stamp);
+        // printf("mean = %f\n", *(traffic+time_stamp));
     }
 
     double _mean = sum/time_interval;
+    
     for(int time_stamp = 0;time_stamp<time_interval;time_stamp++)
         *(traffic+time_stamp) -= _mean;
 
     for(int time_stamp = 0;time_stamp<time_interval;time_stamp++)
         *(traffic+time_stamp) = *(traffic+time_stamp)*standard_deviation + mean;
     
-    // for(int time_stamp = 0;time_stamp<time_interval;time_stamp++)
-    //     printf("%3d : "INFORM_DOUBLE_FORMAT"\n", time_stamp, *(traffic+time_stamp));
+    for(int time_stamp = 0;time_stamp<time_interval;time_stamp++){
+        if(*(traffic+time_stamp) >=160){
+            // printf("%3d : "INFORM_DOUBLE_FORMAT"\n", time_stamp, *(traffic+time_stamp));
+            *(traffic+time_stamp) =159.0;
+        }
+            
         // printf("%f\n", *(traffic+time_stamp));
+    }
     return (double*)traffic;
 }
 

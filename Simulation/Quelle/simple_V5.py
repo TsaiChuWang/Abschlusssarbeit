@@ -250,6 +250,23 @@ def _total_line_chart(capacity, number, IMAGE_PATH):
     print("Max util.  | {:10f} | {:10f}".format(original_max_traffic/capacity, real_max_traffic/capacity))
     print('=' * term_size.columns)
 
+def min_transfer_rate(number):
+    transfer_rate = 0.0
+    DATA_PATH = "../Datei/simple_V5/traffic.csv"
+
+    rate = []
+    dataframe = pd.read_csv(DATA_PATH)
+    data = dataframe.values.tolist()
+    for index in range(number):
+      original_traffic = [float(row[index*3]) for row in data]
+      real_traffic = [float(row[index*3+1]) for row in data]
+      rate.append(sum(real_traffic)/sum(original_traffic)*100)
+    transfer_rate = min(rate)
+    # print("a="+str(transfer_rate))
+    with open("../Datei/transrate.txt", "w") as file:
+      file.write(str(transfer_rate))
+    file.close()
+    return transfer_rate
 
 if(int(sys.argv[1]) == 0):
     config = configparser.ConfigParser()
@@ -301,3 +318,7 @@ if(int(sys.argv[1])==7):
     capacity = float(sys.argv[2])
     number = int(sys.argv[3])
     _total_line_chart(capacity, number, IMAGE_PATH)
+
+if(int(sys.argv[1])==8):
+    number = int(sys.argv[2])
+    min_transfer_rate(number)

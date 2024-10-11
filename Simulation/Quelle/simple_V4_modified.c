@@ -11,7 +11,7 @@
 #define BUCKET_DATA_STORED_PATH "../Datei/simple_V4/traffic.csv"
 #define IMPORTANT_DATA_STORED_PATH "../Datei/simple_V4/important_data.csv"
 
-// #define PRINT
+#define PRINT
 #define END_PRINT
 
 #define _CODE_CAPACITY 0
@@ -45,17 +45,7 @@ int main(int argc, char *argv[]){
       return EXIT_FAILURE;
     }
 
-    capacity = config.capacity;           /** @brief 1 : Link capacity **/
-    tenant_number = config.tenant_number;      /** @brief 2 : Number of tenants **/
-    time_interval = config.time_interval;     /** @brief 3 : Simulation time (with time units) **/
-    error = config.error;  
-    gaussian = config.gaussian;
-    mean = config.mean;               /** @brief 5 : Mean of the traffic **/
-    standard_deviation = config.standard_deviation; /** @brief 6 : Standard derivation(Covariance) of the traffic **/
-    bucket_depth = config.bucket_depth;       /** @brief 7 : GCRA bucket size(depth) **/
-    leakage_rate = config.leakage_rate;       /** @brief 8 : GCRA leakage rate **/
-    
-    double max_transfer_rate = 0.0;
+    double min_transfer_rate = 0.0;
     double first_alpha = 0.0;
     double last_alpha = 0.0;
 
@@ -92,6 +82,18 @@ int main(int argc, char *argv[]){
         break;
     }
 
+
+    capacity = config.capacity;           /** @brief 1 : Link capacity **/
+    tenant_number = config.tenant_number;      /** @brief 2 : Number of tenants **/
+    time_interval = config.time_interval;     /** @brief 3 : Simulation time (with time units) **/
+    error = config.error;  
+    gaussian = config.gaussian;
+    mean = config.mean;               /** @brief 5 : Mean of the traffic **/
+    standard_deviation = config.standard_deviation; /** @brief 6 : Standard derivation(Covariance) of the traffic **/
+    bucket_depth = config.bucket_depth;       /** @brief 7 : GCRA bucket size(depth) **/
+    leakage_rate = config.leakage_rate;       /** @brief 8 : GCRA leakage rate **/
+    
+
     modify_ini_file(CONFIGURATION_PATH, &config);
 
     struct Tenant* tenants = (struct Tenant*)malloc(sizeof(struct Tenant)*tenant_number);
@@ -105,6 +107,9 @@ int main(int argc, char *argv[]){
         // printf("%d\n", config.time_interval);
         (*(tenants + index)).traffic = traffic;
     }
+
+    config.bucket_depth = atof(argv[2]);
+    // printf("%f\n", bucket_depth);
 
 #ifdef RECORD
     /**
@@ -189,12 +194,17 @@ end_distinguish:
      */
     fclose(traffic_file);
 
+
     sprintf(command, "python3 " PYTHON_IMAGE_PATH " 8 %d", tenant_number);
-    max_transfer_rate = read_double_from_file("../Datei/transrate.txt");
+    system(command);
+    min_transfer_rate = read_double_from_file("../Datei/transrate.txt");
 #ifdef PRINT
-    printf("max_rate = "INFORM_DOUBLE_FORMAT"\n", max_transfer_rate);
+    printf("min_rate = "INFORM_DOUBLE_FORMAT"\n", min_transfer_rate);
 #endif
 #endif
+
+
+    
 
     sprintf(command, "python3 ./CVXPY.py 3 "CONFIGURATION_PATH);
     system(command);
@@ -216,11 +226,11 @@ end_distinguish:
 
     FILE* data_file;
     data_file = fopen(IMPORTANT_DATA_STORED_PATH, "a+");
-        fprintf(data_file, INFORM_DOUBLE_FORMAT", "INFORM_DOUBLE_FORMAT", "INFORM_DOUBLE_FORMAT", "INFORM_DOUBLE_FORMAT"\n", atof(argv[2]), max_transfer_rate, first_alpha, last_alpha);
+        fprintf(data_file, INFORM_DOUBLE_FORMAT", "INFORM_DOUBLE_FORMAT", "INFORM_DOUBLE_FORMAT", "INFORM_DOUBLE_FORMAT"\n", atof(argv[2]), min_transfer_rate, first_alpha, last_alpha);
     fclose(data_file);
 
 #ifdef END_PRINT
-    printf("max_rate = "INFORM_DOUBLE_FORMAT"\n", max_transfer_rate);
+    printf("min_rate = "INFORM_DOUBLE_FORMAT"\n", min_transfer_rate);
     printf("alpha1   = "INFORM_DOUBLE_FORMAT"\n", first_alpha);
     printf("alpha2   = "INFORM_DOUBLE_FORMAT"\n", last_alpha);
 #endif

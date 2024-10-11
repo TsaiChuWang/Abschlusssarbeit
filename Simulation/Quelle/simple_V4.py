@@ -231,7 +231,7 @@ def _total_line_chart(capacity, number, IMAGE_PATH):
     print("Max util.  | {:10f} | {:10f}".format(original_max_traffic/capacity, real_max_traffic/capacity))
     print('=' * term_size.columns)
 
-def max_transfer_rate(number):
+def min_transfer_rate(number):
     transfer_rate = 0.0
     DATA_PATH = "../Datei/simple_V4/traffic.csv"
 
@@ -242,13 +242,86 @@ def max_transfer_rate(number):
       original_traffic = [float(row[index*3]) for row in data]
       real_traffic = [float(row[index*3+1]) for row in data]
       rate.append(sum(real_traffic)/sum(original_traffic)*100)
-    transfer_rate = max(rate)
-
+    transfer_rate = min(rate)
+    print("a="+str(transfer_rate))
     with open("../Datei/transrate.txt", "w") as file:
 	    file.write(str(transfer_rate))
     file.close()
     return transfer_rate
     
+
+def variation_line_chart(title):
+    DATA_PATH = "../Datei/simple_V4/important_data.csv"
+    IMAGE_PATH_MAX_TRANSFER_RATE ="../Datei/simple_V4/images/max_transfer_rate_variation.png"
+    IMAGE_PATH_ALPHA_1 ="../Datei/simple_V4/images/alpha1.png"
+    IMAGE_PATH_ALPHA_2 ="../Datei/simple_V4/images/alpha2.png"
+
+    dataframe = pd.read_csv(DATA_PATH)
+    data = dataframe.values.tolist()
+
+    max_transfer_rate = [float(row[1]) for row in data]
+    alpha_1 = [float(row[2]) for row in data]
+    alpha_2 = [float(row[3]) for row in data]
+
+    plt.plot([float(row[0]) for row in data], max_transfer_rate, linestyle='-', color='red', label="Min transfer rate")
+    plt.title('Min Transfer Rate : '+title+' Variation')
+    plt.xlabel(title)
+    plt.ylabel('Min Transfer Rate')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH_MAX_TRANSFER_RATE)
+    plt.clf()
+
+    plt.plot([float(row[0]) for row in data], alpha_1, linestyle='-', color='red', label="Alpha (1)")
+    plt.title('Alpha(1) : '+title+' Variation')
+    plt.xlabel(title)
+    plt.ylabel('Alpha(1)')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH_ALPHA_1)
+    plt.clf()
+
+    plt.plot([float(row[0]) for row in data], alpha_2, linestyle='-', color='blue', label="Alpha (2)")
+    plt.title('Alpha(2) : '+title+' Variation')
+    plt.xlabel(title)
+    plt.ylabel('Alpha(2)')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH_ALPHA_2)
+    plt.clf()
+
+def allocated_tenant_number_variation(title):
+    DATA_PATH = "../Datei/simple_V4/important_data.csv"
+    IMAGE_PATH_ALPHA_ALLOCATED ="../Datei/simple_V4/images/alpha_allocated.png"
+    dataframe = pd.read_csv(DATA_PATH)
+    data = dataframe.values.tolist()
+
+    alpha_allocated = [(float(row[2])/int(row[0])) for row in data]
+    plt.plot([float(row[0]) for row in data], alpha_allocated, linestyle='-', color='red', label="Alpha Each Tenant Allocated")
+    plt.title('Alpha Each Tenant Allocated')
+    plt.xlabel(title)
+    plt.ylabel('Alpha Each Tenant Allocated')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH_ALPHA_ALLOCATED)
+    plt.clf()
+
+def allocated_variation(title, number):
+    DATA_PATH = "../Datei/simple_V4/important_data.csv"
+    IMAGE_PATH_ALPHA_ALLOCATED ="../Datei/simple_V4/images/alpha_allocated.png"
+    dataframe = pd.read_csv(DATA_PATH)
+    data = dataframe.values.tolist()
+
+    alpha_allocated = [(float(row[2])/number) for row in data]
+    plt.plot([float(row[0]) for row in data], alpha_allocated, linestyle='-', color='red', label="Alpha Each Tenant Allocated")
+    plt.title('Alpha Each Tenant Allocated')
+    plt.xlabel(title)
+    plt.ylabel('Alpha Each Tenant Allocated')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH_ALPHA_ALLOCATED)
+    plt.clf()
+
 if(int(sys.argv[1])==0):
     print('=' * term_size.columns)
 
@@ -274,7 +347,7 @@ if(int(sys.argv[1])==5):
 
 if(int(sys.argv[1])==8):
     number = int(sys.argv[2])
-    max_transfer_rate(number)
+    min_transfer_rate(number)
 
 if(int(sys.argv[1])==3):
     IMAGE_PATH = "../Datei/simple_V4/images/traffic_total_linechart.png"
@@ -292,3 +365,12 @@ if(int(sys.argv[1])==7):
     capacity = float(sys.argv[2])
     number = int(sys.argv[3])
     _total_line_chart(capacity, number, IMAGE_PATH)
+
+if(int(sys.argv[1])==9):
+    variation_line_chart(sys.argv[2])
+
+if(int(sys.argv[1])==10):
+    allocated_tenant_number_variation(sys.argv[2])
+
+if(int(sys.argv[1])==11):
+    allocated_variation(sys.argv[2], int(sys.argv[3]))

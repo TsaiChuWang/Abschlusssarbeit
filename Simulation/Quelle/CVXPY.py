@@ -30,6 +30,7 @@ if(int(sys.argv[1]) == 0):
     tenant_number = int(config['simulation']['tenant_number'])
     capacity = float(config['simulation']['capacity'])
 
+    print(error)
     constraints = [ math.sqrt(2*numpy.log((1/error)))*numpy.linalg.norm([(standard_deviation/mean)*mean for i in range(tenant_number)], ord = 2) + (mean*tenant_number) <=alpha*capacity ]
     
     problem = cvxpy.Problem(objective, constraints)

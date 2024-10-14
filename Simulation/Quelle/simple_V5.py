@@ -373,6 +373,57 @@ def allocated_variation(title, number):
     plt.savefig(IMAGE_PATH_ALPHA_ALLOCATED)
     plt.clf()
 
+def record_An_experiment_MTR():
+    DATA_PATH = "../Datei/simple_V5/important_data.csv"
+    dataframe = pd.read_csv(DATA_PATH)
+    data = dataframe.values.tolist()
+    data_index_row = [float(row[0]) for row in data]
+    mtr = [float(row[1]) for row in data]
+    # print(data_index_row)
+    # print(mtr)
+    RECORD_DATA_PATH = "../Datei/simple_V5/experiment.csv"
+    try:
+        record_dataframe = pd.read_csv(RECORD_DATA_PATH)
+        record_data = record_dataframe.values.tolist()
+        record_data[0] = data_index_row
+    except:
+        record_data = [data_index_row]
+    # print(record_data)
+    record_data.append(mtr)
+    record_data = numpy.array(record_data)
+    record_dataframe = pd.DataFrame(record_data)
+    # print(record_data)
+    record_dataframe.to_csv(RECORD_DATA_PATH, index=False)
+
+def draw_An_experiment_MTR():
+    RECORD_DATA_PATH = "../Datei/simple_V5/experiment.csv"
+    record_dataframe = pd.read_csv(RECORD_DATA_PATH)
+    record_data = record_dataframe.values.tolist()
+
+    config = configparser.ConfigParser()
+    config.read("../configuration/simple_V5.ini")
+    # print(config.keys)
+    error = float(config['simulation']['error'])
+
+    num = len(record_data)-1
+    cmap = plt.get_cmap('tab20')
+    
+    colors = [cmap(i / num) for i in range(num)]
+    hex_colors = ['#%02x%02x%02x' % (int(r*255), int(g*255), int(b*255)) for r, g, b, _ in colors]
+    # print(hex_colors)
+
+    IMAGE_PATH_EXPERIMENT_MTR ="../Datei/simple_V5/images/experiment_mtr.png"
+    for index in range(num):
+        plt.plot(record_data[0], record_data[index+1], linestyle='-', color=hex_colors[index], label=str(index+1))
+    plt.plot([float(row[0]) for row in record_data], [100-(error*100) for row in record_data], linestyle='-', color='blue', label="Predicted Transfer")
+    plt.title('MTR Experiment with '+str(num)+' Times')
+    plt.xlabel('Times')
+    plt.ylabel('Min Transfer Rate')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH_EXPERIMENT_MTR)
+    plt.clf()
+
 if(int(sys.argv[1]) == 0):
     config = configparser.ConfigParser()
     config.read(sys.argv[2])
@@ -447,3 +498,15 @@ if(int(sys.argv[1])==13):
     covariance = float(sys.argv[4])
     for index in range(num):
         _line_chart_gap(index, mean, covariance)
+
+if(int(sys.argv[1])==14):
+    record_An_experiment_MTR()
+
+if(int(sys.argv[1])==15):
+    RECORD_DATA_PATH = "../Datei/simple_V5/experiment.csv"
+    with open(RECORD_DATA_PATH, "w") as file:
+      file.write("")
+    file.close()
+
+if(int(sys.argv[1])==16):
+    draw_An_experiment_MTR()

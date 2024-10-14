@@ -20,8 +20,8 @@
 #define _CODE_LEAKAGE_RATE 6
 #define _CODE_TIME_INTERVAL 7
 
-// gcc ./simple_V5_variation.c inih/ini.c -o ../Ausführung/simple_V5_variation -lcurl -lgsl -lgslcblas -lm
-// ../Ausführung/simple_V5_variation 
+// gcc ./simple_V5_variation_observation.c inih/ini.c -o ../Ausführung/simple_V5_variation_observation -lcurl -lgsl -lgslcblas -lm
+// ../Ausführung/simple_V5_variation_observation 
 
 int main(int argc, char *argv[]){
     configuration config;
@@ -46,68 +46,32 @@ int main(int argc, char *argv[]){
     // int parameter = _CODE_TIME_INTERVAL;
     int length;  // Change
 
-    sprintf(command, "gcc ./simple_V5_modeified.c inih/ini.c -o ../Ausführung/simple_V5_modified -lcurl -lgsl -lgslcblas -lm");
+    system("python3 "PYTHON_PATH" 15");
+    sprintf(command, "gcc ./simple_V5_variation.c inih/ini.c -o ../Ausführung/simple_V5_variation -lcurl -lgsl -lgslcblas -lm");
     system(command);
 
     double fraction = 2;
     switch (parameter){
         case _CODE_TENANT_NUMBER:
-            length = 20;  // Change
-            for(int index=10;index<=length;index+=1){
-                sprintf(command, "../Ausführung/simple_V5_modified %d %d", parameter, index);   // Change
-                printf("%s\n", command);
-                system(command);
-            }
             break;
         case _CODE_ERROR:
-            double fraction = 2;
-            while(fraction>0.000001){
-                fraction = fraction*0.5;
-                sprintf(command, "../Ausführung/simple_V5_modified %d %lf", parameter, fraction);   // Change
-                // printf("%s %f\n", command,fraction);
-                system(command);
-            }
             break;
         case _CODE_MEAN:
-            length = 360;
-            for(int index=1;index<=length;index+=2){
-                sprintf(command, "../Ausführung/simple_V5_modified %d %lf", parameter, (double)index);   // Change
-                printf("%s\n", command);
-                system(command);
-            }
             break;
         case _CODE_STANDARD_DEVIATION:
-            length = 120;
-            for(int index=1;index<=length;index+=2){
-                sprintf(command, "../Ausführung/simple_V5_modified %d %lf", parameter, (double)index);   // Change
-                printf("%s\n", command);
-                system(command);
-            }        
             break;
         case _CODE_BUCKET_DEPTH:
-            length = 285;
-            printf("a\n");
-            for(double index=250;index<=350;index+=1){
-                sprintf(command, "../Ausführung/simple_V5_modified %d %lf", parameter, (double)index);   // Change
-                printf("%s\n", command);
-                system(command);
-            }        
+            int time = atoi(argv[1]);
+            
+            for(int index = 0;index<time;index++){
+                system("../Ausführung/simple_V5_variation");
+                // printf("a=%d\n", index);
+                system("python3 "PYTHON_PATH" 14");
+            }
             break;
         case _CODE_LEAKAGE_RATE:
-            length = 125;
-            for(double index=119.95;index<=120.05;index+=0.0001){
-                sprintf(command, "../Ausführung/simple_V5_modified %d %lf", parameter, (double)index);   // Change
-                printf("%s\n", command);
-                system(command);
-            }        
             break;
         case _CODE_TIME_INTERVAL:
-            length = 10000;
-            for(int index=50;index<=length;index+=50){
-                sprintf(command, "../Ausführung/simple_V5_modified %d %lf", parameter, (double)index);   // Change
-                printf("%s\n", command);
-                system(command);
-            }
             break;
         default:
             return EXIT_SUCCESS;
@@ -142,17 +106,7 @@ int main(int argc, char *argv[]){
             break;                                                                                                                                                                                                                                    
     }
 
-    if(parameter == _CODE_TENANT_NUMBER)
-        sprintf(command, "python3 "PYTHON_PATH" 10 %s " CONFIGURATION_PATH, title); 
-    else sprintf(command, "python3 "PYTHON_PATH" 9 %s "CONFIGURATION_PATH, title); 
-    // printf("%s\n", command);
-    system(command);
-
-    if(parameter == _CODE_TENANT_NUMBER)
-        sprintf(command, "python3 "PYTHON_PATH" 11 %s", title);   
-    else
-        sprintf(command, "python3 "PYTHON_PATH" 12 %s %d", title, config.tenant_number); 
-    system(command);
-
+    
+    system("python3 "PYTHON_PATH" 16");
     return EXIT_SUCCESS;
 }

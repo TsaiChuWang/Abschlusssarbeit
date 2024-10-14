@@ -20,7 +20,7 @@
 #define _CODE_STANDARD_DEVIATION 4
 #define _CODE_BUCKET_DEPTH 5
 #define _CODE_LEAKAGE_RATE 6
-
+#define _CODE_TIME_INTERVAL 7
 // gcc ./simple_V5_modeified.c inih/ini.c -o ../Ausführung/simple_V5_modeified -lcurl -lgsl -lgslcblas -lm
 // ../Ausführung/simple_V5_modeified  1 100
 
@@ -64,6 +64,9 @@ int main(int argc, char *argv[]){
         break;
         case _CODE_LEAKAGE_RATE:
             config.leakage_rate = atof(argv[2]);
+        break;
+        case _CODE_TIME_INTERVAL:
+            config.time_interval = atoi(argv[2]);
         break;
         default:
             config.capacity = 360;

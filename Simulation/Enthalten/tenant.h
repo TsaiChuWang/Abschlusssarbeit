@@ -105,6 +105,7 @@ double* generateRegularTraffic(long time_interval, double mean, double standard_
         if(*(traffic+time_stamp) >=160){
             // printf("%3d : "INFORM_DOUBLE_FORMAT"\n", time_stamp, *(traffic+time_stamp));
             *(traffic+time_stamp) =159.0;
+            // printf("%3d : "INFORM_DOUBLE_FORMAT"\n", time_stamp, *(traffic+time_stamp));
         }
             
         // printf("%f\n", *(traffic+time_stamp));

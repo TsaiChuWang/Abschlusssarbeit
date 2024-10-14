@@ -18,10 +18,10 @@
 #define _CODE_STANDARD_DEVIATION 4
 #define _CODE_BUCKET_DEPTH 5
 #define _CODE_LEAKAGE_RATE 6
-
+#define _CODE_TIME_INTERVAL 7
 
 // gcc ./simple_V5_variation.c inih/ini.c -o ../Ausführung/simple_V5_variation -lcurl -lgsl -lgslcblas -lm
-// ../Ausführung/simple_V5_variation 1
+// ../Ausführung/simple_V5_variation 
 
 int main(int argc, char *argv[]){
     configuration config;
@@ -37,15 +37,14 @@ int main(int argc, char *argv[]){
       return EXIT_FAILURE;
     }
 
-    int parameter = _CODE_TENANT_NUMBER;    // Change
+    // int parameter = _CODE_TENANT_NUMBER;    // Change
     // int parameter = _CODE_ERROR;    // Change
     // int parameter = _CODE_MEAN;    // Change
     // int parameter = _CODE_STANDARD_DEVIATION;    // Change
     // int parameter = _CODE_BUCKET_DEPTH;    // Change
     // int parameter = _CODE_LEAKAGE_RATE;    // Change
+    int parameter = _CODE_TIME_INTERVAL;
     int length;  // Change
-
-
 
     sprintf(command, "gcc ./simple_V5_modeified.c inih/ini.c -o ../Ausführung/simple_V5_modified -lcurl -lgsl -lgslcblas -lm");
     system(command);
@@ -102,6 +101,14 @@ int main(int argc, char *argv[]){
                 system(command);
             }        
             break;
+        case _CODE_TIME_INTERVAL:
+            length = 10000;
+            for(int index=50;index<=length;index+=50){
+                sprintf(command, "../Ausführung/simple_V5_modified %d %lf", parameter, (double)index);   // Change
+                printf("%s\n", command);
+                system(command);
+            }
+            break;
         default:
             return EXIT_SUCCESS;
             break;
@@ -126,6 +133,9 @@ int main(int argc, char *argv[]){
             break;
         case _CODE_LEAKAGE_RATE:
             sprintf(title, "Leakage_Rate");
+            break;
+        case _CODE_TIME_INTERVAL:
+            sprintf(title, "Time_Interval");
             break;
         default:
             return EXIT_SUCCESS;

@@ -41,9 +41,9 @@ int main(int argc, char *argv[]){
     // int parameter = _CODE_ERROR;    // Change
     // int parameter = _CODE_MEAN;    // Change
     // int parameter = _CODE_STANDARD_DEVIATION;    // Change
-    int parameter = _CODE_BUCKET_DEPTH;    // Change
+    // int parameter = _CODE_BUCKET_DEPTH;    // Change
     // int parameter = _CODE_LEAKAGE_RATE;    // Change
-    // int parameter = _CODE_TIME_INTERVAL;
+    int parameter = _CODE_TIME_INTERVAL;
     int length;  // Change
 
     sprintf(command, "gcc ./simple_V5_modeified.c inih/ini.c -o ../Ausführung/simple_V5_modified -lcurl -lgsl -lgslcblas -lm");
@@ -102,8 +102,8 @@ int main(int argc, char *argv[]){
             }        
             break;
         case _CODE_TIME_INTERVAL:
-            length = 10000;
-            for(int index=50;index<=length;index+=50){
+            length = 250;
+            for(int index=50;index<=length;index+=1){
                 sprintf(command, "../Ausführung/simple_V5_modified %d %lf", parameter, (double)index);   // Change
                 printf("%s\n", command);
                 system(command);

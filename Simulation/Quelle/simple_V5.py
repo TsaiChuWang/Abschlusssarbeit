@@ -424,6 +424,12 @@ def draw_An_experiment_MTR():
     plt.savefig(IMAGE_PATH_EXPERIMENT_MTR)
     plt.clf()
 
+def random_color(number):
+    cmap = plt.get_cmap('tab20')
+    colors = [cmap(i / number) for i in range(number)]
+    hex_colors = ['#%02x%02x%02x' % (int(r*255), int(g*255), int(b*255)) for r, g, b, _ in colors]
+    return hex_colors
+
 if(int(sys.argv[1]) == 0):
     config = configparser.ConfigParser()
     config.read(sys.argv[2])
@@ -530,3 +536,152 @@ if(int(sys.argv[1])==17):
     record_data = numpy.array(record_data)
     record_dataframe = pd.DataFrame(record_data)
     record_dataframe.to_csv(RECORD_PATH.format(sys.argv[2]), index=False)
+
+if(int(sys.argv[1])==18):
+    RECORD_PATH = "../Datei/simple_V5/experiments/traffic_{}.csv"
+    
+    config = configparser.ConfigParser()
+    config.read("../configuration/simple_V5.ini")
+    tenant_number = int(config['simulation']['tenant_number'])
+    colors = random_color(tenant_number)
+
+    capacity = 0.0
+    with open("../Datei/objective.txt", "r") as file:
+      capacity = float(file.read().strip())
+    file.close()
+    # print(capacity)
+
+    IMAGE_PATH_TRANSFER_IMAGE = "../Datei/simple_V5/experiments/transfer_traffic.png"
+    for tenant in range(tenant_number):
+        dataframe = pd.read_csv(RECORD_PATH.format(tenant+1))
+        data = dataframe.values.tolist()
+        plt.plot([timestamp+1 for timestamp in range(len(data))], [float(row[0]) for row in data], linestyle='-', color=colors[tenant], label=str(tenant+1))
+    
+    plt.plot([timestamp+1 for timestamp in range(len(data))], [capacity for row in data], linestyle='-', color='red', label='capacity')
+    plt.title('Number of Naughty Tenants and Transfer Traffic')
+    plt.xlabel('Timestamp')
+    plt.ylabel('TraEnsfer Traffic')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH_TRANSFER_IMAGE)
+    plt.clf()
+
+    IMAGE_PATH_REAL_IMAGE = "../Datei/simple_V5/experiments/real_traffic.png"
+    for tenant in range(tenant_number):
+        dataframe = pd.read_csv(RECORD_PATH.format(tenant+1))
+        data = dataframe.values.tolist()
+        plt.plot([timestamp+1 for timestamp in range(len(data))], [float(row[1]) for row in data], linestyle='-', color=colors[tenant], label=str(tenant+1))
+    plt.plot([timestamp+1 for timestamp in range(len(data))], [capacity for row in data], linestyle='-', color='red', label='capacity')
+    plt.title('Number of Naughty Tenants and Real Traffic')
+    plt.xlabel('Timestamp')
+    plt.ylabel('Real Traffic')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH_REAL_IMAGE)
+    plt.clf()
+
+if(int(sys.argv[1])==19):
+    RECORD_PATH = "../Datei/simple_V5/experiments/traffic_{}.csv"
+    
+    config = configparser.ConfigParser()
+    config.read("../configuration/simple_V5.ini")
+    tenant_number = int(config['simulation']['tenant_number'])
+    time_interval = int(config['simulation']['time_interval'])
+    colors = random_color(tenant_number)
+
+    capacity = 0.0
+    with open("../Datei/objective.txt", "r") as file:
+      capacity = float(file.read().strip())
+    file.close()
+
+    IMAGE_PATH_MINIMUM_TRAFFIC_IMAG = "../Datei/simple_V5/experiments/minumum_traffic.png"
+    minimum_transfer_traffic = []
+    minimum_real_traffic = []
+    for tenant in range(tenant_number):
+        dataframe = pd.read_csv(RECORD_PATH.format(tenant+1))
+        data = dataframe.values.tolist()
+        minimum_transfer_traffic.append(100*min([float(row[0]) for row in data])/capacity)
+        minimum_real_traffic.append(100*min([float(row[1]) for row in data])/capacity)
+    
+    plt.plot([tenant+1 for tenant in range(tenant_number)], minimum_transfer_traffic, linestyle='-', color='blue', label='Transfer Traffic')
+    plt.plot([tenant+1 for tenant in range(tenant_number)], minimum_real_traffic, linestyle='-', color='green', label='Real Traffic')
+    plt.plot([tenant+1 for tenant in range(tenant_number)], [100 for tenant in range(tenant_number)], linestyle='-', color='red', label='Capacity')
+
+    plt.title('Number of Naughty Tenants and Minimum Transfer Rate')
+    plt.xlabel('Naughty Tenants')
+    plt.ylabel('Minimum Transfer Rate')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH_MINIMUM_TRAFFIC_IMAG)
+    plt.clf()
+
+    IMAGE_PATH_MEAN_IMAGE = "../Datei/simple_V5/experiments/mean_traffic.png"
+    mean_transfer_traffic = []
+    mean_real_traffic = []
+    for tenant in range(tenant_number):
+        dataframe = pd.read_csv(RECORD_PATH.format(tenant+1))
+        data = dataframe.values.tolist()
+        mean_transfer_traffic.append(100*sum([float(row[0])/(time_interval*capacity) for row in data]))
+        mean_real_traffic.append(100*sum([float(row[1])/(time_interval*capacity) for row in data]))
+    
+    plt.plot([tenant+1 for tenant in range(tenant_number)], mean_transfer_traffic, linestyle='-', color='blue', label='Transfer Traffic')
+    plt.plot([tenant+1 for tenant in range(tenant_number)], mean_real_traffic, linestyle='-', color='green', label='Real Traffic')
+    plt.plot([tenant+1 for tenant in range(tenant_number)], [100 for tenant in range(tenant_number)], linestyle='-', color='red', label='Capacity')
+
+    plt.title('Number of Naughty Tenants and Mean Transfer Rate')
+    plt.xlabel('Naughty Tenants')
+    plt.ylabel('Mean Transfer Rate')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH_MEAN_IMAGE)
+    plt.clf()
+
+if(int(sys.argv[1])==20):
+    RECORD_PATH = "../Datei/simple_V5/experiments/traffic_{}.csv"
+    
+    config = configparser.ConfigParser()
+    config.read("../configuration/simple_V5.ini")
+    tenant_number = int(config['simulation']['tenant_number'])
+    colors = random_color(tenant_number)
+
+    capacity = 0.0
+    with open("../Datei/objective.txt", "r") as file:
+      capacity = float(file.read().strip())
+    file.close()
+    # print(capacity)
+
+    IMAGE_PATH_TRANSFER_IMAGE = "../Datei/simple_V5/experiments/transfer_traffic_pale.png"
+    for tenant in range(tenant_number):
+        dataframe = pd.read_csv(RECORD_PATH.format(tenant+1))
+        data = dataframe.values.tolist()
+        if(tenant == 0 or tenant == int(tenant_number/2)-1 or tenant == (tenant_number-1)):
+            plt.plot([timestamp+1 for timestamp in range(len(data))], [float(row[0]) for row in data], linestyle='-', color=colors[tenant], label=str(tenant+1))
+        # else:
+        #     plt.plot([timestamp+1 for timestamp in range(len(data))], [float(row[0]) for row in data], linestyle='-', color='gray', label=str(tenant+1))
+
+    plt.plot([timestamp+1 for timestamp in range(len(data))], [capacity for row in data], linestyle='-', color='red', label='capacity')
+    plt.title('Number of Naughty Tenants and Transfer Traffic')
+    plt.xlabel('Timestamp')
+    plt.ylabel('TraEnsfer Traffic')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH_TRANSFER_IMAGE)
+    plt.clf()
+
+    IMAGE_PATH_REAL_IMAGE = "../Datei/simple_V5/experiments/real_traffic_pale.png"
+    for tenant in range(tenant_number):
+        dataframe = pd.read_csv(RECORD_PATH.format(tenant+1))
+        data = dataframe.values.tolist()
+        if(tenant == 0 or tenant == int(tenant_number/2)-1 or tenant == (tenant_number-1)):
+            plt.plot([timestamp+1 for timestamp in range(len(data))], [float(row[1]) for row in data], linestyle='-', color=colors[tenant], label=str(tenant+1))
+        # else:
+        #     plt.plot([timestamp+1 for timestamp in range(len(data))], [float(row[1]) for row in data], linestyle='-', color='gray', label=str(tenant+1))
+
+    plt.plot([timestamp+1 for timestamp in range(len(data))], [capacity for row in data], linestyle='-', color='red', label='capacity')
+    plt.title('Number of Naughty Tenants and Real Traffic')
+    plt.xlabel('Timestamp')
+    plt.ylabel('Real Traffic')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH_REAL_IMAGE)
+    plt.clf()

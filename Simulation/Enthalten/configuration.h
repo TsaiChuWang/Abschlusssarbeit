@@ -67,7 +67,10 @@
         int gaussian;
         double mean;    /** @brief The mean value for traffic generation. **/
         double standard_deviation;  /** @brief The standard deviation used for traffic generation. **/
-        
+        double naughty_mean;
+        double naughty_standard_deviation;
+        int naughty_tenant_number;
+
         double bucket_depth;    /** @brief The maximum depth of the token bucket. **/
         double leakage_rate;    /** @brief The rate at which tokens leak from the bucket (tokens per time interval). **/
     }configuration;
@@ -91,6 +94,12 @@
             pconfig->mean = atof(value);
         else if(MATCH("traffic", "standard_deviation"))
             pconfig->standard_deviation = atof(value);
+        else if(MATCH("traffic", "naughty_mean"))
+            pconfig->naughty_mean = atof(value);
+        else if(MATCH("traffic", "naughty_standard_deviation"))
+            pconfig->naughty_standard_deviation = atof(value);
+        else if(MATCH("traffic", "naughty_tenant_number"))
+            pconfig->naughty_tenant_number = atoi(value);
         else if(MATCH("GCRA", "bucket_depth")) 
             pconfig->bucket_depth = atof(value);
         else if(MATCH("GCRA", "leakage_rate")) 
@@ -147,6 +156,9 @@
         fprintf(file, "gaussian = %d\n", config->gaussian);
         fprintf(file, "mean = %f\n", config->mean);
         fprintf(file, "standard_deviation = %f\n", config->standard_deviation);
+        fprintf(file, "naughty_mean = %f\n", config->naughty_mean);
+        fprintf(file, "naughty_standard_deviation = %f\n", config->naughty_standard_deviation);
+        fprintf(file, "naughty_tenant_number = %d\n", config->naughty_tenant_number);
 
         fprintf(file, "[GCRA]\n");
         fprintf(file, "bucket_depth = %f\n", config->bucket_depth);

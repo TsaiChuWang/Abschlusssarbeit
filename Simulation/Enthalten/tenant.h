@@ -102,9 +102,9 @@ double* generateRegularTraffic(long time_interval, double mean, double standard_
         *(traffic+time_stamp) = *(traffic+time_stamp)*standard_deviation + mean;
     
     for(int time_stamp = 0;time_stamp<time_interval;time_stamp++){
-        if(*(traffic+time_stamp) >=160){
+        if(*(traffic+time_stamp) >=(mean + standard_deviation)){
             // printf("%3d : "INFORM_DOUBLE_FORMAT"\n", time_stamp, *(traffic+time_stamp));
-            *(traffic+time_stamp) =159.0;
+            *(traffic+time_stamp) =(mean + standard_deviation)*0.999;
             // printf("%3d : "INFORM_DOUBLE_FORMAT"\n", time_stamp, *(traffic+time_stamp));
         }
             
@@ -113,7 +113,35 @@ double* generateRegularTraffic(long time_interval, double mean, double standard_
     return (double*)traffic;
 }
 
+double* generateNaughtyTraffic(long time_interval, double naughty_mean, double naughty_standard_deviation){
+    double* traffic = (double*)malloc(sizeof(double)*time_interval);
+    double sum = 0;
 
+    for(int time_stamp = 0;time_stamp<time_interval;time_stamp++){
+        *(traffic+time_stamp) = ((double)rand()/RAND_MAX)*2-1;
+        sum+=*(traffic+time_stamp);
+        // printf("mean = %f\n", *(traffic+time_stamp));
+    }
+
+    double _mean = sum/time_interval;
+    
+    for(int time_stamp = 0;time_stamp<time_interval;time_stamp++)
+        *(traffic+time_stamp) -= _mean;
+
+    for(int time_stamp = 0;time_stamp<time_interval;time_stamp++)
+        *(traffic+time_stamp) = *(traffic+time_stamp)*naughty_standard_deviation + naughty_mean;
+    
+    for(int time_stamp = 0;time_stamp<time_interval;time_stamp++){
+        if(*(traffic+time_stamp) >=(naughty_mean + naughty_standard_deviation)){
+            // printf("%3d : "INFORM_DOUBLE_FORMAT"\n", time_stamp, *(traffic+time_stamp));
+            *(traffic+time_stamp) =(naughty_mean + naughty_standard_deviation)-1;
+            // printf("%3d : "INFORM_DOUBLE_FORMAT"\n", time_stamp, *(traffic+time_stamp));
+        }
+            
+        // printf("%f\n", *(traffic+time_stamp));
+    }
+    return (double*)traffic;
+}
 /**
  * @struct Tenant
  * @brief Represents a network tenant.

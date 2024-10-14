@@ -56,113 +56,188 @@
 #endif
 
 #ifdef _CONFIGURATION_H
+
 #include <string.h>
 
-    typedef struct{
-        double capacity; /** @brief The total capacity for the system (e.g., bandwidth or resource limit). **/
-        int tenant_number;  /** @brief The number of tenants in the system. **/
-        long time_interval; /** @brief The time interval for token bucket processing (in milliseconds). **/
-        double error;
+    /**
+     * @def TRAFFIC_MODE_REGULAR
+     * @brief Traffic mode for regular (non-Gaussian) traffic generation.
+     *
+     * This mode represents standard traffic generation without Gaussian distribution.
+     */
+    #define TRAFFIC_MODE_REGULAR 0
 
-        int gaussian;
-        double mean;    /** @brief The mean value for traffic generation. **/
-        double standard_deviation;  /** @brief The standard deviation used for traffic generation. **/
-        double naughty_mean;
-        double naughty_standard_deviation;
-        int naughty_tenant_number;
+    /**
+     * @def TRAFFIC_MODE_GAUSSIAN
+     * @brief Traffic mode for Gaussian distribution-based traffic generation.
+     *
+     * This mode enables traffic generation based on a Gaussian (normal) distribution, 
+     * using parameters such as mean and standard deviation.
+     */
+    #define TRAFFIC_MODE_GAUSSIAN 1
 
-        double bucket_depth;    /** @brief The maximum depth of the token bucket. **/
-        double leakage_rate;    /** @brief The rate at which tokens leak from the bucket (tokens per time interval). **/
-    }configuration;
+    /**
+     * @def TRAFFIC_MODE_NAUGHTY_TENANT_INCLUDE
+     * @brief Traffic mode that includes "naughty" tenants in traffic generation.
+     *
+     * This mode accounts for tenants that generate irregular or bursty traffic, often 
+     * characterized by a separate Gaussian distribution with its own mean and standard deviation.
+     */
+    #define TRAFFIC_MODE_NAUGHTY_TENANT_INCLUDE 2
 
-    static int handler(void* config, const char* section, const char* name, const char* value){
-        configuration* pconfig = (configuration*)config;
-    
-#define MATCH(sect, nam) strcmp(section, sect) == 0 && strcmp(name, nam) == 0
-     
-        if(MATCH("simulation", "capacity"))
-            pconfig->capacity = atof(value);
-        else if(MATCH("simulation", "tenant_number"))
-            pconfig->tenant_number = atoi(value);
-        else if(MATCH("simulation", "time_interval"))
-            pconfig->time_interval = (long)atoi(value);
-        else if(MATCH("simulation", "error"))
-            pconfig->error = atof(value);
-        else if(MATCH("traffic", "gaussian"))
-            pconfig->gaussian = atoi(value);
-        else if(MATCH("traffic", "mean"))
-            pconfig->mean = atof(value);
-        else if(MATCH("traffic", "standard_deviation"))
-            pconfig->standard_deviation = atof(value);
-        else if(MATCH("traffic", "naughty_mean"))
-            pconfig->naughty_mean = atof(value);
-        else if(MATCH("traffic", "naughty_standard_deviation"))
-            pconfig->naughty_standard_deviation = atof(value);
-        else if(MATCH("traffic", "naughty_tenant_number"))
-            pconfig->naughty_tenant_number = atoi(value);
-        else if(MATCH("GCRA", "bucket_depth")) 
-            pconfig->bucket_depth = atof(value);
-        else if(MATCH("GCRA", "leakage_rate")) 
-            pconfig->leakage_rate = atof(value);
-        else return 0;  
+    /**
+     * @struct configuration
+     * @brief Configuration settings for the token bucket algorithm and traffic generation.
+     * 
+     * This structure holds parameters that define the system's capacity, tenant details, 
+     * and GCRA algorithm settings, along with traffic generation settings using Gaussian distribution.
+     */
+
+    typedef struct {
+        double  capacity;       /**< @brief The total capacity for the system (e.g., bandwidth or resource limit). */
+        int     tenant_number;  /**< @brief The number of tenants in the system. */
+        long    time_interval;  /**< @brief The time interval for token bucket processing (in milliseconds). */
+        double  error;          /**< @brief The allowed error margin or variance for traffic control. */
+
+        int     gaussian;           /**< @brief A flag indicating whether Gaussian traffic generation is enabled (1 = enabled, 0 = disabled). */
+        double  mean;               /**< @brief The mean value for traffic generation (used in Gaussian distribution). */
+        double  standard_deviation; /**< @brief The standard deviation for traffic generation (used in Gaussian distribution). */
         
-        return SUCCESS;
+        double  naughty_mean;               /**< @brief The mean value for generating traffic for "naughty" tenants (those that may overuse resources). */
+        double  naughty_standard_deviation; /**< @brief The standard deviation for traffic generation of "naughty" tenants. */
+        int     naughty_tenant_number;      /**< @brief The number of "naughty" tenants (those that generate irregular traffic). */
+
+        double  bucket_depth;   /**< @brief The maximum depth of the token bucket (i.e., the maximum tokens the bucket can hold). */
+        double  leakage_rate;   /**< @brief The rate at which tokens leak from the bucket (tokens per time interval). */
+    } configuration;
+
+    /**
+     * @brief INI file handler function for loading configuration settings.
+     * 
+     * This function processes INI file sections and key-value pairs, updating the fields 
+     * of the `configuration` structure based on the provided values.
+     * 
+     * @param config A pointer to the `configuration` structure to update.
+     * @param section The section of the INI file currently being processed.
+     * @param name The key name in the INI file section.
+     * @param value The corresponding value for the key in the INI file.
+     * 
+     * @return SUCCESS if the key-value pair is successfully matched and processed; 
+     *         0 if the key-value pair is not matched.
+     */
+    static int handler(void* config, const char* section, const char* name, const char* value){
+        configuration* pconfig = (configuration*)config;  /**< Cast config to configuration type. */
+    
+    #define MATCH(sect, nam) (strcmp(section, sect) == 0 && strcmp(name, nam) == 0) /**< Macro to match section and name. */
+     
+        if (MATCH("simulation", "capacity")) 
+            pconfig->capacity = atof(value);            /**< Set capacity from string value. */
+        else if (MATCH("simulation", "tenant_number")) 
+            pconfig->tenant_number = atoi(value);       /**< Set tenant_number from string value. */
+        else if (MATCH("simulation", "time_interval")) 
+            pconfig->time_interval = (long)atoi(value); /**< Set time_interval from string value. */
+        else if (MATCH("simulation", "error")) 
+            pconfig->error = atof(value);               /**< Set error from string value. */
+    
+        else if (MATCH("traffic", "gaussian")) 
+            pconfig->gaussian = atoi(value);                    /**< Set Gaussian traffic mode from string value. */
+        else if (MATCH("traffic", "mean")) 
+            pconfig->mean = atof(value);                        /**< Set mean for traffic generation from string value. */
+        else if (MATCH("traffic", "standard_deviation")) 
+            pconfig->standard_deviation = atof(value);          /**< Set standard deviation for traffic generation from string value. */
+        else if (MATCH("traffic", "naughty_mean")) 
+            pconfig->naughty_mean = atof(value);                /**< Set mean for "naughty" tenant traffic from string value. */
+        else if (MATCH("traffic", "naughty_standard_deviation")) 
+            pconfig->naughty_standard_deviation = atof(value);  /**< Set standard deviation for "naughty" tenant traffic from string value. */
+        else if (MATCH("traffic", "naughty_tenant_number")) 
+            pconfig->naughty_tenant_number = atoi(value);       /**< Set number of "naughty" tenants from string value. */
+
+        else if (MATCH("GCRA", "bucket_depth")) 
+            pconfig->bucket_depth = atof(value);    /**< Set bucket depth for GCRA (Generic Cell Rate Algorithm) from string value. */
+        else if (MATCH("GCRA", "leakage_rate")) 
+            pconfig->leakage_rate = atof(value);    /**< Set leakage rate for GCRA from string value. */
+        else return EXIT_FAILURE;                              /**< Return 0 if no match is found for the section and name. */
+        
+        return SUCCESS; /**< Return SUCCESS if the key-value pair was processed successfully. */
     }
 
     /**
-     * @brief Implementation of read_double_from_file function.
+     * @brief Reads a double value from a specified file.
+     * 
+     * This function opens a file in read mode and attempts to read a double value from it.
+     * If the file cannot be opened or if the reading fails, it returns an error value (-1.0).
      *
      * @param filename The name of the file to read the double value from.
-     * @return The double value from the file or -1.0 if an error occurs.
+     * 
+     * @return The double value read from the file, or -1.0 if an error occurs (such as failure 
+     *         to open the file or read the value correctly).
      */
     double read_double_from_file(const char *filename) {
-        FILE *file;
-        double value;
+        FILE *file;      /**< File pointer for accessing the file. */
+        double value;    /**< Variable to store the double value read from the file. */
 
         // Open the file in read mode
         file = fopen(filename, "r");
         if (file == NULL) {
-            perror("Error opening file");
-            return -1.0;  // Return an error value if file can't be opened
+            perror("Error opening file");  /**< Print error if the file cannot be opened. */
+            return FAILED;  /**< Return error value if file can't be opened. */
         }
 
         // Read the double value from the file
         if (fscanf(file, "%lf", &value) != 1) {
-            perror("Error reading double from file");
-            fclose(file);
-            return -1.0;   // Return an error value if reading fails
+            perror("Error reading double from file");  /**< Print error if reading fails. */
+            fclose(file);  /**< Close the file before returning. */
+            return FAILED;   /**< Return error value if reading fails. */
         }
 
         // Close the file
-        fclose(file);
+        fclose(file);  /**< Close the file after reading the value. */
 
-        return value;
+        return value;  /**< Return the successfully read double value. */
     }
 
+    /**
+     * @brief Modifies an INI configuration file by writing updated values from the `configuration` structure.
+     * 
+     * This function opens an INI file in write mode and writes the updated values from the `configuration` structure 
+     * to the file. The INI file is divided into sections such as `[simulation]`, `[traffic]`, and `[GCRA]`, and each 
+     * section's fields are updated with the corresponding values from the structure.
+     *
+     * @param filename The name of the INI file to modify.
+     * @param config A pointer to the `configuration` structure containing the updated values to be written.
+     * 
+     * @note The function will overwrite the contents of the INI file.
+     */
     void modify_ini_file(const char* filename, configuration* config) {
+        // Open the file in write mode
         FILE* file = fopen(filename, "w");
         if (!file) {
-            perror("Unable to open file for writing");
+            perror("Unable to open file for writing");  /**< Print error message if file cannot be opened. */
             return;
         }
 
+        // Write the [simulation] section
         fprintf(file, "[simulation]\n");
-        fprintf(file, "capacity = %f\n", config->capacity);
-        fprintf(file, "tenant_number = %d\n", config->tenant_number);
-        fprintf(file, "time_interval = %d\n", config->time_interval);
-        fprintf(file, "error = %f\n", config->error);
+        fprintf(file, "capacity = %f\n", config->capacity);  /**< Write the capacity to the INI file. */
+        fprintf(file, "tenant_number = %d\n", config->tenant_number);  /**< Write the tenant number to the INI file. */
+        fprintf(file, "time_interval = %ld\n", config->time_interval);  /**< Write the time interval to the INI file. */
+        fprintf(file, "error = %f\n", config->error);  /**< Write the error margin to the INI file. */
 
+        // Write the [traffic] section
         fprintf(file, "[traffic]\n");
-        fprintf(file, "gaussian = %d\n", config->gaussian);
-        fprintf(file, "mean = %f\n", config->mean);
-        fprintf(file, "standard_deviation = %f\n", config->standard_deviation);
-        fprintf(file, "naughty_mean = %f\n", config->naughty_mean);
-        fprintf(file, "naughty_standard_deviation = %f\n", config->naughty_standard_deviation);
-        fprintf(file, "naughty_tenant_number = %d\n", config->naughty_tenant_number);
+        fprintf(file, "gaussian = %d\n", config->gaussian);  /**< Write whether Gaussian traffic is enabled. */
+        fprintf(file, "mean = %f\n", config->mean);  /**< Write the mean value for traffic generation. */
+        fprintf(file, "standard_deviation = %f\n", config->standard_deviation);  /**< Write the standard deviation for traffic generation. */
+        fprintf(file, "naughty_mean = %f\n", config->naughty_mean);  /**< Write the mean for "naughty" tenant traffic. */
+        fprintf(file, "naughty_standard_deviation = %f\n", config->naughty_standard_deviation);  /**< Write the standard deviation for "naughty" tenant traffic. */
+        fprintf(file, "naughty_tenant_number = %d\n", config->naughty_tenant_number);  /**< Write the number of "naughty" tenants. */
 
+        // Write the [GCRA] section
         fprintf(file, "[GCRA]\n");
-        fprintf(file, "bucket_depth = %f\n", config->bucket_depth);
-        fprintf(file, "leakage_rate = %f\n", config->leakage_rate);
-        fclose(file);
+        fprintf(file, "bucket_depth = %f\n", config->bucket_depth);  /**< Write the bucket depth for GCRA. */
+        fprintf(file, "leakage_rate = %f\n", config->leakage_rate);  /**< Write the leakage rate for GCRA. */
+
+        // Close the file
+        fclose(file);  /**< Close the file after writing. */
     }
 #endif

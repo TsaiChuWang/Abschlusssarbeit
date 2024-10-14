@@ -264,7 +264,7 @@ def min_transfer_rate(number, config_path):
       real_traffic = [float(row[index*3+1]) for row in data]
       rate.append(sum(real_traffic)/sum(original_traffic)*100)
     transfer_rate = min(rate)
-    # print("a="+str(transfer_rate))
+    print("a="+str(transfer_rate))
     with open("../Datei/transrate.txt", "w") as file:
       file.write(str(transfer_rate))
     file.close()
@@ -510,3 +510,23 @@ if(int(sys.argv[1])==15):
 
 if(int(sys.argv[1])==16):
     draw_An_experiment_MTR()
+
+if(int(sys.argv[1])==17):
+    DATA_PATH = "../Datei/simple_V5/traffic.csv"
+    RECORD_PATH = "../Datei/simple_V5/experiments/traffic_{}.csv"
+
+    config = configparser.ConfigParser()
+    config.read("../configuration/simple_V5.ini")
+    tenant_number = int(config['simulation']['tenant_number'])
+
+    dataframe = pd.read_csv(DATA_PATH)
+    data = dataframe.values.tolist()
+    record_data = []
+    for row in data:
+        transfer_traffic = sum([float(row[index*3]) for index in range(tenant_number)])
+        real_traffic = sum([float(row[index*3+1]) for index in range(tenant_number)])
+        record_data.append([transfer_traffic, real_traffic])
+    
+    record_data = numpy.array(record_data)
+    record_dataframe = pd.DataFrame(record_data)
+    record_dataframe.to_csv(RECORD_PATH.format(sys.argv[2]), index=False)

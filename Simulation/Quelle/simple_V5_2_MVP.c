@@ -57,11 +57,13 @@
  */
 
 int main(int argc, char *argv[]){
-    
+
+    double capacity;    // optimizw with the model
+
     int tenant_number;  /** @brief The number of tenants in the system. **/
     long time_interval; /** @brief The time interval for token bucket processing (in milliseconds). **/
     double error;
-    double capacity;
+    
     int gaussian = 2;
     double mean;    /** @brief The mean value for traffic generation. **/
     double standard_deviation;  /** @brief The standard deviation used for traffic generation. **/
@@ -76,14 +78,32 @@ int main(int argc, char *argv[]){
     char command[MAX_COMMAND_LENGTH];
 
     if(argc<2){ // Argument parsing and default assignments
-        tenant_number = 3;
-        time_interval = 100;
+        tenant_number = INITIAL_CONFIGURATION_TENANT_NUMBER;
+        time_interval = INITIAL_CONFIGURATION_TIME_INTERVAL;
+        error = INITIAL_CONFIGURATION_ERROR;
+
+        gaussian = INITIAL_CONFIGURATION_GAUSSIAN;
         mean = 120;
         standard_deviation = 40;
         bucket_depth = 40;
         leakage_rate = 120;
-        error = 0.01;
+        
         naughty_mean = 150;
+
+         14
+    #define  100
+    #define  0.001
+
+    #define  0
+    #define INITIAL_CONFIGURATION_MEAN 120.0
+    #define INITIAL_CONFIGURATION_STANDARD_DEVIATION 40.0
+
+    #define INITIAL_CONFIGURATION_NAUGHTY_MEAN 150
+    #define INITIAL_CONFIGURATION_NAUGHTY_STANDARD_DEVIATION 10
+    #define INITIAL_CONFIGURATION_NAUGHTY_TENANT_NUMBER 7
+    
+    #define INITIAL_CONFIGURATION_BUCKET_DEPTH 285.5160353
+    #define INITIAL_CONFIGURATION_LEAKAGE_RATE 120.0
     }
     
     if(strcmp(argv[1], "c")==0){

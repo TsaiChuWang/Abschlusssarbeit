@@ -7,37 +7,36 @@
 #include <netinet/udp.h>
 #include <unistd.h>
 
-// sudo ip netns exec ns2 gcc simple_V6_receive.c -o simple_V6_receive
-// sudo ip netns exec ns2 ./simple_V6_receive
+#include "../Enthalten/include.h"
 
-int main() {
-    int receive_sock;
-    char buffer[4096];
+// sudo ip netns exec ns2 gcc simple_V7_receive.c -o simple_V7_receive
+// sudo ip netns exec ns2 ./simple_V7_receive
 
-    // Create raw socket for receiving
-    sock = socket(AF_INET, SOCK_RAW, IPPROTO_UDP);
-    if (sock < 0) {
+int main(int argc, char *argv[]) {
+    int receive_socket;
+    char buffer[MAX_BUFFER_SIZE];
+
+    receive_socket = socket(AF_INET, SOCK_RAW, IPPROTO_UDP);
+    if (receive_socket < 0) {
         perror("Socket error");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     printf("Waiting for packet...\n");
 
-    // Receive packet
-    while (1) {
-        int packet_len = recvfrom(sock, buffer, 4096, 0, NULL, NULL);
-        if (packet_len < 0) {
+    while (TRUE) {
+        int packet_length = recvfrom(receive_socket, buffer, MAX_BUFFER_SIZE, 0, NULL, NULL);
+        if (packet_length < 0) {
             perror("Receive error");
-            exit(1);
+            exit(EXIT_FAILURE);
         }
 
         struct iphdr *iph = (struct iphdr *) buffer;
         struct udphdr *udph = (struct udphdr *) (buffer + sizeof(struct iphdr));
 
-        printf("Received packet: Source IP: %s, Source Port: %d\n",
-               inet_ntoa(*(struct in_addr *)&iph->saddr), ntohs(udph->source));
+        printf("Received packet: Source IP: "INFORM_IP_ADDRESS_FORMAT", Source Port: "INFORM_PORT_FORMAT", Packet Size : "INFORM_PACKET_SIZE_FORMAT"\n ", inet_ntoa(*(struct in_addr *)&iph->saddr), ntohs(udph->source), packet_length);
     }
 
-    close(sock);
-    return 0;
+    close(receive_socket);
+    return EXIT_SUCCESS;
 }

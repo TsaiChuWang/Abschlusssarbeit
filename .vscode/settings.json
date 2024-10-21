@@ -14,7 +14,10 @@
         "curl.h": "c",
         "ini.h": "c",
         "typeinfo": "c",
-        "netnamespce.h": "c"
+        "netnamespce.h": "c",
+        "string.h": "c",
+        "stdlib.h": "c",
+        "stdio.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true

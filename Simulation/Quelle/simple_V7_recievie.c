@@ -22,6 +22,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    fflush(stdout);
     printf("Waiting for packet...\n");
 
     while (TRUE) {
@@ -34,7 +35,8 @@ int main(int argc, char *argv[]) {
         struct iphdr *iph = (struct iphdr *) buffer;
         struct udphdr *udph = (struct udphdr *) (buffer + sizeof(struct iphdr));
 
-        printf("Received packet: Source IP: "INFORM_IP_ADDRESS_FORMAT", Source Port: "INFORM_PORT_FORMAT", Packet Size : "INFORM_PACKET_SIZE_FORMAT"\n ", inet_ntoa(*(struct in_addr *)&iph->saddr), ntohs(udph->source), packet_length);
+        fflush(stdout);
+        printf("Received packet: Source IP: "INFORM_IP_ADDRESS_FORMAT", Source Port: "INFORM_PORT_FORMAT", Packet Size : "INFORM_PACKET_SIZE_FORMAT"\n", inet_ntoa(*(struct in_addr *)&iph->saddr), ntohs(udph->source), packet_length);
     }
 
     close(receive_socket);

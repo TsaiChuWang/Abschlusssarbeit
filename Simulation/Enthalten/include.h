@@ -22,9 +22,9 @@
 #define MAX_BUFFER_SIZE     4096
 #define GENERATE_BINARY (int)(rand()%2) /* @brief Generate a binary random value (0 or 1) */ 
 
-#define INFORM_IP_ADDRESS_FORMAT  "%16s"
-#define INFORM_PORT_FORMAT        "%6d"
-#define INFORM_PACKET_SIZE_FORMAT "%6d"
+#define INFORM_IP_ADDRESS_FORMAT  "%s"
+#define INFORM_PORT_FORMAT        "%d"
+#define INFORM_PACKET_SIZE_FORMAT "%d"
 #define INFORM_NS_NAME_FORMAT     "%s"
 #define INFORM_VETH_NAME_FORMAT   "%s"
 #define INFORM_BRIDGE_NAME_FORMAT "%s"

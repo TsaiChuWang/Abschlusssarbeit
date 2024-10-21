@@ -11,8 +11,9 @@
 #define CHECK_SUM
 #include "../Enthalten/netnamespce.h"
 
-// sudo ip netns exec [ns.name] gcc simple_V7_send.c -o simple_V7_send
-// sudo ip netns exec [ns.name] ./simple_V7_send [ns.ip] [destination IP] [ns.id]
+// sudo ip netns exec [ns.name] gcc simple_V7_send.c -o ../Ausführung/simple_V7_send
+// sudo ip netns exec [ns.name] ../Ausführung/simple_V7_send [ns.ip] [destination IP] [ns.id]
+// sudo ip netns exec ns2 ../Ausführung/simple_V7_send 10.0.0.2 10.0.0.1 2
 
 int main(int argc, char *argv[]) {
     int send_socket;

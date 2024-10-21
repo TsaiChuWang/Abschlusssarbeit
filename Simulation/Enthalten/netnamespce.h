@@ -19,6 +19,7 @@
 
 #define RECEIVE_PROGRAM "simple_V7_recievie"
 #define SEND_PROGRAM "simple_V7_send"
+#define SEND_PROGRAM_SPECIEFIED_PACKET_NUMBER_PER_SECOND "simple_V7_1_send"
 
 #define DESTINATION_IP "10.0.0.1"
 
@@ -52,6 +53,11 @@ typedef struct {
 
   int status;
 }Bridge;
+
+typedef struct {
+  NetworkNamesapce* net_namespace;
+  int packet_number_persecond;
+}ThreadArgument_Speicified_Packet_Number_Per_Second;
 
 NetworkNamesapce announceNetworkNamesapce_general(unsigned int identifier){
   NetworkNamesapce net_namespace;
@@ -295,6 +301,7 @@ void executeReceiveProgram(NetworkNamesapce* ptr_net_namespace){
 void* receiveThread(void* argument) {
   // pid_t pid = getpid();
   // pthread_t tid = pthread_self();
+  // fflush(stdout);
   // printf("PID: %d, TID: %lu\n", (int)pid, (unsigned long)tid);
   NetworkNamesapce* net_namespace = (NetworkNamesapce*)argument;
   executeReceiveProgram(net_namespace);
@@ -308,7 +315,16 @@ void executeSendProgram(NetworkNamesapce* ptr_source_net_namespace){
 
   sprintf(command, "sudo ip netns exec "INFORM_NS_NAME_FORMAT" ../Ausführung/"SEND_PROGRAM" "INFORM_IP_ADDRESS_FORMAT" "DESTINATION_IP" %d", ptr_source_net_namespace->name, ptr_source_net_namespace->ip_address, ptr_source_net_namespace->identifier);
   system(command); 
-  printf("%s\n", command); 
+  // printf("%s\n", command); 
+}
+
+void executeSendProgramSpeiciedPersencond(NetworkNamesapce* ptr_source_net_namespace, int packet_number_persecond){
+  char command[MAX_COMMAND_LENGTH];
+  sprintf(command, "sudo ip netns exec "INFORM_NS_NAME_FORMAT" gcc ./"SEND_PROGRAM_SPECIEFIED_PACKET_NUMBER_PER_SECOND".c -o ../Ausführung/"SEND_PROGRAM_SPECIEFIED_PACKET_NUMBER_PER_SECOND, ptr_source_net_namespace->name);
+  system(command);  
+
+  sprintf(command, "sudo ip netns exec "INFORM_NS_NAME_FORMAT" ../Ausführung/"SEND_PROGRAM_SPECIEFIED_PACKET_NUMBER_PER_SECOND" "INFORM_IP_ADDRESS_FORMAT" "DESTINATION_IP" %d %d", ptr_source_net_namespace->name, ptr_source_net_namespace->ip_address, ptr_source_net_namespace->identifier, packet_number_persecond);
+  system(command); 
 }
 
 void* sendThread(void* argument) {
@@ -317,7 +333,11 @@ void* sendThread(void* argument) {
   return NULL;
 }
 
-
+void* sendThreadSpeiciedPersencond(void* argument) {
+  ThreadArgument_Speicified_Packet_Number_Per_Second* thread_arguments = (ThreadArgument_Speicified_Packet_Number_Per_Second*)argument;
+  executeSendProgramSpeiciedPersencond(thread_arguments->net_namespace, thread_arguments->packet_number_persecond);
+  return NULL;
+}
 #endif
 
 

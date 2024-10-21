@@ -13,7 +13,8 @@
         "type_traits": "c",
         "curl.h": "c",
         "ini.h": "c",
-        "typeinfo": "c"
+        "typeinfo": "c",
+        "netnamespce.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true

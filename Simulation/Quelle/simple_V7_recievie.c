@@ -6,11 +6,12 @@
 #include <netinet/ip.h>
 #include <netinet/udp.h>
 #include <unistd.h>
-// sudo ip netns exec ns2 gcc recv_packet.c -o recv_packet
-// sudo ip netns exec ns2 ./recv_packet
+
+// sudo ip netns exec ns2 gcc simple_V6_receive.c -o simple_V6_receive
+// sudo ip netns exec ns2 ./simple_V6_receive
 
 int main() {
-    int sock;
+    int receive_sock;
     char buffer[4096];
 
     // Create raw socket for receiving

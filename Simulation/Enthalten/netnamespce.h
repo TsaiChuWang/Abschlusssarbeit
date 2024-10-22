@@ -63,6 +63,12 @@ typedef struct {
   int packet_number_persecond;
 }ThreadArgument_Speicified_Packet_Number_Per_Second;
 
+typedef struct {
+  NetworkNamesapce* net_namespace;
+  int simulation_time;
+}ThreadArgument_Trafffic_Generation;
+
+
 NetworkNamesapce announceNetworkNamesapce_general(unsigned int identifier){
   NetworkNamesapce net_namespace;
   net_namespace.identifier = identifier;
@@ -333,14 +339,15 @@ void executeSendProgramSpeiciedPersencond(NetworkNamesapce* ptr_source_net_names
 
 }
 
-void executeSendProgramTrafficGeneration(NetworkNamesapce* ptr_source_net_namespace, int packet_number_persecond){
+void executeSendProgramTrafficGeneration(NetworkNamesapce* ptr_source_net_namespace, int simulation_time){
   char command[MAX_COMMAND_LENGTH];
   sprintf(command, "sudo ip netns exec "INFORM_NS_NAME_FORMAT" gcc ./"SEND_PROGRAM_TRAFFIC_GENERATION".c -o ../Ausführung/"SEND_PROGRAM_TRAFFIC_GENERATION, ptr_source_net_namespace->name);
   system(command);  
 
-  sprintf(command, "sudo ip netns exec "INFORM_NS_NAME_FORMAT" ../Ausführung/"SEND_PROGRAM_TRAFFIC_GENERATION" "INFORM_IP_ADDRESS_FORMAT" "DESTINATION_IP" %d %d", ptr_source_net_namespace->name, ptr_source_net_namespace->ip_address, ptr_source_net_namespace->identifier, packet_number_persecond);
+  sprintf(command, "sudo ip netns exec "INFORM_NS_NAME_FORMAT" ../Ausführung/"SEND_PROGRAM_TRAFFIC_GENERATION" "INFORM_IP_ADDRESS_FORMAT" "DESTINATION_IP" %d "INFORM_NS_NAME_FORMAT" %d", ptr_source_net_namespace->name, ptr_source_net_namespace->ip_address, ptr_source_net_namespace->identifier, ptr_source_net_namespace->name, simulation_time);
   system(command); 
 }
+
 
 void* sendThread(void* argument) {
   NetworkNamesapce* net_namespace = (NetworkNamesapce*)argument;
@@ -365,6 +372,12 @@ void* sendThreadSpeiciedPersencond(void* argument) {
         // Sleep for the remaining time to make the total execution time exactly 1 second
         nanosleep(&remaining_time, NULL);
     }
+  return NULL;
+}
+
+void* sendThreadTrafficGeneration(void* argument) {
+  ThreadArgument_Trafffic_Generation* thread_arguments = (ThreadArgument_Trafffic_Generation*)argument;
+  executeSendProgramTrafficGeneration(thread_arguments->net_namespace, thread_arguments->simulation_time);
   return NULL;
 }
 #endif

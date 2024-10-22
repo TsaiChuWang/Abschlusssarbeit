@@ -11,7 +11,7 @@
 
 int main(int argc, char *argv[]){
 
-  int simluation_time = 20;
+  int simluation_time = 25;
 
   NetworkNamesapce destination = announceNetworkNamesapce_general(1);
   NetworkNamesapce source_1 = announceNetworkNamesapce_general(2);
@@ -50,15 +50,15 @@ int main(int argc, char *argv[]){
     printf("Error creating thread 1\n");
     return EXIT_FAILURE;
   }
-  // ThreadArgument_Speicified_Packet_Number_Per_Second thread_arguments;
-  // thread_arguments.net_namespace = &source_1;
-  // thread_arguments.packet_number_persecond = 10;
-  // fflush(stdout);
-  // if (pthread_create(&thread_send, NULL, sendThreadSpeiciedPersencond, &thread_arguments)) {
-  //     fprintf(stderr, "Error creating thread 2\n");
-  //     printf("Error creating thread 2\n");
-  //     return EXIT_FAILURE;
-  // }
+  ThreadArgument_Trafffic_Generation thread_arguments;
+  thread_arguments.net_namespace = &source_1;
+  thread_arguments.simulation_time = simluation_time-5;
+  fflush(stdout);
+  if (pthread_create(&thread_send, NULL, sendThreadTrafficGeneration, &thread_arguments)) {
+      fprintf(stderr, "Error creating thread 2\n");
+      printf("Error creating thread 2\n");
+      return EXIT_FAILURE;
+  }
 
 
   sleep(simluation_time);

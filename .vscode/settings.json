@@ -22,7 +22,8 @@
         "ip.h": "c",
         "unistd.h": "c",
         "time.h": "c",
-        "socket.h": "c"
+        "socket.h": "c",
+        "traffic_generation.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true

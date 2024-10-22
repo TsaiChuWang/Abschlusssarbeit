@@ -7,8 +7,11 @@
 #include <stdlib.h>
 #include <time.h>
 
-int* generateNormalDistribution(int simulation_time, int mean, int standard_deviation) {
-  srand(time(0));
+#define MEAN 120
+#define STANDARD_DEVIATION 40
+
+int* generateNormalDistribution(int simulation_time, int mean, int standard_deviation, int identifier) {
+  srand((unsigned int)time(NULL) + identifier);
   int* traffic = (int*)malloc(sizeof(int)*simulation_time);
   int sum = 0;
   for(int time_stamp = 0;time_stamp<simulation_time;time_stamp++){

@@ -10,12 +10,14 @@
 
 #include "../Enthalten/include.h"
 
-// sudo ip netns exec ns2 gcc simple_V7_receive.c -o simple_V7_receive
-// sudo ip netns exec ns2 ./simple_V7_receive
+// sudo ip netns exec ns2 gcc simple_V7_recievie.c -o ../Ausführung/simple_V7_recievie
+// sudo ip netns exec ns2 ../Ausführung/simple_V7_recievie
 
 int main(int argc, char *argv[]) {
     int receive_socket;
     char buffer[MAX_BUFFER_SIZE];
+
+    FILE* data = fopen("../Datei/simple_V7/data.csv", "w+");
 
     int packet_count = 0;
     struct timespec ts;
@@ -57,10 +59,12 @@ int main(int argc, char *argv[]) {
             record = 1;
         }
         // printf("a\n");
-        printf("time : %ld.%09ld Received packet: Source IP: "INFORM_IP_ADDRESS_FORMAT", Source Port: "INFORM_PORT_FORMAT", Packet Size : "INFORM_PACKET_SIZE_FORMAT" Packet Count : %d\n", ts.tv_sec- second, ts.tv_nsec - nsecond, inet_ntoa(*(struct in_addr *)&iph->saddr), ntohs(udph->source), packet_length, packet_count);
-
+        long elapsed_time_ns = (ts.tv_sec- second) * ONE_SECOND_IN_NS + (ts.tv_nsec - nsecond);
+        // printf("time : %ld.%09ld Received packet: Source IP: "INFORM_IP_ADDRESS_FORMAT", Source Port: "INFORM_PORT_FORMAT", Packet Size : "INFORM_PACKET_SIZE_FORMAT" Packet Count : %d\n", ts.tv_sec- second, ts.tv_nsec - nsecond, inet_ntoa(*(struct in_addr *)&iph->saddr), ntohs(udph->source), packet_length, packet_count);
+        fprintf(data, "%ld, %s, %d, %d, %d\n", elapsed_time_ns, inet_ntoa(*(struct in_addr *)&iph->saddr), ntohs(udph->source), packet_length, packet_count);
     }
-
+ printf("coumt = %d\n", packet_count);
+ fclose(data);
     close(receive_socket);
         
     return EXIT_SUCCESS;

@@ -14,6 +14,7 @@
 #include <time.h>
 #include <pthread.h>
 #include <unistd.h>  // For nanosleep
+#include "../Enthalten/traffic_generation.h"
 
 #define STATUS_ANNOUCED       0
 #define STATUS_CREATED        1
@@ -26,6 +27,7 @@
 #define SEND_PROGRAM_TRAFFIC_GENERATION "simple_V7_2_send"
 
 #define DESTINATION_IP "10.0.0.1"
+#define PACKET_SIZE 256
 
 typedef struct{
   unsigned int identifier;
@@ -377,9 +379,23 @@ void* sendThreadSpeiciedPersencond(void* argument) {
 
 void* sendThreadTrafficGeneration(void* argument) {
   ThreadArgument_Trafffic_Generation* thread_arguments = (ThreadArgument_Trafffic_Generation*)argument;
+  printf("name = %s\n", thread_arguments->net_namespace->name);
   executeSendProgramTrafficGeneration(thread_arguments->net_namespace, thread_arguments->simulation_time);
   return NULL;
 }
+void* sendThreadTrafficGeneration_Multiple(void* argument) {
+  ThreadArgument_Trafffic_Generation* thread_arguments = (ThreadArgument_Trafffic_Generation*)argument;
+  fflush(stdout);
+  printf("name = %s\n", thread_arguments->net_namespace->name);
+  int* traffic = generateNormalDistribution(thread_arguments->simulation_time, MEAN, STANDARD_DEVIATION, thread_arguments->net_namespace->identifier);
+  for(int time_stamp = 0;time_stamp<thread_arguments->simulation_time;time_stamp++){
+    char command[MAX_COMMAND_LENGTH];
+    sprintf(command, "sudo ip netns exec "INFORM_NS_NAME_FORMAT" iperf -c "DESTINATION_IP" -u -b %ld -l %d -t 1", thread_arguments->net_namespace->name, PACKET_SIZE*(*(traffic+time_stamp))*8 ,PACKET_SIZE);
+    system(command);
+  }
+  return NULL;
+}
+
 #endif
 
 

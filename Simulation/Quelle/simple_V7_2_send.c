@@ -31,20 +31,22 @@ int main(int argc, char *argv[]) {
     int identifier = atoi(argv[3]);
 
     char command[MAX_COMMAND_LENGTH];
-    sprintf(command, "sudo ip netns exec "INFORM_NS_NAME_FORMAT" gcc ./simple_V7_1_send.c -o ../Ausführung/simple_V7_1_send", ns_name);
-    system(command);  
-    // printf("%s\n", command);
-    // sprintf(command, "sudo ip netns exec ns2 ../Ausführung/simple_V7_1_send 10.0.0.2 10.0.0.1 2 5");
-    // system("sudo ip netns exec ns2 ../Ausführung/simple_V7_1_send 10.0.0.2 10.0.0.1 2 5"); 
-    // printf("%s\n", command);
+    // sprintf(command, "sudo ip netns exec "INFORM_NS_NAME_FORMAT" gcc ./simple_V7_1_send.c -o ../Ausführung/simple_V7_1_send", ns_name);
+    // system(command);  
+    // // printf("%s\n", command);
+    // // sprintf(command, "sudo ip netns exec ns2 ../Ausführung/simple_V7_1_send 10.0.0.2 10.0.0.1 2 5");
+    // // system("sudo ip netns exec ns2 ../Ausführung/simple_V7_1_send 10.0.0.2 10.0.0.1 2 5"); 
+    // // printf("%s\n", command);
     int* traffic = generateNormalDistribution(simulation_time, MEAN, STANDARD_DEVIATION);
-    setbuf(stdout, NULL);
-    for(int time_stamp = 0;time_stamp<simulation_time;time_stamp++){
-        fflush(stdout);
-        sprintf(command, "sudo ip netns exec %s ../Ausführung/simple_V7_1_send %s %s %d %d", ns_name, source_ip_address, destination_ip_address, identifier, *(traffic+time_stamp));;
-        // // sprintf(command, "sudo ip netns exec "INFORM_NS_NAME_FORMAT" ../Ausführung/simple_V7_1_send "INFORM_IP_ADDRESS_FORMAT" %s %d %d", ns_name, source_ip_address, identifier, destination_ip_address, *(traffic+time_stamp));
-        system(command); 
-        // printf("%s\n", command);
-    }
+    // setbuf(stdout, NULL);
+    // for(int time_stamp = 0;time_stamp<simulation_time;time_stamp++){
+    //     fflush(stdout);
+    //     sprintf(command, "sudo ip netns exec %s ../Ausführung/simple_V7_1_send %s %s %d %d", ns_name, source_ip_address, destination_ip_address, identifier, *(traffic+time_stamp));;
+    //     // // sprintf(command, "sudo ip netns exec "INFORM_NS_NAME_FORMAT" ../Ausführung/simple_V7_1_send "INFORM_IP_ADDRESS_FORMAT" %s %d %d", ns_name, source_ip_address, identifier, destination_ip_address, *(traffic+time_stamp));
+    //     system(command); 
+    //     // printf("%s\n", command);
+    // }
+
+    // sprintf(command, "sudo ip netns exec iperf -c %s -u -b %ld -l 256 -t 1", destination_ip_address, (long));
     return EXIT_SUCCESS;
 }

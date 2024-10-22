@@ -1,0 +1,24 @@
+
+#define _TRAFFIC_GENERATION_H
+
+#ifdef _TRAFFIC_GENERATION_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+int* generateNormalDistribution(int simulation_time, int mean, int standard_deviation) {
+  srand(time(0));
+  int* traffic = (int*)malloc(sizeof(int)*simulation_time);
+  for(int time_stamp = 0;time_stamp<simulation_time;time_stamp++){
+    // if(time_stamp == 0 || time_stamp== simulation_time-1)
+    //  *(traffic+time_stamp) = (rand() % (2*standard_deviation + 1)) + mean - standard_deviation;
+    // else *(traffic+time_stamp) = 0;
+    // printf("%d\n", *(traffic+time_stamp));
+
+    *(traffic+time_stamp) = (rand() % (2*standard_deviation + 1)) + mean - standard_deviation;
+  }
+    
+  return traffic;
+}
+#endif

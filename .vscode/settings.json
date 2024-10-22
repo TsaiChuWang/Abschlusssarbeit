@@ -19,7 +19,9 @@
         "stdlib.h": "c",
         "stdio.h": "c",
         "udp.h": "c",
-        "ip.h": "c"
+        "ip.h": "c",
+        "unistd.h": "c",
+        "time.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true

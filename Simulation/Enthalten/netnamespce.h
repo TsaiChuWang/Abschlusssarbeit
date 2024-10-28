@@ -22,9 +22,11 @@
 #define STATUS_DELETED        3
 
 #define RECEIVE_PROGRAM "simple_V7_recievie"
+#define RECEIVE_PROGRAM_GCRA "simple_V7_4_recievie"
 #define SEND_PROGRAM "simple_V7_send"
 #define SEND_PROGRAM_SPECIEFIED_PACKET_NUMBER_PER_SECOND "simple_V7_1_send"
 #define SEND_PROGRAM_TRAFFIC_GENERATION "simple_V7_2_send"
+#define SEND_PROGRAM_TRAFFIC_GENERATION_V4 "simple_V7_4_send"
 
 #define DESTINATION_IP "10.0.0.1"
 #define PACKET_SIZE 256
@@ -70,6 +72,10 @@ typedef struct {
   int simulation_time;
 }ThreadArgument_Trafffic_Generation;
 
+typedef struct {
+  NetworkNamesapce* net_namespace;
+  int tenant_number;
+}ThreadArgument_GCRA;
 
 NetworkNamesapce announceNetworkNamesapce_general(unsigned int identifier){
   NetworkNamesapce net_namespace;
@@ -310,6 +316,17 @@ void executeReceiveProgram(NetworkNamesapce* ptr_net_namespace){
   // printf("%s\n", command);
 }
 
+void executeReceiveProgram_GCRA(NetworkNamesapce* ptr_net_namespace, int tenant_number){
+  char command[MAX_COMMAND_LENGTH];
+  sprintf(command, "sudo ip netns exec "INFORM_NS_NAME_FORMAT" gcc ./"RECEIVE_PROGRAM_GCRA".c -o ../Ausführung/"RECEIVE_PROGRAM_GCRA, ptr_net_namespace->name);
+  system(command);  
+  // printf("%s\n", command);
+
+  sprintf(command, "sudo ip netns exec "INFORM_NS_NAME_FORMAT" ../Ausführung/"RECEIVE_PROGRAM_GCRA" %d", ptr_net_namespace->name, tenant_number);
+  system(command);  
+  // printf("%s\n", command);
+}
+
 void* receiveThread(void* argument) {
   // pid_t pid = getpid();
   // pthread_t tid = pthread_self();
@@ -317,6 +334,16 @@ void* receiveThread(void* argument) {
   // printf("PID: %d, TID: %lu\n", (int)pid, (unsigned long)tid);
   NetworkNamesapce* net_namespace = (NetworkNamesapce*)argument;
   executeReceiveProgram(net_namespace);
+  return NULL;
+}
+
+void* receiveThread_GCRA(void* argument) {
+  // pid_t pid = getpid();
+  // pthread_t tid = pthread_self();
+  // fflush(stdout);
+  // printf("PID: %d, TID: %lu\n", (int)pid, (unsigned long)tid);
+  ThreadArgument_GCRA* thread_arguments = (ThreadArgument_GCRA*)argument;
+  executeReceiveProgram_GCRA(thread_arguments->net_namespace, thread_arguments->tenant_number);
   return NULL;
 }
 
@@ -350,6 +377,14 @@ void executeSendProgramTrafficGeneration(NetworkNamesapce* ptr_source_net_namesp
   system(command); 
 }
 
+void executeSendProgramTrafficGeneration_V4(NetworkNamesapce* ptr_source_net_namespace, int simulation_time){
+  char command[MAX_COMMAND_LENGTH];
+  sprintf(command, "sudo ip netns exec "INFORM_NS_NAME_FORMAT" gcc ./"SEND_PROGRAM_TRAFFIC_GENERATION_V4".c -o ../Ausführung/"SEND_PROGRAM_TRAFFIC_GENERATION_V4, ptr_source_net_namespace->name);
+  system(command);  
+
+  sprintf(command, "sudo ip netns exec "INFORM_NS_NAME_FORMAT" ../Ausführung/"SEND_PROGRAM_TRAFFIC_GENERATION_V4" "INFORM_IP_ADDRESS_FORMAT" "DESTINATION_IP" %d "INFORM_NS_NAME_FORMAT" %d", ptr_source_net_namespace->name, ptr_source_net_namespace->ip_address, ptr_source_net_namespace->identifier, ptr_source_net_namespace->name, simulation_time);
+  system(command); 
+}
 
 void* sendThread(void* argument) {
   NetworkNamesapce* net_namespace = (NetworkNamesapce*)argument;
@@ -383,6 +418,14 @@ void* sendThreadTrafficGeneration(void* argument) {
   executeSendProgramTrafficGeneration(thread_arguments->net_namespace, thread_arguments->simulation_time);
   return NULL;
 }
+
+void* sendThreadTrafficGeneration_V4(void* argument) {
+  ThreadArgument_Trafffic_Generation* thread_arguments = (ThreadArgument_Trafffic_Generation*)argument;
+  // printf("name = %s\n", thread_arguments->net_namespace->name);
+  executeSendProgramTrafficGeneration_V4(thread_arguments->net_namespace, thread_arguments->simulation_time);
+  return NULL;
+}
+
 void* sendThreadTrafficGeneration_Multiple(void* argument) {
   ThreadArgument_Trafffic_Generation* thread_arguments = (ThreadArgument_Trafffic_Generation*)argument;
   fflush(stdout);
@@ -390,7 +433,7 @@ void* sendThreadTrafficGeneration_Multiple(void* argument) {
   int* traffic = generateNormalDistribution(thread_arguments->simulation_time, MEAN, STANDARD_DEVIATION, thread_arguments->net_namespace->identifier);
   for(int time_stamp = 0;time_stamp<thread_arguments->simulation_time;time_stamp++){
     char command[MAX_COMMAND_LENGTH];
-    sprintf(command, "sudo ip netns exec "INFORM_NS_NAME_FORMAT" iperf -c "DESTINATION_IP" -u -b %ld -l %d -t 1", thread_arguments->net_namespace->name, PACKET_SIZE*(*(traffic+time_stamp))*8 ,PACKET_SIZE);
+    sprintf(command, "sudo ip netns exec "INFORM_NS_NAME_FORMAT" iperf -c "DESTINATION_IP" -u -b %ld -l %d -t 1 ", thread_arguments->net_namespace->name, PACKET_SIZE*(*(traffic+time_stamp))*8 ,PACKET_SIZE);
     system(command);
   }
   return NULL;

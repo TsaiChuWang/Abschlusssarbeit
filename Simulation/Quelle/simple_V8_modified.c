@@ -18,6 +18,8 @@
 #define _CODE_TAU 3
 #define _CODE_L 4
 
+#define REDUCTION
+
 typedef struct{
     long tau;    
     long l;   
@@ -188,15 +190,16 @@ int main(int argc, char *argv[]){
         double rate = ((double)count/(double)tenants[index].timestamps_length);
         // printf("%f\n", rate);
         if(rate*100.0 < min_rate)
-            min_rate = rate;
+            min_rate = rate*100;
         printf("Tanant %2d : %f %\n", index, rate*100);
 
-        sprintf(command, "python3 " PYTHON_PATH " 1 %d", index);
-        system(command);
+        // sprintf(command, "python3 " PYTHON_PATH " 1 %d", index);
+        // system(command);
     }
 
     FILE* data_stored = fopen(BUCKET_DATA_STORED_PATH, "a+");
     fprintf(data_stored, "%s, %f, %f, %f\n", argv[2], capacity, (double)(capacity/((double)tenant_number)), min_rate);
+    printf("%s, %f, %f, %f\n", argv[2], capacity, (double)(capacity/((double)tenant_number)), min_rate);
     fclose(data_stored);
 
 #ifdef REDUCTION

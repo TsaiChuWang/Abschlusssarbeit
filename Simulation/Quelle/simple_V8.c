@@ -150,6 +150,23 @@ int main(int argc, char *argv[]){
         // printf("%lld\n", gcras[index].virtual_time);
     }
 
+    for(int index = 0; index < tenant_number; index++){
+        int count = 0;
+        for(int time_stamp = 0;time_stamp<tenants[index].timestamps_length;time_stamp++){
+            count += tenants[index].accpectance[time_stamp];
+            
+        }
+        // printf("%d\n", count);
+        // printf("%d\n", tenants[index].timestamps_length);
+        double rate = ((double)count/(double)tenants[index].timestamps_length);
+        // printf("%f\n", rate);
+
+        printf("Tanant %2d : %f %\n", index, rate*100);
+
+        sprintf(command, "python3 " PYTHON_PATH " 1 %d", index);
+        system(command);
+    }
+
     
 
     return EXIT_SUCCESS;

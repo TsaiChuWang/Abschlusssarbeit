@@ -1,6 +1,6 @@
 #include <math.h>
 
-#define DROPPED_CODE -1
+#define DROPPED_CODE 0
 #define ACCEPTED_CODE 1
 
 #ifdef SIMPLE_V2_925_GCRA

@@ -424,6 +424,8 @@ def draw_An_experiment_MTR():
     plt.savefig(IMAGE_PATH_EXPERIMENT_MTR)
     plt.clf()
 
+
+
 def random_color(number):
     cmap = plt.get_cmap('tab20')
     colors = [cmap(i / number) for i in range(number)]
@@ -447,9 +449,24 @@ if(int(sys.argv[1]) == 0):
         file.write(str(alpha.value))
     file.close()
 
-if(int(sys.argv[1])==1):
-    index = int(sys.argv[2])
-    line_chart_tenant(index)
+if(int(sys.argv[1]) == 1):
+    DATA_PATH = "../Datei/simple_V8/traffic_{}.csv".format(sys.argv[2])
+    IMAGE_PATH = "../Datei/simple_V8/DOTCHART_1_{}.png".format(sys.argv[2])
+    dataframe = pd.read_csv(DATA_PATH)
+    data = dataframe.values.tolist()
+    # print(int(data[-1][0]))
+    packet_time = [int(row[0]) for row in data]
+    packet_status = [int(row[1]) for row in data]
+    
+    plt.scatter(packet_time, packet_status)
+
+    plt.xlabel("Timestamp")
+    plt.ylabel("Packet State")
+    plt.grid(True)
+    plt.title("Packet State of Tenant {}".format(sys.argv[2]))
+    plt.savefig(IMAGE_PATH)
+    # print(DATA_PATH)
+
 
 if(int(sys.argv[1])==2):
     index = int(sys.argv[2])

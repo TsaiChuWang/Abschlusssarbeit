@@ -424,8 +424,6 @@ def draw_An_experiment_MTR():
     plt.savefig(IMAGE_PATH_EXPERIMENT_MTR)
     plt.clf()
 
-
-
 def random_color(number):
     cmap = plt.get_cmap('tab20')
     colors = [cmap(i / number) for i in range(number)]
@@ -467,12 +465,32 @@ if(int(sys.argv[1]) == 1):
     plt.savefig(IMAGE_PATH)
     # print(DATA_PATH)
 
-
 if(int(sys.argv[1])==2):
-    index = int(sys.argv[2])
-    mean = float(sys.argv[3])
-    covariance = float(sys.argv[4])
-    _line_chart_tenant(index, mean, covariance)
+    DATA_PATH = "../Datei/simple_V8/traffic.csv"
+    dataframe = pd.read_csv(DATA_PATH)
+    data = dataframe.values.tolist()
+
+    attribute = sys.argv[2]
+    IMAGE_PATH = "../Datei/simple_V8/images/Variation_{}.png".format(sys.argv[2])
+
+    x_axis = [float(row[0]) for row in data]
+    min_rate = [float(row[3]) for row in data]
+
+    config = configparser.ConfigParser()
+    config.read("../configuration/simple_V8.ini")
+    error = float(config['simulation']['error'])
+
+    plt.plot(x_axis, min_rate, linestyle='-', color='red', label="Min transfer rate")
+    plt.plot(x_axis, [100-(error*100) for row in data], linestyle='-', color='blue', label="Predicted Transfer")
+    plt.title('Min Transfer Rate : '+attribute+' Variation')
+    plt.xlabel(attribute)
+    plt.ylabel('Min Transfer Rate')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH)
+    plt.clf()
+
+
 
 if(int(sys.argv[1])==3):
     print('=' * term_size.columns)

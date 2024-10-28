@@ -57,6 +57,9 @@ int main(int argc, char *argv[]){
                 sprintf(command, "../Ausführung/simple_V8_modified %d %d", parameter, tenant_number);
                 system(command);
             }
+
+            sprintf(command, "python3 " PYTHON_PATH " 2 Tenant_Number");
+            system(command);
             break;
         
         default:

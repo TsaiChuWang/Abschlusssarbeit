@@ -1,5 +1,8 @@
 #include <math.h>
 
+#define DROPPED_CODE -1
+#define ACCEPTED_CODE 1
+
 #ifdef SIMPLE_V2_925_GCRA
     #ifndef TOKEN_BUCKET_H
         #include "../Enthalten/token_bucket.h"
@@ -113,6 +116,38 @@ double* generateRegularTraffic(long time_interval, double mean, double standard_
     return (double*)traffic;
 }
 
+double* generateRegularTraffic_(long time_interval, double mean, double standard_deviation, int identifier){
+    srand((unsigned int)time(NULL) + identifier);
+    double* traffic = (double*)malloc(sizeof(double)*time_interval);
+    double sum = 0;
+
+    for(int time_stamp = 0;time_stamp<time_interval;time_stamp++){
+        *(traffic+time_stamp) = ((double)rand()/RAND_MAX)*2-1;
+        sum+=*(traffic+time_stamp);
+        // printf("mean = %f\n", *(traffic+time_stamp));
+    }
+
+    double _mean = sum/time_interval;
+    
+    for(int time_stamp = 0;time_stamp<time_interval;time_stamp++)
+        *(traffic+time_stamp) -= _mean;
+
+    for(int time_stamp = 0;time_stamp<time_interval;time_stamp++)
+        *(traffic+time_stamp) = *(traffic+time_stamp)*standard_deviation + mean;
+    
+    for(int time_stamp = 0;time_stamp<time_interval;time_stamp++){
+        if(*(traffic+time_stamp) >=(mean + standard_deviation)){
+            // printf("%3d : "INFORM_DOUBLE_FORMAT"\n", time_stamp, *(traffic+time_stamp));
+            *(traffic+time_stamp) =(mean + standard_deviation)*0.999;
+            // printf("%3d : "INFORM_DOUBLE_FORMAT"\n", time_stamp, *(traffic+time_stamp));
+        }
+            
+        // printf("%f\n", *(traffic+time_stamp));
+    }
+    return (double*)traffic;
+}
+
+
 double* generateNaughtyTraffic(long time_interval, double naughty_mean, double naughty_standard_deviation){
     double* traffic = (double*)malloc(sizeof(double)*time_interval);
     double sum = 0;
@@ -178,8 +213,10 @@ struct Tenant{
     struct Token_Bucket bucket;
 #endif
 
-    unsigned long long* timestamps;
+    long* timestamps;
     int timestamps_length;
+
+    int* accpectance;
 };
 
 // Create a tenant
@@ -240,6 +277,7 @@ struct Tenant{
 #endif
         tenant.timestamps = NULL;
         tenant.timestamps_length = 0;
+        accpectance = NULL;
         return tenant;
     }
 #endif
@@ -408,7 +446,7 @@ void translateTimestamps(double* traffic, long time_interval, struct Tenant* ten
     // }
 
     int index = 0;
-    unsigned long long time = 0;
+    long time = 0;
     
     
     for(int time_stamp = 0;time_stamp<time_interval;time_stamp++){
@@ -425,7 +463,7 @@ void translateTimestamps(double* traffic, long time_interval, struct Tenant* ten
     index = 0;
     time = 0;
     // printf("l = %d\n", length);
-    unsigned long long* times = (unsigned long long*)malloc(sizeof(long)*length);
+    long* times = (long*)malloc(sizeof(long)*length);
     for(int time_stamp = 0;time_stamp<time_interval;time_stamp++){
         for(int i = 0;i<*(traffic+time_stamp);i++){
             time = (long)(time + ONE_SECOND_IN_NS/((int)*(traffic+time_stamp)));
@@ -434,6 +472,8 @@ void translateTimestamps(double* traffic, long time_interval, struct Tenant* ten
             // printf("index = %d l = %ld\n", index, time);
         }
     }
+    int* accpectance = (int*)calloc(length, sizeof(int));
+    tenant->accpectance = accpectance;
     tenant->timestamps = times;
 }
 
@@ -441,7 +481,7 @@ void recordTimestamps(struct Tenant tenant, char* path){
     FILE* traffic_file;
     traffic_file = fopen(path, "w+");
     for(int time_stamp = 0;time_stamp<tenant.timestamps_length;time_stamp++){
-        fprintf(traffic_file,  "%lld\n", *(tenant.timestamps+time_stamp));
+        fprintf(traffic_file,  "%lld, %d\n", *(tenant.timestamps+time_stamp), tenant.accpectance[time_stamp]);
         // printf("%lld\n", *(tenant.timestamps+time_stamp));
     }            
         

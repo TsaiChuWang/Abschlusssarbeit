@@ -24,7 +24,13 @@
         "time.h": "c",
         "socket.h": "c",
         "traffic_generation.h": "c",
-        "inet.h": "c"
+        "inet.h": "c",
+        "vector": "c",
+        "system_error": "c",
+        "array": "c",
+        "functional": "c",
+        "tuple": "c",
+        "utility": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true

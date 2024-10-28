@@ -11,8 +11,8 @@
 #define BUCKET_DATA_STORED_PATH "../Datei/simple_V8/traffic.csv"
 // gcc ./simple_V8.c inih/ini.c -o ../Ausführung/simple_V8 -lcurl -lgsl -lgslcblas -lm
 // ../Ausführung/simple_V8 c
-#define TAU 8333333
-#define L 16666666
+// #define gcras[index].tau 8333333
+// #define L 16666666
 
 typedef struct{
     long tau;    
@@ -23,10 +23,10 @@ typedef struct{
     long allow_time;
 }GCRA;
 
-GCRA initGCRA(){
+GCRA initGCRA(long tau, long l){
     GCRA gcra;
-    gcra.tau = TAU;
-    gcra.l = L;
+    gcra.tau = tau;
+    gcra.l = l;
     gcra.last_time = 0;
     gcra.record = 0;
     gcra.allow_time = 0;
@@ -49,6 +49,8 @@ int main(int argc, char *argv[]){
 
     double bucket_depth;    /** @brief The maximum depth of the token bucket. **/
     double leakage_rate;    /** @brief The rate at which tokens leak from the bucket (tokens per time interval). **/
+    long tau;
+    long l;
 
     configuration config;
     char command[MAX_COMMAND_LENGTH];
@@ -81,6 +83,8 @@ int main(int argc, char *argv[]){
         naughty_mean = config.naughty_mean;
         naughty_standard_deviation = config.naughty_standard_deviation;
         naughty_tenant_number = config.naughty_tenant_number;
+        tau = config.tau;
+        l = config.l;
     }
     system("python3 " PYTHON_PATH " 0 "CONFIGURATION_PATH);
     capacity = read_double_from_file("../Datei/objective.txt");
@@ -115,12 +119,13 @@ int main(int argc, char *argv[]){
     GCRA* gcras = (GCRA*)malloc(sizeof(GCRA)*tenant_number);
 
     for(int index = 0; index < tenant_number; index++){
+        *(gcras+index) = initGCRA(tau, l);
         for(int time_stamp = 0;time_stamp<tenants[index].timestamps_length;time_stamp++){
 
-            if(gcras[index].last_time == 0){
-                gcras[index].last_time = tenants[index].timestamps[time_stamp];
-                gcras[index].tau = tenants[index].timestamps[time_stamp] + TAU;
-            }
+            // if(gcras[index].last_time == 0){
+            //     gcras[index].last_time = tenants[index].timestamps[time_stamp];
+            //     gcras[index].tau = tenants[index].timestamps[time_stamp] + gcras[index].tau;
+            // }
             int accept = 0;
 
             // printf("v= %lld a = %lld t = %lld %d\n", gcras[index].virtual_time, gcras[index].allow_time, tenants[index].timestamps[time_stamp],
@@ -132,10 +137,10 @@ int main(int argc, char *argv[]){
                 long _virtual_time = gcras[index].virtual_time;
 
                 if(_virtual_time>tenants[index].timestamps[time_stamp])
-                    gcras[index].virtual_time = _virtual_time+TAU;
-                else gcras[index].virtual_time = tenants[index].timestamps[time_stamp]+TAU;
+                    gcras[index].virtual_time = _virtual_time+gcras[index].tau;
+                else gcras[index].virtual_time = tenants[index].timestamps[time_stamp]+gcras[index].tau;
 
-                gcras[index].allow_time = (long)(_virtual_time - L);
+                gcras[index].allow_time = (long)(_virtual_time - (long)(gcras[index].l));
             }else{
                 accept = DROPPED_CODE;
             }
@@ -146,7 +151,7 @@ int main(int argc, char *argv[]){
         sprintf(path, DATA_STORED_PATH, index);
         recordTimestamps(*(tenants + index), path);
 
-        // printf("%lld\n", gcras[index].allow_time);
+        // printf("%lld\n", gcras[index].tau);
         // printf("%lld\n", gcras[index].virtual_time);
     }
 

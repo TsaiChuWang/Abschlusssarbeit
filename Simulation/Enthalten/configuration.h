@@ -124,6 +124,9 @@
 
         double  bucket_depth;   /**< @brief The maximum depth of the token bucket (i.e., the maximum tokens the bucket can hold). */
         double  leakage_rate;   /**< @brief The rate at which tokens leak from the bucket (tokens per time interval). */
+
+        long tau;
+        long l;
     } configuration;
 
     /**
@@ -171,6 +174,10 @@
             pconfig->bucket_depth = atof(value);    /**< Set bucket depth for GCRA (Generic Cell Rate Algorithm) from string value. */
         else if (MATCH("GCRA", "leakage_rate")) 
             pconfig->leakage_rate = atof(value);    /**< Set leakage rate for GCRA from string value. */
+        else if (MATCH("GCRA", "tau")) 
+            pconfig->tau = strtol(value, NULL, 10);    /**< Set bucket depth for GCRA (Generic Cell Rate Algorithm) from string value. */
+        else if (MATCH("GCRA", "l")) 
+            pconfig->l = strtol(value, NULL, 10);    /**< Set leakage rate for GCRA from string value. */
         else return EXIT_FAILURE;                              /**< Return 0 if no match is found for the section and name. */
         
         return SUCCESS; /**< Return SUCCESS if the key-value pair was processed successfully. */
@@ -251,6 +258,8 @@
         fprintf(file, "[GCRA]\n");
         fprintf(file, "bucket_depth = %f\n", config->bucket_depth);  /**< Write the bucket depth for GCRA. */
         fprintf(file, "leakage_rate = %f\n", config->leakage_rate);  /**< Write the leakage rate for GCRA. */
+        fprintf(file, "tau = %ld\n", config->tau);  /**< Write the bucket depth for GCRA. */
+        fprintf(file, "l = %ld\n", config->l);  /**< Write the leakage rate for GCRA. */
 
         // Close the file
         fclose(file);  /**< Close the file after writing. */

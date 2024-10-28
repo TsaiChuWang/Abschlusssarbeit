@@ -177,6 +177,9 @@ struct Tenant{
 #ifdef SIMPLE_V2_925_GCRA
     struct Token_Bucket bucket;
 #endif
+
+    unsigned long long* timestamps;
+    int timestamps_length;
 };
 
 // Create a tenant
@@ -235,6 +238,8 @@ struct Tenant{
 #ifdef SIMPLE_V2_925_GCRA
         tenant.bucket = createATokenBucket(BUCKET_DEPTH, LEAKAGE_RATE);
 #endif
+        tenant.timestamps = NULL;
+        tenant.timestamps_length = 0;
         return tenant;
     }
 #endif
@@ -396,4 +401,50 @@ void recordTrafficEntireInterval(struct Tenant* tenants, unsigned int tenant_num
 }
 #endif
 
+void translateTimestamps(double* traffic, long time_interval, struct Tenant* tenant){
+    int length = 0;
+    // for(int time_stamp = 0;time_stamp<time_interval;time_stamp++){
+    //     length += (int)*(traffic+time_stamp);
+    // }
+
+    int index = 0;
+    unsigned long long time = 0;
+    
+    
+    for(int time_stamp = 0;time_stamp<time_interval;time_stamp++){
+        for(int i = 0;i<*(traffic+time_stamp);i++){
+            // time = (long)(time + ONE_SECOND_IN_NS/((int)*(traffic+time_stamp)));
+            // *(times+index) = time;
+            index+=1;
+            // printf("index = %d l = %ld\n", index, length);
+        }
+    }
+    length = index;
+    tenant->timestamps_length = length;
+
+    index = 0;
+    time = 0;
+    // printf("l = %d\n", length);
+    unsigned long long* times = (unsigned long long*)malloc(sizeof(long)*length);
+    for(int time_stamp = 0;time_stamp<time_interval;time_stamp++){
+        for(int i = 0;i<*(traffic+time_stamp);i++){
+            time = (long)(time + ONE_SECOND_IN_NS/((int)*(traffic+time_stamp)));
+            *(times+index) = time;
+            index+=1;
+            // printf("index = %d l = %ld\n", index, time);
+        }
+    }
+    tenant->timestamps = times;
+}
+
+void recordTimestamps(struct Tenant tenant, char* path){
+    FILE* traffic_file;
+    traffic_file = fopen(path, "w+");
+    for(int time_stamp = 0;time_stamp<tenant.timestamps_length;time_stamp++){
+        fprintf(traffic_file,  "%lld\n", *(tenant.timestamps+time_stamp));
+        // printf("%lld\n", *(tenant.timestamps+time_stamp));
+    }            
+        
+    fclose(traffic_file);
+}
 #endif

@@ -5,18 +5,19 @@
 #include "../Enthalten/token_bucket.h"   /**< Token bucket algorithm implementation */
 #include "./inih/ini.h"
 
-#define CONFIGURATION_PATH "../configuration/simple_V8.ini"
-#define PYTHON_PATH "./simple_V8.py"
-#define DATA_STORED_PATH "../Datei/simple_V8/traffic_%d.csv"
-#define BUCKET_DATA_STORED_PATH "../Datei/simple_V8/traffic.csv"
-// gcc ./simple_V8_modified.c inih/ini.c -o ../Ausführung/simple_V8_modified -lcurl -lgsl -lgslcblas -lm
-// ../Ausführung/simple_V8_modified c
+#define CONFIGURATION_PATH "../configuration/simple_V8_1.ini"
+#define PYTHON_PATH "./simple_V8_1.py"
+#define DATA_STORED_PATH "../Datei/simple_V8/simple_V8_1/traffic_%d.csv"
+#define BUCKET_DATA_STORED_PATH "../Datei/simple_V8/simple_V8_1/traffic.csv"
+// gcc ./simple_V8_1_modified.c inih/ini.c -o ../Ausführung/simple_V8_1_modified -lcurl -lgsl -lgslcblas -lm
+// ../Ausführung/simple_V8_1_modified c
 
 #define _CODE_TENANT_NUMBER 0
 #define _CODE_MEAN 1
 #define _CODE_STANDARD_DEVIATION 2
 #define _CODE_TAU 3
 #define _CODE_L 4
+#define _CODE_NAUGHTY_NUMBER 5
 
 #define REDUCTION
 
@@ -46,7 +47,7 @@ int main(int argc, char *argv[]){
     long time_interval; /** @brief The time interval for token bucket processing (in milliseconds). **/
     double error;
     double capacity;
-    int gaussian = 0;
+    int gaussian = 2;
     double mean;    /** @brief The mean value for traffic generation. **/
     double standard_deviation;  /** @brief The standard deviation used for traffic generation. **/
     double naughty_mean;
@@ -82,6 +83,9 @@ int main(int argc, char *argv[]){
         case _CODE_L:
             config.l = strtol(argv[2], NULL, 10);
         break;
+        case _CODE_NAUGHTY_NUMBER:
+            config.naughty_tenant_number = atoi(argv[2]);
+        break;
         default:
             config.capacity = 360;
             config.tenant_number = 3;
@@ -91,7 +95,7 @@ int main(int argc, char *argv[]){
             config.bucket_depth = 200;
             config.leakage_rate = 120;
             config.tau = 6465000;
-            config.l = 16666666;
+            config.l = 19230000;
         break;
     }
 
@@ -111,9 +115,9 @@ int main(int argc, char *argv[]){
 
     // printf("%ld\n", tau);
 
-    system("python3 " PYTHON_PATH " 0 "CONFIGURATION_PATH);
-    capacity = read_double_from_file("../Datei/objective.txt");
-    printf("Capacity = "INFORM_DOUBLE_FORMAT"\n", capacity);
+    // system("python3 " PYTHON_PATH " 0 "CONFIGURATION_PATH);
+    capacity = 2236.297915;
+    // printf("Capacity = "INFORM_DOUBLE_FORMAT"\n", capacity);
 
     struct Tenant* tenants = (struct Tenant*)malloc(sizeof(struct Tenant)*tenant_number);
     for(int index = 0; index < tenant_number; index++){
@@ -126,7 +130,7 @@ int main(int argc, char *argv[]){
             traffic = generateNormalDistribution(time_interval, mean, standard_deviation);
         else if(gaussian == 2){
             if(index<naughty_tenant_number){
-                traffic = generateNaughtyTraffic(time_interval, naughty_mean, naughty_standard_deviation);
+                traffic = generateNaughtyTraffic_(time_interval, naughty_mean, naughty_standard_deviation, index);
                 // printf("index = %d | %d\n", index, naughty_tenant_number);
             }
             else {
@@ -217,7 +221,7 @@ int main(int argc, char *argv[]){
             config.naughty_standard_deviation = 10;
             config.naughty_tenant_number = 7;
             config.tau = 6465000;
-            config.l = 16666666;
+            config.l = 19230000;
     modify_ini_file(CONFIGURATION_PATH, &config);
 #endif
 

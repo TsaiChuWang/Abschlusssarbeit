@@ -5,19 +5,19 @@
 #include "../Enthalten/token_bucket.h"   /**< Token bucket algorithm implementation */
 #include "./inih/ini.h"
 
-#define CONFIGURATION_PATH "../configuration/simple_V8.ini"
-#define PYTHON_PATH "./simple_V8.py"
-#define DATA_STORED_PATH "../Datei/simple_V8/traffic_%d.csv"
-#define BUCKET_DATA_STORED_PATH "../Datei/simple_V8/traffic.csv"
-// gcc ./simple_V8_variation.c inih/ini.c -o ../Ausführung/simple_V8_variation -lcurl -lgsl -lgslcblas -lm
-// ../Ausführung/simple_V8_variation 0
+#define CONFIGURATION_PATH "../configuration/simple_V8_1.ini"
+#define PYTHON_PATH "./simple_V8_1.py"
+#define DATA_STORED_PATH "../Datei/simple_V8/simple_V8_1/traffic_%d.csv"
+#define BUCKET_DATA_STORED_PATH "../Datei/simple_V8/simple_V8_1/traffic.csv"
+// gcc ./simple_V8_1_variation.c inih/ini.c -o ../Ausführung/simple_V8_1_variation -lcurl -lgsl -lgslcblas -lm
+// ../Ausführung/simple_V8_1_variation 0
 
 #define _CODE_TENANT_NUMBER 0
 #define _CODE_MEAN 1
 #define _CODE_STANDARD_DEVIATION 2
 #define _CODE_TAU 3
 #define _CODE_L 4
-
+#define _CODE_NAUGHTY_NUMBER 5
 
 typedef struct{
     long tau;    
@@ -46,7 +46,7 @@ int main(int argc, char *argv[]){
     fprintf(data_file,"");
     fclose(data_file);
 
-    system("gcc ./simple_V8_modified.c inih/ini.c -o ../Ausführung/simple_V8_modified -lcurl -lgsl -lgslcblas -lm");
+    system("gcc ./simple_V8_1_modified.c inih/ini.c -o ../Ausführung/simple_V8_1_modified -lcurl -lgsl -lgslcblas -lm");
     int parameter = atoi(argv[1]);
     char command[MAX_COMMAND_LENGTH];
 
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]){
     {
         case _CODE_TENANT_NUMBER:
             for(int tenant_number = 1;tenant_number<50;tenant_number++){
-                sprintf(command, "../Ausführung/simple_V8_modified %d %d", parameter, tenant_number);
+                sprintf(command, "../Ausführung/simple_V8_1_modified %d %d", parameter, tenant_number);
                 system(command);
             }
 
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]){
 
         case _CODE_TAU:
             for(long tau = 6460000;tau<6470000;tau+=100){
-                sprintf(command, "../Ausführung/simple_V8_modified %d %d", parameter, tau);
+                sprintf(command, "../Ausführung/simple_V8_1_modified %d %d", parameter, tau);
                 system(command);
             }
 
@@ -73,15 +73,23 @@ int main(int argc, char *argv[]){
             break;
 
         case _CODE_L:
-            for(long l = 50000;l<25000000;l+=10000){
-                sprintf(command, "../Ausführung/simple_V8_modified %d %d", parameter, l);
+            for(long l = 17830000;l<20000000;l+=100000){
+                sprintf(command, "../Ausführung/simple_V8_1_modified %d %d", parameter, l);
                 system(command);
             }
 
             sprintf(command, "python3 " PYTHON_PATH " 2 L");
             system(command);
             break;
+        case _CODE_NAUGHTY_NUMBER:
+            for(int naighty_tenant_number = 1;naighty_tenant_number<=14;naighty_tenant_number++){
+                sprintf(command, "../Ausführung/simple_V8_1_modified %d %d", parameter, naighty_tenant_number);
+                system(command);
+            }
 
+            sprintf(command, "python3 " PYTHON_PATH " 2 Naughty_Tenant_Number");
+            system(command);
+            break;
         default:
             return EXIT_FAILURE;
             break;

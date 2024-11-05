@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import sys
 import os
+from csv import writer
+import random
 term_size = os.get_terminal_size()
 
 DATEI_OBJECTIVE_WEG = "../Datei/objective.txt"
@@ -424,10 +426,12 @@ def draw_An_experiment_MTR():
     plt.savefig(IMAGE_PATH_EXPERIMENT_MTR)
     plt.clf()
 
+
 def random_color(number):
     cmap = plt.get_cmap('tab20')
     colors = [cmap(i / number) for i in range(number)]
-    hex_colors = ['#%02x%02x%02x' % (int(r*288), int(g*288), int(b*288)) for r, g, b, _ in colors]
+    hex_colors = ["#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
+             for i in range(number)]
     return hex_colors
 
 if(int(sys.argv[1]) == 0):
@@ -491,13 +495,68 @@ if(int(sys.argv[1])==2):
     plt.clf()
 
 
-
 if(int(sys.argv[1])==3):
-    print('=' * term_size.columns)
+    DATA_PATH = "../Datei/simple_V9/traffic.csv"
+    IMAGE_PATH = "../Datei/simple_V9/images/Variation_Observation_{}.png".format(sys.argv[2])
+    os.system("gcc ./simple_V9_variation.c inih/ini.c -o ../Ausführung/simple_V9_variation -lcurl -lgsl -lgslcblas -lm")
+    DATA_PATH_STORED = "../Datei/simple_V9/statistic.csv"
+    with open(DATA_PATH_STORED, 'w') as file:
+        file.write("")
+    file.close()
+
+    colors = random_color(int(sys.argv[3]))
+    for i in range(int(sys.argv[3])):
+
+        os.system("../Ausführung/simple_V9_variation 3")
+
+        dataframe = pd.read_csv(DATA_PATH)
+        data = dataframe.values.tolist()
+
+        attribute = sys.argv[2]
+        
+
+        x_axis = [float(row[0]) for row in data]
+        min_rate = [float(row[3]) for row in data]
+
+        config = configparser.ConfigParser()
+        config.read("../configuration/simple_V9.ini")
+        error = float(config['simulation']['error'])
+
+        plt.plot(x_axis, min_rate, linestyle='-', color=colors[i], label="Min transfer rate({})".format(i))
+        with open(DATA_PATH_STORED, 'a') as file:
+            file.write(str(min_rate)[:-1])
+        file.close()
+
+    plt.plot(x_axis, [100-(error*100) for row in data], linestyle='-', color='red', label="Predicted Transfer")
+    plt.title('Min Transfer Rate : '+attribute+' Variation')
+    plt.xlabel(attribute)
+    plt.ylabel('Min Transfer Rate')
+    # plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH)
+    plt.clf()
 
 if(int(sys.argv[1])==4):
-    index = int(sys.argv[2])
-    line_chart_gap(index)
+    DATA_PATH_STORED = "../Datei/simple_V9/statistic.csv"
+    IMAGE_PATH = "../Datei/simple_V9/images/Variation_NTN_{}.png".format(sys.argv[2])
+    dataframe = pd.read_csv(DATA_PATH_STORED)
+    config = configparser.ConfigParser()
+    config.read("../configuration/simple_V9.ini")
+    error = float(config['simulation']['error'])
+    data = dataframe.values.tolist()
+    data = [float(row[0]) for row in data]
+    x_axis = [i+1 for i in range(len(data))]
+    plt.plot(x_axis, data, linestyle='-', color='blue', label="Min transfer rate({})".format(sys.argv[2]))
+    plt.plot(x_axis, [100-(error*100) for row in data], linestyle='-', color='red', label="Predicted Transfer")
+    attribute = "Naughty Tenants Number"
+    plt.title('Min Transfer Rate : '+attribute+' Variation')
+    plt.xlabel(attribute)
+    plt.ylabel('Min Transfer Rate')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH)
+    plt.clf()
+
 
 if(int(sys.argv[1])==8):
     index = int(sys.argv[2])

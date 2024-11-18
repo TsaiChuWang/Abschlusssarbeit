@@ -30,12 +30,9 @@ int main(int argc, char *argv[]){
 
     // capacity.py
     char command[MAX_COMMAND_LENGTH];
-    sprintf(command, "python3 "PYTHON_CAPACITY_CALCULATION_PATH" %s %d", CONFIGURATION_PATH, 3);
+    sprintf(command, "python3 ../python/capacity.py %s %d", CONFIGURATION_PATH, 3);
     system(command);
-  
-    double capacity = obtain_capacity();
-    printf("capacity : %f\n", capacity);
 
-    
+    free(command);
     return EXIT_SUCCESS;
 }

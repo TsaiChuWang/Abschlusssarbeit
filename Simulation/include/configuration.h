@@ -3,8 +3,6 @@
 
 #define CONFIG_H
 
-#define CAPACITY_FILE_PATH "../Datei/capacity.txt"
-
 #define TRAFFIC_MODE_INTERVAL 0
 #define TRAFFIC_MODE_GAUSSIAN 1
 #define TRAFFIC_MODE_ALL_NAUGHTY 2
@@ -121,16 +119,16 @@
         FILE *file;      
         double capacity;    
 
-        file = fopen(CAPACITY_FILE_PATH, "r");
+        file = fopen(CAPACITY_DATA_PATH, "r");
         if (file == NULL) {
-            printf("Cannot read file %s\n", CAPACITY_FILE_PATH);
-            perror("Error opening file "CAPACITY_FILE_PATH);  
+            printf("Cannot read file %s\n", CAPACITY_DATA_PATH);
+            perror("Error opening file "CAPACITY_DATA_PATH);  
             return FAILED;  
         }
 
         if (fscanf(file, "%lf", &capacity) != 1) {
-            printf("Error reading capacity from file %s\n", CAPACITY_FILE_PATH);
-            perror("Error reading capacity from file "CAPACITY_FILE_PATH);  
+            printf("Error reading capacity from file %s\n", CAPACITY_DATA_PATH);
+            perror("Error reading capacity from file "CAPACITY_DATA_PATH);  
             fclose(file);  
             return FAILED;   
         }

@@ -33,7 +33,9 @@
         "utility": "c",
         "config.h": "c",
         "general.h": "c",
-        "random": "c"
+        "random": "c",
+        "string_view": "c",
+        "initializer_list": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true

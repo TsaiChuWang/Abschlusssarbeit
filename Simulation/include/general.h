@@ -38,3 +38,10 @@
 
 #define PYTHON_CAPACITY_CALCULATION_PATH "../python/capacity.py"
 #define CAPACITY_DATA_PATH "../data/capacity.txt"
+
+#define TENANT_TRAFFIC_MODE_INTERVAL 0
+#define TENANT_TRAFFIC_MODE_GAUSSIAN 1
+#define TENANT_TRAFFIC_MODE_ALL_NAUGHTY 2
+
+#define MBPS 1048576
+#define KBPS 1024

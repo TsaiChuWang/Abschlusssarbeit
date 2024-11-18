@@ -30,7 +30,10 @@
         "array": "c",
         "functional": "c",
         "tuple": "c",
-        "utility": "c"
+        "utility": "c",
+        "config.h": "c",
+        "general.h": "c",
+        "random": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true

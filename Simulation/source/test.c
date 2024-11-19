@@ -103,22 +103,23 @@ int main(int argc, char *argv[]){
         return EXIT_FAILURE;
     }
 
-//     int identifier = 0;
-//     tenant t = initialize_tenant(identifier, config.simulation_time);
-//     for (long index=0;index<t.simulation_time;index++)
-//         if(index<=(t.simulation_time/2))
-//             *(t.generated_packets+index) = 159;
-//         else *(t.generated_packets+index) = 161;
-//     translate_band_to_packets(&t, MBPS, config.packet_size);
+    int identifier = 0;
+    tenant t = initialize_tenant(identifier, config.simulation_time);
+    // for (long index=0;index<t.simulation_time;index++)
+    //     if(index<=(t.simulation_time/2))
+    //         *(t.generated_packets+index) = 159;
+    //     else *(t.generated_packets+index) = 161;
+    tenant_packet_generation(&t, config.mean, config.standard_deviation, config.naughty_mean, config.naughty_standard_deviation);
+    translate_band_to_packets(&t, MBPS, config.packet_size);
 
-// #ifdef RECORD_PACKETS_GENERATION
-//     record_generated_packets(&t, STORED_PACKET_GENERATION_PATH);
-// #endif
+#ifdef RECORD_PACKETS_GENERATION
+    record_generated_packets(&t, STORED_PACKET_GENERATION_PATH);
+#endif
 
-//     timestamp_translation(&t);
-// #ifdef RECORD_TIMESTAMP
-//     record_timestamps(&t, STORED_TIMESTAMP_PATH);
-// #endif   
+    timestamp_translation(&t);
+#ifdef RECORD_TIMESTAMP
+    record_timestamps(&t, STORED_TIMESTAMP_PATH);
+#endif   
 
     return EXIT_SUCCESS;
 }

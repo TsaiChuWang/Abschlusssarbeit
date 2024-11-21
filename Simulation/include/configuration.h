@@ -36,6 +36,7 @@
         fprintf(file, "tenant_number = %d\n", INITIAL_CONFIGURATION_TENANT_NUMBER);  
         fprintf(file, "simulation_time = %ld\n", INITIAL_CONFIGURATION_SIMULATION_simulation_time);  
         fprintf(file, "error = %f\n", INITIAL_CONFIGURATION_ERROR);  
+        fprintf(file, "data_path = ..\\data\\\n");  
 
         // Write the [traffic] section
         fprintf(file, "[traffic]\n");
@@ -64,7 +65,8 @@
     typedef struct {
         int     tenant_number;  
         long    simulation_time;  
-        double  error;         
+        double  error;      
+        char*   data_path   ;
 
         int     traffic_mode;           
         int     mean;               
@@ -90,7 +92,13 @@
             pconfig->simulation_time = (long)atoi(value); 
         else if (MATCH("simulation", "error")) 
             pconfig->error = atof(value);              
-    
+        else if (MATCH("simulation", "data_path")) {
+            char* temp_str = malloc(strlen(value) + 1);  
+            strcpy(temp_str, value);  
+            pconfig->data_path = temp_str;  
+        }
+            
+
         else if (MATCH("traffic", "traffic_mode")) 
             pconfig->traffic_mode = atoi(value);                    
         else if (MATCH("traffic", "mean")) 
@@ -150,6 +158,7 @@
         fprintf(file, "tenant_number = %d\n", config->tenant_number);  
         fprintf(file, "simulation_time = %ld\n", config->simulation_time);  
         fprintf(file, "error = %f\n", config->error);  
+        fprintf(file, "data_path = %s\n", config->data_path);  
 
         // Write the [traffic] section
         fprintf(file, "[traffic]\n");
@@ -176,6 +185,7 @@
         printf("| tenant number              : %-d\n", config.tenant_number);
         printf("| simulation time            : %-ld\n", config.simulation_time);
         printf("| error                      : %-f\n", config.error);
+        printf("| data path                  : %-s\n", config.data_path);
 
         printf("- Traffic :\n");
         printf("| traffic mode               : %-d\n", config.traffic_mode);

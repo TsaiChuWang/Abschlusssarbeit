@@ -6,7 +6,7 @@
 #include "../include/general.h"
 #include "./inih/ini.h"
 #include "../include/configuration.h"
-#include "../include/traffic_generation.h"
+// #include "../include/traffic_generation.h"
 
 #define CONFIGURATION_PATH "../configuration/simple_V1.ini"
 
@@ -22,32 +22,32 @@
 int main(int argc, char *argv[]){
 
 
-//     if(atoi(argv[1]) == GENERATE_TRAFFIC){
-//         system("rm -r ../data/"NAME);
-//         system("mkdir ../data/"NAME);
-//         system("mkdir ../data/"NAME"/packet_generation");
-//         system("mkdir ../data/"NAME"/packet_generation/images");
-//         system("mkdir ../data/"NAME"/timestamp");
-//         system("mkdir ../data/"NAME"/timestamp/images");
-//     }
+    // if(atoi(argv[1]) == GENERATE_TRAFFIC){
+    //     system("rm -r ../data/"NAME);
+    //     system("mkdir ../data/"NAME);
+    //     system("mkdir ../data/"NAME"/packet_generation");
+    //     system("mkdir ../data/"NAME"/packet_generation/images");
+    //     system("mkdir ../data/"NAME"/timestamp");
+    //     system("mkdir ../data/"NAME"/timestamp/images");
+    // }
 
 
-//     // configuration.h
-//     configuration config;
+    // configuration.h
+    configuration config;
 
-//     if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0) {
-//         printf("Can't load configuration\"%s\"\n", CONFIGURATION_PATH);
-//         return EXIT_FAILURE;
-//     }
+    if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0) {
+        printf("Can't load configuration\"%s\"\n", CONFIGURATION_PATH);
+        return EXIT_FAILURE;
+    }
 
-//     // show_configuration(config);
+    // show_configuration(config);
 
-//     config.packet_size = 512;
-//     modify_ini_file(CONFIGURATION_PATH, &config);
+    // config.packet_size = 512;
+    // modify_ini_file(CONFIGURATION_PATH, &config);
 
-// #ifdef REDUCTION
-//     reduction_inif_file(CONFIGURATION_PATH);
-// #endif
+#ifdef REDUCTION
+    reduction_inif_file(CONFIGURATION_PATH);
+#endif
 
 //     // capacity.py
 //     char command[MAX_COMMAND_LENGTH];
@@ -96,30 +96,30 @@ int main(int argc, char *argv[]){
 //     // Free allocated memory
 //     free(timestamps);
 
-    configuration config;
+//     configuration config;
 
-    if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0) {
-        printf("Can't load configuration\"%s\"\n", CONFIGURATION_PATH);
-        return EXIT_FAILURE;
-    }
+//     if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0) {
+//         printf("Can't load configuration\"%s\"\n", CONFIGURATION_PATH);
+//         return EXIT_FAILURE;
+//     }
 
-    int identifier = 0;
-    tenant t = initialize_tenant(identifier, config.simulation_time);
-    // for (long index=0;index<t.simulation_time;index++)
-    //     if(index<=(t.simulation_time/2))
-    //         *(t.generated_packets+index) = 159;
-    //     else *(t.generated_packets+index) = 161;
-    tenant_packet_generation(&t, config.mean, config.standard_deviation, config.naughty_mean, config.naughty_standard_deviation);
-    translate_band_to_packets(&t, MBPS, config.packet_size);
+//     int identifier = 0;
+//     tenant t = initialize_tenant(identifier, config.simulation_time);
+//     // for (long index=0;index<t.simulation_time;index++)
+//     //     if(index<=(t.simulation_time/2))
+//     //         *(t.generated_packets+index) = 159;
+//     //     else *(t.generated_packets+index) = 161;
+//     tenant_packet_generation(&t, config.mean, config.standard_deviation, config.naughty_mean, config.naughty_standard_deviation);
+//     translate_band_to_packets(&t, MBPS, config.packet_size);
 
-#ifdef RECORD_PACKETS_GENERATION
-    record_generated_packets(&t, STORED_PACKET_GENERATION_PATH);
-#endif
+// #ifdef RECORD_PACKETS_GENERATION
+//     record_generated_packets(&t, STORED_PACKET_GENERATION_PATH);
+// #endif
 
-    timestamp_translation(&t);
-#ifdef RECORD_TIMESTAMP
-    record_timestamps(&t, STORED_TIMESTAMP_PATH);
-#endif   
+//     timestamp_translation(&t);
+// #ifdef RECORD_TIMESTAMP
+//     record_timestamps(&t, STORED_TIMESTAMP_PATH);
+// #endif   
 
     return EXIT_SUCCESS;
 }

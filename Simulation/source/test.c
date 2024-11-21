@@ -21,7 +21,7 @@
 
 int main(int argc, char *argv[]){
 
-
+    char command[MAX_COMMAND_LENGTH];
     // if(atoi(argv[1]) == GENERATE_TRAFFIC){
     //     system("rm -r ../data/"NAME);
     //     system("mkdir ../data/"NAME);
@@ -36,11 +36,11 @@ int main(int argc, char *argv[]){
     configuration config;
 
     if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0) {
-        printf("Can't load configuration\"%s\"\n", CONFIGURATION_PATH);
+        printf("Can't load configuration \"%s\"\n", CONFIGURATION_PATH);
         return EXIT_FAILURE;
     }
 
-    // show_configuration(config);
+    show_configuration(config);
 
     // config.packet_size = 512;
     // modify_ini_file(CONFIGURATION_PATH, &config);
@@ -49,13 +49,18 @@ int main(int argc, char *argv[]){
     reduction_inif_file(CONFIGURATION_PATH);
 #endif
 
-//     // capacity.py
-//     char command[MAX_COMMAND_LENGTH];
-//     sprintf(command, "python3 "PYTHON_CAPACITY_CALCULATION_PATH" %s %d", CONFIGURATION_PATH, 0);
-//     system(command);
+    // Clean
+    sprintf(command, "rm -r %s", config.data_path);
+    system(command);
+    sprintf(command, "mkdir %s", config.data_path);
+    system(command);
+    
+    // capacity.py
+    sprintf(command, "python3 "PYTHON_CAPACITY_CALCULATION_PATH" %s %d", CONFIGURATION_PATH, 0);
+    system(command);
   
-//     double capacity = obtain_capacity();
-//     printf("capacity : %f\n", capacity);
+    double capacity = obtain_capacity();
+    printf("capacity : %f\n", capacity);
 
 //     // Initialize tenants 
 //     tenant* tenants = initialize_tenants(config.tenant_number, config.simulation_time);

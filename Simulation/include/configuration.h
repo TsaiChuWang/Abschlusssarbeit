@@ -7,15 +7,19 @@
 #define TRAFFIC_MODE_GAUSSIAN 1
 #define TRAFFIC_MODE_ALL_NAUGHTY 2
 
+#define UNIT_MBPS 0
+#define UNIT_KBPS 1
+
 #ifdef REDUCTION
     #define INITIAL_CONFIGURATION_TENANT_NUMBER 100
     #define INITIAL_CONFIGURATION_SIMULATION_simulation_time 6000  // ?
     #define INITIAL_CONFIGURATION_ERROR 0.001
+    #define INITIAL_CONFIGURATION_UNIT 0
 
     #define INITIAL_CONFIGURATION_TRAFFIC_MODE 0
     #define INITIAL_CONFIGURATION_MEAN 120
     #define INITIAL_CONFIGURATION_STANDARD_DEVIATION 40
-    #define INITIAL_CONFIGURATION_PACKET_SIZE 256
+    #define INITIAL_CONFIGURATION_PACKET_SIZE 512
 
     #define INITIAL_CONFIGURATION_NAUGHTY_MEAN 150
     #define INITIAL_CONFIGURATION_NAUGHTY_STANDARD_DEVIATION 10
@@ -36,7 +40,8 @@
         fprintf(file, "tenant_number = %d\n", INITIAL_CONFIGURATION_TENANT_NUMBER);  
         fprintf(file, "simulation_time = %ld\n", INITIAL_CONFIGURATION_SIMULATION_simulation_time);  
         fprintf(file, "error = %f\n", INITIAL_CONFIGURATION_ERROR);  
-        fprintf(file, "data_path = ..\\data\\\n");  
+        fprintf(file, "data_path = ../data/test\n");  
+        fprintf(file, "unit = %d\n", INITIAL_CONFIGURATION_UNIT);
 
         // Write the [traffic] section
         fprintf(file, "[traffic]\n");
@@ -66,7 +71,8 @@
         int     tenant_number;  
         long    simulation_time;  
         double  error;      
-        char*   data_path   ;
+        char*   data_path;
+        int     unit;
 
         int     traffic_mode;           
         int     mean;               
@@ -97,7 +103,8 @@
             strcpy(temp_str, value);  
             pconfig->data_path = temp_str;  
         }
-            
+        else if (MATCH("simulation", "unit")) 
+            pconfig->unit = atoi(value);                    
 
         else if (MATCH("traffic", "traffic_mode")) 
             pconfig->traffic_mode = atoi(value);                    
@@ -159,6 +166,7 @@
         fprintf(file, "simulation_time = %ld\n", config->simulation_time);  
         fprintf(file, "error = %f\n", config->error);  
         fprintf(file, "data_path = %s\n", config->data_path);  
+        fprintf(file, "unit = %d\n", config->unit);
 
         // Write the [traffic] section
         fprintf(file, "[traffic]\n");
@@ -186,6 +194,18 @@
         printf("| simulation time            : %-ld\n", config.simulation_time);
         printf("| error                      : %-f\n", config.error);
         printf("| data path                  : %-s\n", config.data_path);
+        
+        switch(config.unit){
+            case UNIT_MBPS:
+                printf("| unit                       : Mbps\n");
+                break;
+            case UNIT_KBPS:
+                printf("| unit                       : kbps\n");
+                break;
+            default:
+                printf("| unit                       : Mbps\n");
+
+        }
 
         printf("- Traffic :\n");
         printf("| traffic mode               : %-d\n", config.traffic_mode);

@@ -7,6 +7,7 @@
 #include "./inih/ini.h"
 #include "../include/configuration.h"
 #include "../include/traffic_generation.h"
+#include "../include/GCRA.h"
 
 #define CONFIGURATION_PATH "../configuration/simple_V1.ini"
 
@@ -82,10 +83,10 @@ int main(int argc, char *argv[])
 
     long step_size = (long)((long)config.packet_size / (GBPS / ONE_SECOND_IN_NS));
     long grid_length = obtain_grid_length(config.simulation_time, step_size);
-    // printf("%ld\n", grid_length);
+    printf("%ld\n", grid_length);
 
     double ratio = (double)(config.mean * unit) / GBPS;
-    printf("%f\n", ratio);
+    // printf("%f\n", ratio);
 
     char filename[MAX_PATH_LENGTH];
     sprintf(filename, "%s/packets.csv", config.data_path);
@@ -99,15 +100,20 @@ int main(int argc, char *argv[])
 
     int tenant_number = 10;
     for (int tenant = 0; tenant < tenant_number; tenant++)
-        fprintf(file, "%d", tenant);
-    fprintf(file, "\n");
+        if (tenant == tenant_number - 1)
+            fprintf(file, "%d\n", tenant);
+        else
+            fprintf(file, "%d, ", tenant);
 
     long *count = (long *)calloc(tenant_number, sizeof(long));
-    grid_length = 100;
+    grid_length = 1000000;
 
     int **label = (int **)malloc(sizeof(int *) * tenant_number);
     for (int tenant = 0; tenant < tenant_number; tenant++)
         *(label + tenant) = (int *)calloc(4, sizeof(int));
+
+    GCRA *gcras_1 = initializeGCRAs(tenant_number, config.tau_1, config.packet_size);
+    GCRA *gcras_2 = initializeGCRAs(tenant_number, config.tau_2, config.packet_size);
 
     for (long grid = 0; grid < grid_length; grid++)
     {
@@ -115,13 +121,56 @@ int main(int argc, char *argv[])
         // print_packets(packets, tenant_number);
         for (int tenant = 0; tenant < tenant_number; tenant++)
         {
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
+            {
+                if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
+                    *(count + tenant) += 1;
+
+                GCRA *gcra_1 = (GCRA *)(gcras_1 + tenant);
+                long timestamp = grid * step_size;
+                long x = (long)gcra_1->x - (timestamp - gcra_1->last_time) * (((double)(config.mean + config.standard_deviation) * unit) / ONE_SECOND_IN_NS);
+
+                // printf("%ld %ld %f\n", gcra_1->x, grid * step_size, (timestamp - gcra_1->last_time) * (((double)(config.mean + config.standard_deviation) * unit) / ONE_SECOND_IN_NS));
+
+                if (x > gcra_1->tau)
+                    *(packets + tenant) = PACKET_LABEL_OVER_UPPERBOUND_DROPPED;
+                else
+                {
+                    gcra_1->x = MAX((long)0, x) + gcra_1->l;
+                    gcra_1->last_time = timestamp;
+                    *(packets + tenant) = PACKET_LABEL_ACCEPT;
+                }
+
+                if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
+                {
+                    GCRA *gcra_2 = (GCRA *)(gcras_2 + tenant);
+                    long timestamp = grid * step_size;
+                    long x = (long)gcra_2->x - (timestamp - gcra_2->last_time) * (((double)(config.mean) * unit) / ONE_SECOND_IN_NS);
+
+                    // printf("%ld %ld %f\n", gcra_2->x, grid * step_size, (timestamp - gcra_2->last_time) * (((double)(config.mean) * unit) / ONE_SECOND_IN_NS));
+
+                    if (x > gcra_2->tau)
+                        *(packets + tenant) = PACKET_LABEL_GCRA_DROPPED;
+                    else
+                    {
+                        gcra_2->x = MAX((long)0, x) + gcra_2->l;
+                        gcra_2->last_time = timestamp;
+                        *(packets + tenant) = PACKET_LABEL_ACCEPT;
+                    }
+                }
+            }
+            else
+                goto RECORD;
+
+            // Record
+        RECORD:
+            if (*(packets + tenant) != PACKET_LABEL_NO_PACKET)
+                label[tenant][*(packets + tenant)] += 1;
+
             if (tenant == tenant_number - 1)
                 fprintf(file, "%d\n", *(packets + tenant));
             else
                 fprintf(file, "%d, ", *(packets + tenant));
-
-            if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
-                *(count + tenant) += 1;
         }
         // printf("\n");
     }
@@ -131,6 +180,12 @@ int main(int argc, char *argv[])
     for (int tenant = 0; tenant < tenant_number; tenant++)
         printf("%-10ld :%f\n", *(count + tenant), (double)(*(count + tenant) * 100) / grid_length);
     printf("\n");
+
+    printf("\ncount = %ld\n", config.tau_2);
+    for (int tenant = 0; tenant < tenant_number; tenant++)
+        printf("%-10ld %-10ld %-10ld %-10ld\n", label[tenant][0], label[tenant][1], label[tenant][2], label[tenant][3]);
+    printf("\n");
+
     // int *packets = packet_generation_uniform(0, ratio, grid_length);
     // print_packets(packets, grid_length);
 

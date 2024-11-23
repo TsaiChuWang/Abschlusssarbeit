@@ -6,7 +6,7 @@
 #include "../include/general.h"
 #include "./inih/ini.h"
 #include "../include/configuration.h"
-// #include "../include/traffic_generation.h"
+#include "../include/traffic_generation.h"
 
 #define CONFIGURATION_PATH "../configuration/simple_V1.ini"
 
@@ -68,6 +68,10 @@ int main(int argc, char *argv[])
     system(command);
     sprintf(command, "mkdir %s", config.data_path);
     system(command);
+    // sprintf(command, "mkdir %s/packets", config.data_path);
+    // system(command);
+    // sprintf(command, "mkdir %s/packets/images", config.data_path);
+    // system(command);
 
     // capacity.py
     sprintf(command, "python3 " PYTHON_CAPACITY_CALCULATION_PATH " %s %d", CONFIGURATION_PATH, 0);
@@ -75,6 +79,60 @@ int main(int argc, char *argv[])
 
     double capacity = obtain_capacity();
     printf("capacity : %f bps\n", capacity * unit);
+
+    long step_size = (long)((long)config.packet_size / (GBPS / ONE_SECOND_IN_NS));
+    long grid_length = obtain_grid_length(config.simulation_time, step_size);
+    // printf("%ld\n", grid_length);
+
+    double ratio = (double)(config.mean * unit) / GBPS;
+    printf("%f\n", ratio);
+
+    char filename[MAX_PATH_LENGTH];
+    sprintf(filename, "%s/packets.csv", config.data_path);
+
+    FILE *file = fopen(filename, "w");
+    if (file == NULL)
+    {
+        printf("Failed to open file %s for writing.\n", filename);
+        exit(EXIT_FAILURE);
+    }
+
+    int tenant_number = 10;
+    for (int tenant = 0; tenant < tenant_number; tenant++)
+        fprintf(file, "%d", tenant);
+    fprintf(file, "\n");
+
+    long *count = (long *)calloc(tenant_number, sizeof(long));
+    grid_length = 100;
+
+    int **label = (int **)malloc(sizeof(int *) * tenant_number);
+    for (int tenant = 0; tenant < tenant_number; tenant++)
+        *(label + tenant) = (int *)calloc(4, sizeof(int));
+
+    for (long grid = 0; grid < grid_length; grid++)
+    {
+        int *packets = packet_generation_uniform(grid, ratio, tenant_number);
+        // print_packets(packets, tenant_number);
+        for (int tenant = 0; tenant < tenant_number; tenant++)
+        {
+            if (tenant == tenant_number - 1)
+                fprintf(file, "%d\n", *(packets + tenant));
+            else
+                fprintf(file, "%d, ", *(packets + tenant));
+
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
+                *(count + tenant) += 1;
+        }
+        // printf("\n");
+    }
+    fclose(file);
+
+    printf("\ncount =\n");
+    for (int tenant = 0; tenant < tenant_number; tenant++)
+        printf("%-10ld :%f\n", *(count + tenant), (double)(*(count + tenant) * 100) / grid_length);
+    printf("\n");
+    // int *packets = packet_generation_uniform(0, ratio, grid_length);
+    // print_packets(packets, grid_length);
 
     //     // Initialize tenants
     //     tenant* tenants = initialize_tenants(config.tenant_number, config.simulation_time);

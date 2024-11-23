@@ -35,7 +35,8 @@
         "general.h": "c",
         "random": "c",
         "string_view": "c",
-        "initializer_list": "c"
+        "initializer_list": "c",
+        "limits": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true

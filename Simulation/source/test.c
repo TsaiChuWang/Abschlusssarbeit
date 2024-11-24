@@ -83,32 +83,22 @@ int main(int argc, char *argv[])
     printf("capacity : %f bps\n", capacity * unit);
 
     long step_size = (long)((long)config.packet_size / (GBPS / ONE_SECOND_IN_NS));
-    long grid_length = obtain_grid_length(config.simulation_time, step_size);
-    printf("%ld\n", grid_length);
+    long window_length = obtain_grid_length(config.simulation_time, step_size);
+    long grid_length = ONE_SECOND_IN_NS/config.packet_size;
+    window_length = window_length/grid_length;
+    printf("grid_length = %ld\n", grid_length);
+    printf("window_length = %ld\n", window_length);
+
+    printf("Max Time = %ld\n", window_length*step_size*grid_length);
 
     double ratio = (double)(config.mean * unit) / GBPS;
     // printf("%f\n", ratio);
 
-    char filename[MAX_PATH_LENGTH];
-    sprintf(filename, "%s/packets.csv", config.data_path);
-
-    FILE *file = fopen(filename, "w");
-    if (file == NULL)
-    {
-        printf("Failed to open file %s for writing.\n", filename);
-        exit(EXIT_FAILURE);
-    }
-
     // int tenant_number = config.tenant_number;
     int tenant_number = 10;
-    for (int tenant = 0; tenant < tenant_number; tenant++)
-        if (tenant == tenant_number - 1)
-            fprintf(file, "%d\n", tenant);
-        else
-            fprintf(file, "%d, ", tenant);
 
     long *count = (long *)calloc(tenant_number, sizeof(long));
-    grid_length = 1171875;
+    
 
     int **label = (int **)malloc(sizeof(int *) * tenant_number);
     for (int tenant = 0; tenant < tenant_number; tenant++)
@@ -119,98 +109,95 @@ int main(int argc, char *argv[])
     link_capacity_queue link;
     initQueue(&link);
     long linkTransmissionInterval = (long)(config.packet_size*(double)ONE_SECOND_IN_NS/(capacity*unit));   //config.packet_size
-    printf("linkTransmissionInterval = %ld\n", linkTransmissionInterval);
+    // printf("linkTransmissionInterval = %ld\n", linkTransmissionInterval);
     long dequeue_timestamp = 0;
 
-    for (long grid = 0; grid < grid_length; grid++)
-    {
-        int *packets = packet_generation_uniform(grid, ratio, tenant_number);
-        // print_packets(packets, tenant_number);
-        long timestamp = grid * step_size;
+    window_length = 2;
+    for(long window = 0;window<window_length;window++){
+        // Open File to Record packets
+        char filename[MAX_PATH_LENGTH];
+        sprintf(filename, "%s/packets.csv", config.data_path);
 
-            // printf("%ld %ld\n", dequeue_timestamp, timestamp);
-        while(dequeue_timestamp <= timestamp){
-            dequeue(&link);
-            dequeue_timestamp += linkTransmissionInterval;
-            // printf("%ld %ld\n", dequeue_timestamp, timestamp);
-        }
-
+        FILE *file = fopen(filename, "w");
+        if (file == NULL){
+            printf("Failed to open file %s for writing.\n", filename);
+            exit(EXIT_FAILURE);
+        }  
         for (int tenant = 0; tenant < tenant_number; tenant++)
-        {
-            if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
+            if (tenant == tenant_number - 1)
+                fprintf(file, "%d\n", tenant);
+            else fprintf(file, "%d, ", tenant);
+
+        for (long grid = 0; grid < grid_length; grid++){
+            int *packets = packet_generation_uniform(grid, ratio, tenant_number);
+            // print_packets(packets, tenant_number);
+            long timestamp = window*step_size*grid_length + grid * step_size;
+            // printf("timestamp = %-ld\n", timestamp);
+
+            while(dequeue_timestamp <= timestamp){
+                dequeue(&link);
+                dequeue_timestamp += linkTransmissionInterval;
+                // printf("%ld %ld\n", dequeue_timestamp, timestamp);
+            }
+
+            for (int tenant = 0; tenant < tenant_number; tenant++)
             {
                 if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
                     *(count + tenant) += 1;
-
-                GCRA *gcra_1 = (GCRA *)(gcras_1 + tenant);
-                long x = (long)gcra_1->x - (timestamp - gcra_1->last_time) * (((double)(config.mean + config.standard_deviation) * unit) / ONE_SECOND_IN_NS);
-
-                // printf("%ld %ld %f\n", gcra_1->x, grid * step_size, (timestamp - gcra_1->last_time) * (((double)(config.mean + config.standard_deviation) * unit) / ONE_SECOND_IN_NS));
-
-                if (x > gcra_1->tau)
-                    *(packets + tenant) = PACKET_LABEL_OVER_UPPERBOUND_DROPPED;
-                else
-                {
-                    gcra_1->x = MAX((long)0, x) + gcra_1->l;
-                    gcra_1->last_time = timestamp;
-                    *(packets + tenant) = PACKET_LABEL_ACCEPT;
-                }
-
-                if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
-                {
-                    GCRA *gcra_2 = (GCRA *)(gcras_2 + tenant);
-                    
-                    long x = (long)gcra_2->x - (timestamp - gcra_2->last_time) * (((double)(config.mean) * unit) / ONE_SECOND_IN_NS);
-
-                    // printf("%ld %ld %f\n", gcra_2->x, grid * step_size, (timestamp - gcra_2->last_time) * (((double)(config.mean) * unit) / ONE_SECOND_IN_NS));
-
-                    if (x > gcra_2->tau)
-                        *(packets + tenant) = PACKET_LABEL_GCRA_DROPPED;
-                    else
-                    {
-                        gcra_2->x = MAX((long)0, x) + gcra_2->l;
-                        gcra_2->last_time = timestamp;
-                        *(packets + tenant) = PACKET_LABEL_ACCEPT;
-                    }
-                }
-                else
-                    goto RECORD;
+                else goto RECORD;
 
                 if (*(packets + tenant) == PACKET_LABEL_ACCEPT){
+                    long rate_1 = (long)(timestamp - (gcras_1 + tenant)->last_time) * (((double)(config.mean + config.standard_deviation) * unit) / ONE_SECOND_IN_NS);
+                    // printf("rate = %ld\n", rate_1);
+                    long x = (long)(gcras_1 + tenant)->x - rate_1;
+                    // printf("rate = %ld\n", x);
+
+                    if (x > (gcras_1 + tenant)->tau)
+                        *(packets + tenant) = PACKET_LABEL_OVER_UPPERBOUND_DROPPED;
+                    else{
+                        (gcras_1 + tenant)->x = MAX((long)0, x) + (gcras_1 + tenant)->l;
+                        (gcras_1 + tenant)->last_time = timestamp;
+                        *(packets + tenant) = PACKET_LABEL_ACCEPT;
+                    }
+                }else goto RECORD;
+
+                if(*(packets + tenant) == PACKET_LABEL_ACCEPT){
+                    long rate_2 = (long)(timestamp - (gcras_2 + tenant)->last_time) * (((double)(config.mean) * unit) / ONE_SECOND_IN_NS);
+                    // printf("rate = %ld\n", rate_2);
+                    long x = (long)(gcras_2 + tenant)->x - rate_2;
+                    // printf("rate = %ld\n", x);
+
+                    if (x > (gcras_2 + tenant)->tau)
+                        *(packets + tenant) = PACKET_LABEL_GCRA_DROPPED;
+                    else{
+                        (gcras_2 + tenant)->x = MAX((long)0, x) + (gcras_2 + tenant)->l;
+                        (gcras_2 + tenant)->last_time = timestamp;
+                        *(packets + tenant) = PACKET_LABEL_ACCEPT;
+                    }
+                }else goto RECORD;
+
+                if(*(packets + tenant) == PACKET_LABEL_ACCEPT)
                     *(packets + tenant) = enqueue(&link);
-                }
+                else goto RECORD;
+                // Record
+RECORD:
+                if (*(packets + tenant) != PACKET_LABEL_NO_PACKET)
+                    label[tenant][*(packets + tenant)] += 1;
+
+                if (tenant == tenant_number - 1)
+                    fprintf(file, "%d\n", *(packets + tenant));
                 else
-                    goto RECORD;
+                    fprintf(file, "%d, ", *(packets + tenant));
             }
-            else
-                goto RECORD;
-
-            // Record
-        RECORD:
-            if (*(packets + tenant) != PACKET_LABEL_NO_PACKET)
-                label[tenant][*(packets + tenant)] += 1;
-
-            if (tenant == tenant_number - 1)
-                fprintf(file, "%d\n", *(packets + tenant));
-            else
-                fprintf(file, "%d, ", *(packets + tenant));
         }
-        // printf("\n");
+        fclose(file);
 
-        // printf("%d\n", link.rear);
+        print_packets_count(count, tenant_number, grid_length*(window+1));
+        record_packets_count(count, tenant_number, grid_length*(window+1), config.data_path);
+
+        print_packets_label(label, count, tenant_number);
+        record_packets_label(label, count, tenant_number, config.data_path);
     }
-    fclose(file);
 
-    print_packets_count(count, tenant_number, grid_length);
-    record_packets_count(count, tenant_number, grid_length, config.data_path);
-
-
-    // printf("\ncount = %ld\n", config.tau_2);
-    // for (int tenant = 0; tenant < tenant_number; tenant++)
-    //     printf("%-10ld %-10ld %-10ld %-10ld\n", label[tenant][0], label[tenant][1], label[tenant][2], label[tenant][3]);
-    // printf("\n");
-
-   print_packets_label(label, count, tenant_number);
-   record_packets_label(label, count, tenant_number, config.data_path);
     return EXIT_SUCCESS;
 }

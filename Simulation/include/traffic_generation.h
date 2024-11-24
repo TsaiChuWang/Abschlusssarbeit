@@ -95,7 +95,7 @@ void record_packets_label(int** label, long* count, int tenant_number, const cha
 
     fprintf(file, "ACCEPT, DROP_OVER, DROP_GCRA, CAPACITY, LOSS\n");
     for (int tenant = 0; tenant < tenant_number; tenant++)
-        fprintf(file, "%-10d, %-10d, %-10d, %-10d, %-f % \n", label[tenant][0], label[tenant][1], label[tenant][2], label[tenant][3], (double)(label[tenant][2]+label[tenant][3])*100.0/ *(count+tenant));
+        fprintf(file, "%-10d, %-10d, %-10d, %-10d, %-f \n", label[tenant][0], label[tenant][1], label[tenant][2], label[tenant][3], (double)(label[tenant][2]+label[tenant][3])*100.0/ *(count+tenant));
     fclose(file);
 }
 #endif

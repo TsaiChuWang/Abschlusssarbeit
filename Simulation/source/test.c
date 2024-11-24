@@ -99,7 +99,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    int tenant_number = config.tenant_number;
+    // int tenant_number = config.tenant_number;
+    int tenant_number = 10;
     for (int tenant = 0; tenant < tenant_number; tenant++)
         if (tenant == tenant_number - 1)
             fprintf(file, "%d\n", tenant);
@@ -107,7 +108,7 @@ int main(int argc, char *argv[])
             fprintf(file, "%d, ", tenant);
 
     long *count = (long *)calloc(tenant_number, sizeof(long));
-    // grid_length = 1000000;
+    grid_length = 1171875;
 
     int **label = (int **)malloc(sizeof(int *) * tenant_number);
     for (int tenant = 0; tenant < tenant_number; tenant++)
@@ -117,12 +118,23 @@ int main(int argc, char *argv[])
     GCRA *gcras_2 = initializeGCRAs(tenant_number, config.tau_2, config.packet_size);
     link_capacity_queue link;
     initQueue(&link);
-    long linkTransmissionInterval = (long)(ONE_SECOND_IN_NS * config.packet_size / capacity);
+    long linkTransmissionInterval = (long)(config.packet_size*(double)ONE_SECOND_IN_NS/(capacity*unit));   //config.packet_size
     printf("linkTransmissionInterval = %ld\n", linkTransmissionInterval);
+    long dequeue_timestamp = 0;
+
     for (long grid = 0; grid < grid_length; grid++)
     {
         int *packets = packet_generation_uniform(grid, ratio, tenant_number);
         // print_packets(packets, tenant_number);
+        long timestamp = grid * step_size;
+
+            // printf("%ld %ld\n", dequeue_timestamp, timestamp);
+        while(dequeue_timestamp <= timestamp){
+            dequeue(&link);
+            dequeue_timestamp += linkTransmissionInterval;
+            // printf("%ld %ld\n", dequeue_timestamp, timestamp);
+        }
+
         for (int tenant = 0; tenant < tenant_number; tenant++)
         {
             if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
@@ -131,7 +143,6 @@ int main(int argc, char *argv[])
                     *(count + tenant) += 1;
 
                 GCRA *gcra_1 = (GCRA *)(gcras_1 + tenant);
-                long timestamp = grid * step_size;
                 long x = (long)gcra_1->x - (timestamp - gcra_1->last_time) * (((double)(config.mean + config.standard_deviation) * unit) / ONE_SECOND_IN_NS);
 
                 // printf("%ld %ld %f\n", gcra_1->x, grid * step_size, (timestamp - gcra_1->last_time) * (((double)(config.mean + config.standard_deviation) * unit) / ONE_SECOND_IN_NS));
@@ -148,7 +159,7 @@ int main(int argc, char *argv[])
                 if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
                 {
                     GCRA *gcra_2 = (GCRA *)(gcras_2 + tenant);
-                    long timestamp = grid * step_size;
+                    
                     long x = (long)gcra_2->x - (timestamp - gcra_2->last_time) * (((double)(config.mean) * unit) / ONE_SECOND_IN_NS);
 
                     // printf("%ld %ld %f\n", gcra_2->x, grid * step_size, (timestamp - gcra_2->last_time) * (((double)(config.mean) * unit) / ONE_SECOND_IN_NS));
@@ -165,8 +176,8 @@ int main(int argc, char *argv[])
                 else
                     goto RECORD;
 
-                if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
-                {
+                if (*(packets + tenant) == PACKET_LABEL_ACCEPT){
+                    *(packets + tenant) = enqueue(&link);
                 }
                 else
                     goto RECORD;
@@ -185,6 +196,8 @@ int main(int argc, char *argv[])
                 fprintf(file, "%d, ", *(packets + tenant));
         }
         // printf("\n");
+
+        // printf("%d\n", link.rear);
     }
     fclose(file);
 
@@ -198,72 +211,6 @@ int main(int argc, char *argv[])
         printf("%-10ld %-10ld %-10ld %-10ld\n", label[tenant][0], label[tenant][1], label[tenant][2], label[tenant][3]);
     printf("\n");
 
-    // int *packets = packet_generation_uniform(0, ratio, grid_length);
-    // print_packets(packets, grid_length);
-
-    //     // Initialize tenants
-    //     tenant* tenants = initialize_tenants(config.tenant_number, config.simulation_time);
-
-    //     // Decide traffic mode
-    //     for(int index = 0; index < config.tenant_number; index++){
-    //         tenant t = (tenant)*(tenants+index);
-    //         switch(config.traffic_mode){
-    //             case TRAFFIC_MODE_INTERVAL:
-    //                 tenants[index].traffic_mode = TENANT_TRAFFIC_MODE_INTERVAL;
-    //             break;
-    //             case TRAFFIC_MODE_GAUSSIAN:
-    //                 tenants[index].traffic_mode = TENANT_TRAFFIC_MODE_GAUSSIAN;
-    //             break;
-    //             case TRAFFIC_MODE_ALL_NAUGHTY:
-    //                 if(index>config.naughty_tenant_number)
-    //                     tenants[index].traffic_mode = TENANT_TRAFFIC_MODE_INTERVAL;
-    //                 else tenants[index].traffic_mode = TRAFFIC_MODE_ALL_NAUGHTY;
-    //             break;
-    //             default:
-    //                 tenants[index].traffic_mode = TENANT_TRAFFIC_MODE_INTERVAL;
-    //             break;
-    //         }
-    //     }
-
-    //     if(atoi(argv[1])==GENERATE_TRAFFIC)
-    //          tenants_timestamp_translation_external(CONFIGURATION_PATH, config.tenant_number, STORED_PACKET_GENERATION_PATH, STORED_TIMESTAMP_PATH);
-
-    //     // const char *filename = "../data/test/timestamp/tenant_99.csv";
-    //     // size_t size = 0;
-
-    //     // long long *timestamps = read_csv(filename, &size);
-    //     // printf("Timestamps (%zu entries):\n", size);
-    //     // for (size_t i = 0; i < size; i++) {
-    //     //     printf("%ld\n", timestamps[i]);
-    //     // }
-
-    //     // Free allocated memory
-    //     free(timestamps);
-
-    //     configuration config;
-
-    //     if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0) {
-    //         printf("Can't load configuration\"%s\"\n", CONFIGURATION_PATH);
-    //         return EXIT_FAILURE;
-    //     }
-
-    //     int identifier = 0;
-    //     tenant t = initialize_tenant(identifier, config.simulation_time);
-    //     // for (long index=0;index<t.simulation_time;index++)
-    //     //     if(index<=(t.simulation_time/2))
-    //     //         *(t.generated_packets+index) = 159;
-    //     //     else *(t.generated_packets+index) = 161;
-    //     tenant_packet_generation(&t, config.mean, config.standard_deviation, config.naughty_mean, config.naughty_standard_deviation);
-    //     translate_band_to_packets(&t, MBPS, config.packet_size);
-
-    // #ifdef RECORD_PACKETS_GENERATION
-    //     record_generated_packets(&t, STORED_PACKET_GENERATION_PATH);
-    // #endif
-
-    //     timestamp_translation(&t);
-    // #ifdef RECORD_TIMESTAMP
-    //     record_timestamps(&t, STORED_TIMESTAMP_PATH);
-    // #endif
 
     return EXIT_SUCCESS;
 }

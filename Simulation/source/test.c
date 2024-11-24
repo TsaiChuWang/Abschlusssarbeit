@@ -201,11 +201,10 @@ int main(int argc, char *argv[])
     }
     fclose(file);
 
-    printf("\ncount =\n");
-    for (int tenant = 0; tenant < tenant_number; tenant++)
-        printf("%-10ld :%f\n", *(count + tenant), (double)(*(count + tenant) * 100) / grid_length);
-    printf("\n");
+    print_packets_count(count, tenant_number, grid_length);
+    record_packets_count(count, tenant_number, grid_length, config.data_path);
 
+    
     printf("\ncount = %ld\n", config.tau_2);
     for (int tenant = 0; tenant < tenant_number; tenant++)
         printf("%-10ld %-10ld %-10ld %-10ld\n", label[tenant][0], label[tenant][1], label[tenant][2], label[tenant][3]);

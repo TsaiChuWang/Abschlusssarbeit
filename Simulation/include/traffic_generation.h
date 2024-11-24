@@ -50,4 +50,27 @@ void print_packets(int *packets, long grid_length)
 
 // void record_paclets(const char)
 
+void print_packets_count(long* count, int tenant_number, long grid_length){
+    printf("\ncount =\n");
+    for (int tenant = 0; tenant < tenant_number; tenant++)
+        printf("Number of packets : %-10ld Percentage : %f %\n", *(count + tenant), (double)(*(count + tenant) * 100) / grid_length);
+    printf("\n");
+}
+
+void record_packets_count(long* count, int tenant_number, long grid_length, const char* folder_path){
+    char filename[MAX_PATH_LENGTH];
+    sprintf(filename, "%s/count.csv", folder_path);
+
+    FILE *file = fopen(filename, "w");
+    if (file == NULL)
+    {
+        printf("Failed to open file %s for writing.\n", filename);
+        exit(EXIT_FAILURE);
+    }
+
+    fprintf(file, "tenant, packets, percentage\n");
+    for (int tenant = 0; tenant < tenant_number; tenant++)
+        fprintf(file, "%d, %ld, %f\n", tenant, *(count + tenant), (double)(*(count + tenant) * 100) / grid_length);
+    fclose(file);
+}
 #endif

@@ -204,12 +204,13 @@ int main(int argc, char *argv[])
     print_packets_count(count, tenant_number, grid_length);
     record_packets_count(count, tenant_number, grid_length, config.data_path);
 
-    
-    printf("\ncount = %ld\n", config.tau_2);
-    for (int tenant = 0; tenant < tenant_number; tenant++)
-        printf("%-10ld %-10ld %-10ld %-10ld\n", label[tenant][0], label[tenant][1], label[tenant][2], label[tenant][3]);
-    printf("\n");
 
+    // printf("\ncount = %ld\n", config.tau_2);
+    // for (int tenant = 0; tenant < tenant_number; tenant++)
+    //     printf("%-10ld %-10ld %-10ld %-10ld\n", label[tenant][0], label[tenant][1], label[tenant][2], label[tenant][3]);
+    // printf("\n");
 
+   print_packets_label(label, count, tenant_number);
+   record_packets_label(label, count, tenant_number, config.data_path);
     return EXIT_SUCCESS;
 }

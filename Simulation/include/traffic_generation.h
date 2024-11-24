@@ -73,4 +73,29 @@ void record_packets_count(long* count, int tenant_number, long grid_length, cons
         fprintf(file, "%d, %ld, %f\n", tenant, *(count + tenant), (double)(*(count + tenant) * 100) / grid_length);
     fclose(file);
 }
+
+void print_packets_label(int** label, long* count, int tenant_number){
+    printf("\nlabel =\n");
+    printf("ACCEPT    , DROP_OVER , DROP_GCRA , CAPACITY   : LOSS\n");
+    for (int tenant = 0; tenant < tenant_number; tenant++)
+        printf("%-10d, %-10d, %-10d, %-10d : %-f % \n", label[tenant][0], label[tenant][1], label[tenant][2], label[tenant][3], (double)(label[tenant][2]+label[tenant][3])*100.0/ *(count+tenant));
+    printf("\n");
+}
+
+void record_packets_label(int** label, long* count, int tenant_number, const char* folder_path){
+    char filename[MAX_PATH_LENGTH];
+    sprintf(filename, "%s/label.csv", folder_path);
+
+    FILE *file = fopen(filename, "w");
+    if (file == NULL)
+    {
+        printf("Failed to open file %s for writing.\n", filename);
+        exit(EXIT_FAILURE);
+    }
+
+    fprintf(file, "ACCEPT, DROP_OVER, DROP_GCRA, CAPACITY, LOSS\n");
+    for (int tenant = 0; tenant < tenant_number; tenant++)
+        fprintf(file, "%-10d, %-10d, %-10d, %-10d, %-f % \n", label[tenant][0], label[tenant][1], label[tenant][2], label[tenant][3], (double)(label[tenant][2]+label[tenant][3])*100.0/ *(count+tenant));
+    fclose(file);
+}
 #endif

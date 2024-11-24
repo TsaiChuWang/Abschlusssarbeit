@@ -8,6 +8,7 @@
 #include "../include/configuration.h"
 #include "../include/traffic_generation.h"
 #include "../include/GCRA.h"
+#include "../include/link_capacity_queue.h"
 
 #define CONFIGURATION_PATH "../configuration/simple_V1.ini"
 
@@ -98,7 +99,7 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    int tenant_number = 10;
+    int tenant_number = config.tenant_number;
     for (int tenant = 0; tenant < tenant_number; tenant++)
         if (tenant == tenant_number - 1)
             fprintf(file, "%d\n", tenant);
@@ -106,7 +107,7 @@ int main(int argc, char *argv[])
             fprintf(file, "%d, ", tenant);
 
     long *count = (long *)calloc(tenant_number, sizeof(long));
-    grid_length = 1000000;
+    // grid_length = 1000000;
 
     int **label = (int **)malloc(sizeof(int *) * tenant_number);
     for (int tenant = 0; tenant < tenant_number; tenant++)
@@ -114,7 +115,10 @@ int main(int argc, char *argv[])
 
     GCRA *gcras_1 = initializeGCRAs(tenant_number, config.tau_1, config.packet_size);
     GCRA *gcras_2 = initializeGCRAs(tenant_number, config.tau_2, config.packet_size);
-
+    link_capacity_queue link;
+    initQueue(&link);
+    long linkTransmissionInterval = (long)(ONE_SECOND_IN_NS * config.packet_size / capacity);
+    printf("linkTransmissionInterval = %ld\n", linkTransmissionInterval);
     for (long grid = 0; grid < grid_length; grid++)
     {
         int *packets = packet_generation_uniform(grid, ratio, tenant_number);
@@ -158,6 +162,14 @@ int main(int argc, char *argv[])
                         *(packets + tenant) = PACKET_LABEL_ACCEPT;
                     }
                 }
+                else
+                    goto RECORD;
+
+                if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
+                {
+                }
+                else
+                    goto RECORD;
             }
             else
                 goto RECORD;

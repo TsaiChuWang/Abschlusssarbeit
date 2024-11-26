@@ -21,7 +21,7 @@ pure_loss = [float(tenant[4]) for tenant in data]
 total_loss = [float(tenant[5]) for tenant in data]
   
 plt.plot(x_axis, pure_loss, linestyle='-', color='blue', label='Loss(Pure)')
-plt.plot(x_axis, [error for loss in pure_loss], linestyle='dotted', color='red', label='Epsilon')
+plt.plot(x_axis, [error*100 for loss in pure_loss], linestyle='dotted', color='red', label='Epsilon')
 
 plt.title('Pure Loss of Each Tenant with τ({})'.format(tau))
 plt.xlabel('Tenant')

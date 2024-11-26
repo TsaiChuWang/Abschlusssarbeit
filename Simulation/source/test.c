@@ -25,7 +25,7 @@
 int main(int argc, char *argv[])
 {
     char command[MAX_COMMAND_LENGTH];
-    clock_t execute_clock = clock(); 
+
 
     // configuration.h
     configuration config;
@@ -63,10 +63,12 @@ int main(int argc, char *argv[])
     double capacity = obtain_capacity();
     printf("capacity : %f bps\n", capacity * unit);
 
-    long window_length = 10;
-    long grid_length = ONE_SECOND_IN_NS/config.packet_size;
-    // long grid_length = 20000;
     long step_size = (long)((long)config.packet_size / (GBPS / ONE_SECOND_IN_NS));
+    long window_length = obtain_grid_length(config.simulation_time, step_size);
+    long grid_length = ONE_SECOND_IN_NS/config.packet_size;
+    window_length = window_length/grid_length;
+    // long grid_length = 20000;
+    
     long dequeue_timestamp = 0;
     record_dequeue_timestamp(dequeue_timestamp, config.data_path);
     int tenant_number = config.tenant_number;
@@ -93,16 +95,13 @@ int main(int argc, char *argv[])
 
     system("gcc ./single_window.c inih/ini.c -o ../execution/single_window -lm");
     for(long window = 0;window<window_length;window++){
-        execute_clock = clock() - execute_clock;
-        double time_taken = ((double)execute_clock)/CLOCKS_PER_SEC;
-        printf("(%6.4f %), Window = %ld, Time start at %15ld : Execute time : %f\n", (double)window*100.0/window_length, window, window*step_size*grid_length,  time_taken);
-
         sprintf(command, "../execution/single_window %ld %f", window, capacity);
+        system(command);
+    
+        sprintf(command, "python3 ../python/statistics.py %s/label.csv", config.data_path);
         system(command);
     }
 
-    sprintf(command, "python3 ../python/statistics.py %s/label.csv", config.data_path);
-    system(command);
 
     // char filename[MAX_PATH_LENGTH];
     // FILE *file;

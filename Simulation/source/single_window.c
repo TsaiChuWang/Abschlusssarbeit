@@ -23,6 +23,8 @@ int main(int argc, char *argv[])
     }
 
     char command[MAX_COMMAND_LENGTH];
+    clock_t execute_clock = clock(); 
+
     configuration config;
 
     if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0){
@@ -150,6 +152,12 @@ RECORD:
     record_gcras(gcras_1, tenant_number, config.data_path, 1);
     record_gcras(gcras_2, tenant_number, config.data_path, 2);
     record_dequeue_timestamp(dequeue_timestamp, config.data_path);
+
+    execute_clock = clock() - execute_clock;
+    double time_taken = ((double)execute_clock)/CLOCKS_PER_SEC;
+    printf("(%6.4f %), Window = %ld, Time start at %15ld : Execute time : ", 
+        (double)window*100.0/config.simulation_time, window, window*step_size*grid_length);
+    printf("%f\n", time_taken);
 
     fclose(file);
 

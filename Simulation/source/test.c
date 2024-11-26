@@ -80,7 +80,13 @@ int main(int argc, char *argv[])
     packets_count count;
     init_Packets_Count(&count, tenant_number, grid_length);
     record_packets_count(count, config.data_path);
-    
+
+    packets_label label;
+    init_Packets_Label(&label, tenant_number, &count);
+    record_packets_label(label, config.data_path);
+    // print_packets_label(label);
+
+
     system("gcc ./single_grid.c inih/ini.c -o ../execution/single_grid -lm");
     
     for(long window = 0;window<window_length;window++){

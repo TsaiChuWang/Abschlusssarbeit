@@ -73,6 +73,11 @@ int main(int argc, char *argv[])
   init_Packets_Count(&count, tenant_number, grid_length);
   read_packets_count(&count, config.data_path);
   // print_packets_count(count);
+
+  packets_label label;
+  init_Packets_Label(&label, tenant_number, &count);
+  read_packets_label(&label, config.data_path);
+  print_packets_label(label);
   
   char filename[MAX_PATH_LENGTH];
   sprintf(filename, "%s/packets.csv", config.data_path);
@@ -92,20 +97,22 @@ int main(int argc, char *argv[])
     // Wheter packet is accepted
     if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
         *(count.count + tenant) += 1;
-    // else goto RECORD;
+    else goto RECORD;
 
-// RECORD:
-//       if (*(packets + tenant) != PACKET_LABEL_NO_PACKET)
-//           label[tenant][*(packets + tenant)] += 1;
+RECORD:
+      if (*(packets + tenant) != PACKET_LABEL_NO_PACKET)
+          label.labels[tenant][*(packets + tenant)] += 1;
 
-//       if (tenant == tenant_number - 1)
-//           fprintf(file, "%d\n", *(packets + tenant));
-//       else
-//           fprintf(file, "%d, ", *(packets + tenant));
+      if (tenant == tenant_number - 1)
+          fprintf(file, "%d\n", *(packets + tenant));
+      else
+          fprintf(file, "%d, ", *(packets + tenant));
   }
 
   record_packets_count(count, config.data_path);
   record_link_capacity_queue(link, config.data_path);
+  record_packets_label(label, config.data_path);
+
 //   for (int tenant = 0; tenant<tenant_number; tenant++){
 //       if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
 //           *(count + tenant) += 1;

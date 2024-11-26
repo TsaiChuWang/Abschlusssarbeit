@@ -106,11 +106,11 @@ void read_gcras(GCRA** pgcras, int tenant_number,const char* folder_path, int ty
     char line[MAX_BUFFER_SIZE];
     size_t row = 0;
     while (fgets(line, sizeof(line), file) && row < tenant_number) {
-        GCRA* pgcra = (GCRA*)(*(pgcras)+row);
+        // GCRA* pgcra = (GCRA*)(*(pgcras)+row);
         long x, last_time;
         if (sscanf(line, "%ld, %ld", &x, &last_time) == 2) {
-            pgcra->x = x;
-            pgcra->last_time = last_time;
+            (*(pgcras)+row)->x = x;
+            (*(pgcras)+row)->last_time = last_time;
             row++;
         } else {
             fprintf(stderr, "Error parsing line: %s\n", line);

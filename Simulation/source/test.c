@@ -25,7 +25,7 @@
 int main(int argc, char *argv[])
 {
     char command[MAX_COMMAND_LENGTH];
-//     clock_t execute_clock = clock(); 
+    clock_t execute_clock = clock(); 
 
     // configuration.h
     configuration config;
@@ -60,10 +60,6 @@ int main(int argc, char *argv[])
     system(command);
     sprintf(command, "mkdir %s/link_queue", config.data_path);
     system(command);
-    // sprintf(command, "mkdir %s/GCRA_1", config.data_path);
-    // system(command);
-    // sprintf(command, "mkdir %s/GCRA_2", config.data_path);
-    // system(command);
 
     sprintf(command, "python3 " PYTHON_CAPACITY_CALCULATION_PATH " %s %d", CONFIGURATION_PATH, 0);
     system(command);
@@ -72,7 +68,9 @@ int main(int argc, char *argv[])
     printf("capacity : %f bps\n", capacity * unit);
 
     long window_length = 1;
-    long grid_length = 2;
+    long grid_length = ONE_SECOND_IN_NS/config.packet_size;
+    // long grid_length = 20000;
+    long step_size = (long)((long)config.packet_size / (GBPS / ONE_SECOND_IN_NS));
     long dequeue_timestamp = 0;
     int tenant_number = config.tenant_number;
     // int tenant_number = 10;
@@ -96,36 +94,48 @@ int main(int argc, char *argv[])
     GCRA *gcras_2 = initializeGCRAs(tenant_number, config.tau_2, config.packet_size);
     record_gcras(gcras_2, tenant_number, config.data_path, 2);
 
+    char filename[MAX_PATH_LENGTH];
+    FILE *file;
 
     system("gcc ./single_grid.c inih/ini.c -o ../execution/single_grid -lm");
-    
     for(long window = 0;window<window_length;window++){
-        // Open File to Record packets
-
-        char filename[MAX_PATH_LENGTH];
         sprintf(filename, "%s/packets.csv", config.data_path);
-        FILE *file = fopen(filename, "w");
+        file = fopen(filename, "w");
         if (file == NULL){
             printf("Failed to open file %s for writing.\n", filename);
             exit(EXIT_FAILURE);
         }
-
-        for (int tenant = 0; tenant < tenant_number; tenant++)
-        if (tenant == tenant_number - 1)
-            fprintf(file, "%d\n", tenant);
-        else fprintf(file, "%d, ", tenant);
         fclose(file);
-            
+
         for (long grid = 0; grid < grid_length; grid++){
             sprintf(command, "../execution/single_grid %d %d %ld %f", grid, window, capacity);
             system(command);
-            // printf("%s\n", command);
-            
-            // print_packets_count(count);
         }
-            
-        
     }
+    // for(long window = 0;window<window_length;window++){
+    //     execute_clock = clock() - execute_clock;
+    //     double time_taken = ((double)execute_clock)/CLOCKS_PER_SEC;
+    //     // printf("(%6.4f), Window = %ld, Time start at %ld : Execute time : %f\n", (double)window*100.0/config.simulation_time,window, window*step_size*grid_length,  time_taken);
+  
+    //     sprintf(filename, "%s/packets.csv", config.data_path);
+    //     file = fopen(filename, "w");
+    //     if (file == NULL){
+    //         printf("Failed to open file %s for writing.\n", filename);
+    //         exit(EXIT_FAILURE);
+    //     }
+
+    //     for (int tenant = 0; tenant < tenant_number; tenant++){
+    //         for (long grid = 0; grid < grid_length; grid++){
+
+    //             sprintf(command, "../execution/single_grid %d %d %ld %f", grid, window, capacity);
+    //             system(command);
+    //             // printf("%s\n", command);
+    //             // print_packets_count(count);
+    //         }
+    //     }
+        
+    //     fclose(file);
+    // }
 
 //   int grid = atoi(argv[1]);
 //   int window = atoi(argv[2]);

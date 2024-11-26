@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 
   char filename[MAX_PATH_LENGTH];
   sprintf(filename, "%s/packets.csv", config.data_path);
-  FILE *file = fopen(filename, "w");
+  FILE *file = fopen(filename, "a");
   if (file == NULL){
       printf("Failed to open file %s for writing.\n", filename);
       exit(EXIT_FAILURE);
@@ -124,7 +124,8 @@ int main(int argc, char *argv[])
         long rate_2 = (long)(timestamp - (gcras_2 + tenant)->last_time) * (((double)(config.mean) * unit) / ONE_SECOND_IN_NS);
         // printf("rate = %ld\n", rate_2);
         long x = (long)(gcras_2 + tenant)->x - rate_2;
-        // printf("rate = %ld\n", x);
+        
+        // printf("x = %ld, tau_2 = %ld\n", x, config.tau_2);
 
         if (x > (gcras_2 + tenant)->tau)
             *(packets + tenant) = PACKET_LABEL_GCRA_DROPPED;
@@ -135,6 +136,10 @@ int main(int argc, char *argv[])
         }
     }else goto RECORD;
 
+    if(*(packets + tenant) == PACKET_LABEL_ACCEPT)
+        *(packets + tenant) = enqueue(&link);
+    else goto RECORD;
+    // printf()
 RECORD:
       if (*(packets + tenant) != PACKET_LABEL_NO_PACKET)
           label.labels[tenant][*(packets + tenant)] += 1;
@@ -150,6 +155,8 @@ RECORD:
   record_packets_label(label, config.data_path);
   record_gcras(gcras_1, tenant_number, config.data_path, 1);
   record_gcras(gcras_2, tenant_number, config.data_path, 2);
+
+  fclose(file);
 //   for (int tenant = 0; tenant<tenant_number; tenant++){
 //       if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
 //           *(count + tenant) += 1;

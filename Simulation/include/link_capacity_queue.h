@@ -186,4 +186,37 @@ void print_link_queue(link_capacity_queue queue){
     printf("rear = %d\n", queue.rear);
 
 }
+
+void record_dequeue_timestamp(long dequeue_timestamp, const char* folder_path){
+    char data_path[MAX_PATH_LENGTH];
+    sprintf(data_path, "%s/link_queue/dequeue_timestamp.txt", folder_path);
+    FILE* file = fopen(data_path, "w+");
+    if (!file) {
+        perror("Error opening file for reading");
+        exit(EXIT_FAILURE);
+    }
+
+    fprintf(file, "%ld\n", dequeue_timestamp);
+    fclose(file);
+}
+
+void read_dequeue_timestamp(long* dequeue_timestamp, const char* folder_path){
+    char data_path[MAX_PATH_LENGTH];
+    sprintf(data_path, "%s/link_queue/dequeue_timestamp.txt", folder_path);    
+    FILE* file = fopen(data_path, "r");
+    if (!file) {
+        perror("Error opening file");
+        exit(EXIT_FAILURE); // Terminate program if file can't be opened
+    }
+
+    long value;
+    if (fscanf(file, "%ld", &value) != 1) { // Try to read an integer
+        fprintf(stderr, "Error reading integer from file\n");
+        fclose(file);
+        exit(EXIT_FAILURE); // Terminate program if no integer is found
+    }
+
+    fclose(file);
+    *dequeue_timestamp = value;
+}
 #endif

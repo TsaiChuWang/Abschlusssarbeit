@@ -37,10 +37,6 @@ int main(int argc, char *argv[])
     }
     // show_configuration(config);
 
-#ifdef REDUCTION
-    reduction_inif_file(CONFIGURATION_PATH);
-#endif
-
     long unit;
     switch (config.unit){
     case UNIT_MBPS:
@@ -67,11 +63,12 @@ int main(int argc, char *argv[])
     double capacity = obtain_capacity();
     printf("capacity : %f bps\n", capacity * unit);
 
-    long window_length = 1;
+    long window_length = 10;
     long grid_length = ONE_SECOND_IN_NS/config.packet_size;
     // long grid_length = 20000;
     long step_size = (long)((long)config.packet_size / (GBPS / ONE_SECOND_IN_NS));
     long dequeue_timestamp = 0;
+    record_dequeue_timestamp(dequeue_timestamp, config.data_path);
     int tenant_number = config.tenant_number;
     // int tenant_number = 10;
 
@@ -94,24 +91,38 @@ int main(int argc, char *argv[])
     GCRA *gcras_2 = initializeGCRAs(tenant_number, config.tau_2, config.packet_size);
     record_gcras(gcras_2, tenant_number, config.data_path, 2);
 
-    char filename[MAX_PATH_LENGTH];
-    FILE *file;
-
-    system("gcc ./single_grid.c inih/ini.c -o ../execution/single_grid -lm");
+    system("gcc ./single_window.c inih/ini.c -o ../execution/single_window -lm");
     for(long window = 0;window<window_length;window++){
-        sprintf(filename, "%s/packets.csv", config.data_path);
-        file = fopen(filename, "w");
-        if (file == NULL){
-            printf("Failed to open file %s for writing.\n", filename);
-            exit(EXIT_FAILURE);
-        }
-        fclose(file);
+        execute_clock = clock() - execute_clock;
+        double time_taken = ((double)execute_clock)/CLOCKS_PER_SEC;
+        printf("(%6.4f %), Window = %ld, Time start at %15ld : Execute time : %f\n", (double)window*100.0/window_length, window, window*step_size*grid_length,  time_taken);
 
-        for (long grid = 0; grid < grid_length; grid++){
-            sprintf(command, "../execution/single_grid %d %d %ld %f", grid, window, capacity);
-            system(command);
-        }
+        sprintf(command, "../execution/single_window %ld %f", window, capacity);
+        system(command);
     }
+
+    sprintf(command, "python3 ../python/statistics.py %s/label.csv", config.data_path);
+    system(command);
+
+    // char filename[MAX_PATH_LENGTH];
+    // FILE *file;
+
+
+    // system("gcc ./single_grid.c inih/ini.c -o ../execution/single_grid -lm");
+    // for(long window = 0;window<window_length;window++){
+    //     sprintf(filename, "%s/packets.csv", config.data_path);
+    //     file = fopen(filename, "w");
+    //     if (file == NULL){
+    //         printf("Failed to open file %s for writing.\n", filename);
+    //         exit(EXIT_FAILURE);
+    //     }
+    //     fclose(file);
+
+    //     for (long grid = 0; grid < grid_length; grid++){
+    //         sprintf(command, "../execution/single_grid %d %d %ld %f", grid, window, capacity);
+    //         system(command);
+    //     }
+    // }
     // for(long window = 0;window<window_length;window++){
     //     execute_clock = clock() - execute_clock;
     //     double time_taken = ((double)execute_clock)/CLOCKS_PER_SEC;

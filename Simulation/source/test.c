@@ -60,6 +60,10 @@ int main(int argc, char *argv[])
     system(command);
     sprintf(command, "mkdir %s/link_queue", config.data_path);
     system(command);
+    // sprintf(command, "mkdir %s/GCRA_1", config.data_path);
+    // system(command);
+    // sprintf(command, "mkdir %s/GCRA_2", config.data_path);
+    // system(command);
 
     sprintf(command, "python3 " PYTHON_CAPACITY_CALCULATION_PATH " %s %d", CONFIGURATION_PATH, 0);
     system(command);
@@ -85,6 +89,12 @@ int main(int argc, char *argv[])
     init_Packets_Label(&label, tenant_number, &count);
     record_packets_label(label, config.data_path);
     // print_packets_label(label);
+
+    GCRA *gcras_1 = initializeGCRAs(tenant_number, config.tau_1, config.packet_size);
+    record_gcras(gcras_1, tenant_number, config.data_path, 1);
+
+    GCRA *gcras_2 = initializeGCRAs(tenant_number, config.tau_2, config.packet_size);
+    record_gcras(gcras_2, tenant_number, config.data_path, 2);
 
 
     system("gcc ./single_grid.c inih/ini.c -o ../execution/single_grid -lm");

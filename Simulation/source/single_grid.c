@@ -7,7 +7,7 @@
 #include "./inih/ini.h"
 #include "../include/configuration.h"
 #include "../include/traffic_generation.h"
-// #include "../include/GCRA.h"
+#include "../include/GCRA.h"
 #include "../include/link_capacity_queue.h"
 #include "../include/packets_count.h"
 
@@ -77,8 +77,14 @@ int main(int argc, char *argv[])
   packets_label label;
   init_Packets_Label(&label, tenant_number, &count);
   read_packets_label(&label, config.data_path);
-  print_packets_label(label);
-  
+  // print_packets_label(label);
+
+  GCRA *gcras_1 = initializeGCRAs(tenant_number, config.tau_1, config.packet_size);
+  read_gcras(&(gcras_1), tenant_number, config.data_path, 1);
+
+  GCRA *gcras_2 = initializeGCRAs(tenant_number, config.tau_2, config.packet_size);
+  read_gcras(&(gcras_2), tenant_number, config.data_path, 2);
+
   char filename[MAX_PATH_LENGTH];
   sprintf(filename, "%s/packets.csv", config.data_path);
   FILE *file = fopen(filename, "w");
@@ -99,6 +105,36 @@ int main(int argc, char *argv[])
         *(count.count + tenant) += 1;
     else goto RECORD;
 
+    if (*(packets + tenant) == PACKET_LABEL_ACCEPT){
+        long rate_1 = (long)(timestamp - (gcras_1 + tenant)->last_time) * (((double)(config.mean + config.standard_deviation) * unit) / ONE_SECOND_IN_NS);
+        // printf("rate = %ld\n", rate_1);
+        long x = (long)(gcras_1 + tenant)->x - rate_1;
+        // printf("rate = %ld\n", x);
+
+        if (x > (gcras_1 + tenant)->tau)
+            *(packets + tenant) = PACKET_LABEL_OVER_UPPERBOUND_DROPPED;
+        else{
+            (gcras_1 + tenant)->x = MAX((long)0, x) + (gcras_1 + tenant)->l;
+            (gcras_1 + tenant)->last_time = timestamp;
+            *(packets + tenant) = PACKET_LABEL_ACCEPT;
+        }
+    }else goto RECORD;
+
+    if(*(packets + tenant) == PACKET_LABEL_ACCEPT){
+        long rate_2 = (long)(timestamp - (gcras_2 + tenant)->last_time) * (((double)(config.mean) * unit) / ONE_SECOND_IN_NS);
+        // printf("rate = %ld\n", rate_2);
+        long x = (long)(gcras_2 + tenant)->x - rate_2;
+        // printf("rate = %ld\n", x);
+
+        if (x > (gcras_2 + tenant)->tau)
+            *(packets + tenant) = PACKET_LABEL_GCRA_DROPPED;
+        else{
+            (gcras_2 + tenant)->x = MAX((long)0, x) + (gcras_2 + tenant)->l;
+            (gcras_2 + tenant)->last_time = timestamp;
+            *(packets + tenant) = PACKET_LABEL_ACCEPT;
+        }
+    }else goto RECORD;
+
 RECORD:
       if (*(packets + tenant) != PACKET_LABEL_NO_PACKET)
           label.labels[tenant][*(packets + tenant)] += 1;
@@ -112,7 +148,8 @@ RECORD:
   record_packets_count(count, config.data_path);
   record_link_capacity_queue(link, config.data_path);
   record_packets_label(label, config.data_path);
-
+  record_gcras(gcras_1, tenant_number, config.data_path, 1);
+  record_gcras(gcras_2, tenant_number, config.data_path, 2);
 //   for (int tenant = 0; tenant<tenant_number; tenant++){
 //       if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
 //           *(count + tenant) += 1;

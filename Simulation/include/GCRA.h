@@ -76,6 +76,49 @@ int second_gcra_limit(int label, long timestamp, GCRA* pgcra, long mean, int pac
     }
 }
 
+void record_gcras(GCRA* gcras, int tenant_number,const char* folder_path, int type){
+    char data_path[MAX_PATH_LENGTH];
+    sprintf(data_path, "%s/GCRA_%d.csv", folder_path, type);
+    FILE* file = fopen(data_path, "w+");
+    if (!file) {
+        perror("Error opening file");
+        return;
+    }
+
+    for(int tenant = 0;tenant<tenant_number;tenant++){
+        GCRA* pgcra = (GCRA*)(gcras+tenant);
+        fprintf(file, "%ld, %ld\n", pgcra->x, pgcra->last_time);
+    }
+
+    fclose(file);
+}
+
+void read_gcras(GCRA** pgcras, int tenant_number,const char* folder_path, int type){
+    char data_path[MAX_PATH_LENGTH];
+    sprintf(data_path, "%s/GCRA_%d.csv", folder_path, type);
+    FILE* file = fopen(data_path, "r");
+    if (!file) {
+        perror("Error opening file");
+        return;
+    }
+
+    // Read and parse each line
+    char line[MAX_BUFFER_SIZE];
+    size_t row = 0;
+    while (fgets(line, sizeof(line), file) && row < tenant_number) {
+        GCRA* pgcra = (GCRA*)(*(pgcras)+row);
+        long x, last_time;
+        if (sscanf(line, "%ld, %ld", &x, &last_time) == 2) {
+            pgcra->x = x;
+            pgcra->last_time = last_time;
+            row++;
+        } else {
+            fprintf(stderr, "Error parsing line: %s\n", line);
+        }
+    }
+
+    fclose(file);
+}
 #endif
 
 // printGCRA(*(gcras));

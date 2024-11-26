@@ -34,6 +34,8 @@ int main(int argc, char *argv[])
     //     system("mkdir ../data/"NAME"/timestamp/images");
     // }
 
+    clock_t execute_clock = clock(); 
+
     // configuration.h
     configuration config;
 
@@ -70,10 +72,6 @@ int main(int argc, char *argv[])
     system(command);
     sprintf(command, "mkdir %s", config.data_path);
     system(command);
-    // sprintf(command, "mkdir %s/packets", config.data_path);
-    // system(command);
-    // sprintf(command, "mkdir %s/packets/images", config.data_path);
-    // system(command);
 
     // capacity.py
     sprintf(command, "python3 " PYTHON_CAPACITY_CALCULATION_PATH " %s %d", CONFIGURATION_PATH, 0);
@@ -83,6 +81,7 @@ int main(int argc, char *argv[])
     printf("capacity : %f bps\n", capacity * unit);
 
     long step_size = (long)((long)config.packet_size / (GBPS / ONE_SECOND_IN_NS));
+    printf("step_size = %ld\n", step_size);
     long window_length = obtain_grid_length(config.simulation_time, step_size);
     long grid_length = ONE_SECOND_IN_NS/config.packet_size;
     window_length = window_length/grid_length;
@@ -94,8 +93,8 @@ int main(int argc, char *argv[])
     double ratio = (double)(config.mean * unit) / GBPS;
     // printf("%f\n", ratio);
 
-    // int tenant_number = config.tenant_number;
-    int tenant_number = 10;
+    int tenant_number = config.tenant_number;
+    // int tenant_number = 10;
 
     long *count = (long *)calloc(tenant_number, sizeof(long));
     
@@ -112,8 +111,12 @@ int main(int argc, char *argv[])
     // printf("linkTransmissionInterval = %ld\n", linkTransmissionInterval);
     long dequeue_timestamp = 0;
 
-    window_length = 2;
+    // window_length = 2;
     for(long window = 0;window<window_length;window++){
+        execute_clock = clock() - execute_clock;
+        double time_taken = ((double)execute_clock)/CLOCKS_PER_SEC;
+        printf("Window = %ld, Time start at %ld : Execute time : %f\n", window, window*step_size*grid_length,  time_taken);
+
         // Open File to Record packets
         char filename[MAX_PATH_LENGTH];
         sprintf(filename, "%s/packets.csv", config.data_path);

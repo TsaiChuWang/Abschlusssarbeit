@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
 
 #define SUCCESS 0
 #define FAILED -1
@@ -31,6 +33,7 @@
 
 #define ONE_SECOND_IN_NS 1000000000L
 
+#define PACKET_LABEL_TYPE 4
 #define PACKET_LABEL_NO_PACKET -1
 #define PACKET_LABEL_ACCEPT 0
 #define PACKET_LABEL_OVER_UPPERBOUND_DROPPED 1
@@ -47,3 +50,20 @@
 #define GBPS 1073741824
 #define MBPS 1048576
 #define KBPS 1024
+
+#define GENERAL_H
+#ifdef GENERAL_H
+void print_equals_line() {
+    struct winsize w;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1) {
+        perror("Error getting terminal size");
+        return;
+    }
+
+    int width = w.ws_col; // Get the terminal's width
+    for (int i = 0; i < width; i++) {
+        putchar('=');
+    }
+    putchar('\n'); // Add a newline at the end
+}
+#endif

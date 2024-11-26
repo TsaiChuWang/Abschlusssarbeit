@@ -38,7 +38,8 @@
         "initializer_list": "c",
         "limits": "c",
         "gcra.h": "c",
-        "link_capacity_queue.h": "c"
+        "link_capacity_queue.h": "c",
+        "packets_count.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true

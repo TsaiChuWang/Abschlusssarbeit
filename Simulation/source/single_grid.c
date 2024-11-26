@@ -9,6 +9,7 @@
 #include "../include/traffic_generation.h"
 // #include "../include/GCRA.h"
 #include "../include/link_capacity_queue.h"
+#include "../include/packets_count.h"
 
 #define CONFIGURATION_PATH "../configuration/simple_V1.ini"
 
@@ -67,13 +68,43 @@ int main(int argc, char *argv[])
   link_capacity_queue link;
   read_link_capacity_queue(&link, config.data_path);
   // print_link_queue(link);
+
+  packets_count count;  
+  init_Packets_Count(&count, tenant_number, grid_length);
+  read_packets_count(&count, config.data_path);
+  // print_packets_count(count);
   
+  char filename[MAX_PATH_LENGTH];
+  sprintf(filename, "%s/packets.csv", config.data_path);
+  FILE *file = fopen(filename, "w");
+  if (file == NULL){
+      printf("Failed to open file %s for writing.\n", filename);
+      exit(EXIT_FAILURE);
+  }  
+
   while(dequeue_timestamp <= timestamp){
       dequeue(&link);
       dequeue_timestamp += linkTransmissionInterval;
       // printf("%ld %ld\n", dequeue_timestamp, timestamp);
   }
 
+  for (int tenant = 0; tenant<tenant_number; tenant++){
+    // Wheter packet is accepted
+    if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
+        *(count.count + tenant) += 1;
+    // else goto RECORD;
+
+// RECORD:
+//       if (*(packets + tenant) != PACKET_LABEL_NO_PACKET)
+//           label[tenant][*(packets + tenant)] += 1;
+
+//       if (tenant == tenant_number - 1)
+//           fprintf(file, "%d\n", *(packets + tenant));
+//       else
+//           fprintf(file, "%d, ", *(packets + tenant));
+  }
+
+  record_packets_count(count, config.data_path);
   record_link_capacity_queue(link, config.data_path);
 //   for (int tenant = 0; tenant<tenant_number; tenant++){
 //       if (*(packets + tenant) == PACKET_LABEL_ACCEPT)

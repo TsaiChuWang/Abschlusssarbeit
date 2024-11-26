@@ -9,6 +9,7 @@
 #include "../include/traffic_generation.h"
 #include "../include/GCRA.h"
 #include "../include/link_capacity_queue.h"
+#include "../include/packets_count.h"
 
 #define CONFIGURATION_PATH "../configuration/simple_V1.ini"
 
@@ -23,10 +24,6 @@
 
 int main(int argc, char *argv[])
 {
-
-
-
-
     char command[MAX_COMMAND_LENGTH];
 //     clock_t execute_clock = clock(); 
 
@@ -64,10 +61,6 @@ int main(int argc, char *argv[])
     sprintf(command, "mkdir %s/link_queue", config.data_path);
     system(command);
 
-    link_capacity_queue link;
-    initQueue(&link);
-    record_link_capacity_queue(link, config.data_path);
-
     sprintf(command, "python3 " PYTHON_CAPACITY_CALCULATION_PATH " %s %d", CONFIGURATION_PATH, 0);
     system(command);
 
@@ -77,17 +70,45 @@ int main(int argc, char *argv[])
     long window_length = 1;
     long grid_length = 2;
     long dequeue_timestamp = 0;
+    int tenant_number = config.tenant_number;
+    // int tenant_number = 10;
 
+    link_capacity_queue link;
+    initQueue(&link);
+    record_link_capacity_queue(link, config.data_path);
+
+    packets_count count;
+    init_Packets_Count(&count, tenant_number, grid_length);
+    record_packets_count(count, config.data_path);
+    
     system("gcc ./single_grid.c inih/ini.c -o ../execution/single_grid -lm");
     
     for(long window = 0;window<window_length;window++){
+        // Open File to Record packets
+
+        char filename[MAX_PATH_LENGTH];
+        sprintf(filename, "%s/packets.csv", config.data_path);
+        FILE *file = fopen(filename, "w");
+        if (file == NULL){
+            printf("Failed to open file %s for writing.\n", filename);
+            exit(EXIT_FAILURE);
+        }
+
+        for (int tenant = 0; tenant < tenant_number; tenant++)
+        if (tenant == tenant_number - 1)
+            fprintf(file, "%d\n", tenant);
+        else fprintf(file, "%d, ", tenant);
+        fclose(file);
+            
         for (long grid = 0; grid < grid_length; grid++){
             sprintf(command, "../execution/single_grid %d %d %ld %f", grid, window, capacity);
             system(command);
             // printf("%s\n", command);
             
+            // print_packets_count(count);
         }
             
+        
     }
 
 //   int grid = atoi(argv[1]);

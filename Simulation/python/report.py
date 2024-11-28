@@ -3,40 +3,38 @@ import matplotlib.pyplot as plt
 
 IMAGE_PATH = "../data/report.png"
 
-x_axis = [ 7680,
-  7424,
-  7552,
-  7616,
-  7648,
-  7488, 
-  7520,
-  7504,
-  7512,
-  7516,
-  7514,
-  7513
-  ]
-y_axis = [ 0.08798286,
-  0.10296441,
-  0.09602841,
-  0.09181585,
-  0.09001778,
-  0.10027699,
-  0.0992252,
-  0.10049743,
-  0.1001163,
-  0.09982913,
-  0.09958553,
-  0.10014665,
+x_axis = [   0,
+  512,
+  1024,
+  2048,
+  3072,
+  3584,
+  4096,
+  5120,
+  8128,
+  16256]
+y_axis = [     27.19924804 ,
+6.814139187 ,
+ 3.49078175 ,
+ 3.104870119,
+ 3.100598698 ,
+ 3.101108447 ,
+ 3.103707451 ,
+ 3.10645731 ,
+ 3.104225066 ,
+3.09837465 ,
+
+
+
   ]     
 print(len(x_axis))
 print(len(y_axis))
-plt.plot(x_axis, y_axis, linestyle='-', color='blue', label='Packet Loss(Pure)')
-plt.plot(x_axis, [0.1 for row in x_axis], linestyle='dotted', color='red', label='Epsilon')
+plt.plot(x_axis, y_axis, linestyle='-', color='blue', label='Total Loss')
+# plt.plot(x_axis, [0.1 for row in x_axis], linestyle='dotted', color='red', label='Epsilon')
 
-plt.title('Different τ2 with Packet Losss(Pure)')
-plt.xlabel('τ2')
-plt.ylabel('Packet Loss(Pure)')
+plt.title('Different τ1 with Packet Total Loss')
+plt.xlabel('τ1')
+plt.ylabel('Total Loss')
 plt.legend()
 plt.grid(True)
 

@@ -11,7 +11,7 @@
 #include "../include/link_capacity_queue.h"
 #include "../include/packets_count.h"
 
-#define CONFIGURATION_PATH "../configuration/simple_V1.ini"
+#define CONFIGURATION_PATH "../configuration/simple_V1_naughty.ini"
 
 #define GENERATE_TRAFFIC 1
 

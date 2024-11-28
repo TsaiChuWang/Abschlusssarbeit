@@ -97,22 +97,22 @@ int main(int argc, char *argv[])
     GCRA *gcras_2 = initializeGCRAs(tenant_number, config.tau_2, config.packet_size);
     record_gcras(gcras_2, tenant_number, config.data_path, 2);
 
-    // system("gcc ./single_window.c inih/ini.c -o ../execution/single_window -lm");
-    // for(long window = 0;window<window_length;window++){
-    //     sprintf(command, "../execution/single_window %ld %f", window, capacity);
-    //     system(command);
-    
-    //     sprintf(command, "python3 ../python/statistics.py %s/label.csv", config.data_path);
-    //     system(command);
-    // }
-    system("gcc ./single_window_naughty.c inih/ini.c -o ../execution/single_window_naughty -lm");
+    system("gcc ./single_window.c inih/ini.c -o ../execution/single_window -lm");
     for(long window = 0;window<window_length;window++){
-        sprintf(command, "../execution/single_window_naughty %ld %f", window, capacity);
+        sprintf(command, "../execution/single_window %ld %f", window, capacity);
         system(command);
     
         sprintf(command, "python3 ../python/statistics.py %s/label.csv", config.data_path);
         system(command);
     }
+    // system("gcc ./single_window_naughty.c inih/ini.c -o ../execution/single_window_naughty -lm");
+    // for(long window = 0;window<window_length;window++){
+    //     sprintf(command, "../execution/single_window_naughty %ld %f", window, capacity);
+    //     system(command);
+    
+    //     sprintf(command, "python3 ../python/statistics.py %s/label.csv", config.data_path);
+    //     system(command);
+    // }
 
     // char filename[MAX_PATH_LENGTH];
     // FILE *file;

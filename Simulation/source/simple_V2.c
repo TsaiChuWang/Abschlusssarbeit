@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 
     system("gcc ./single_window.c inih/ini.c -o ../execution/single_window -lm");
     for(long window = 0;window<window_length;window++){
-        sprintf(command, "../execution/single_window %ld %f", window, capacity);
+        sprintf(command, "../execution/single_window %ld %f %s", window, capacity, CONFIGURATION_PATH);
         system(command);
     
         sprintf(command, "python3 ../python/statistics.py %s/label.csv", config.data_path);

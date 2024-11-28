@@ -17,7 +17,7 @@
 
 int main(int argc, char *argv[])
 {
-    if(argc<3){
+    if(argc<4){
         printf("Missing arguments\n");
         return EXIT_FAILURE;
     }
@@ -25,15 +25,19 @@ int main(int argc, char *argv[])
     char command[MAX_COMMAND_LENGTH];
     clock_t execute_clock = clock(); 
 
+    int window = atoi(argv[1]);
+    double capacity = atof(argv[2]);
+    char configuration_path[MAX_PATH_LENGTH];
+    strcpy(configuration_path, argv[3]);
+
     configuration config;
 
-    if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0){
-        printf("Can't load configuration \"%s\"\n", CONFIGURATION_PATH);
+    if (ini_parse(configuration_path, handler, &config) < 0){
+        printf("Can't load configuration \"%s\"\n", configuration_path);
         return EXIT_FAILURE;
     }
 
-    int window = atoi(argv[1]);
-    double capacity = atof(argv[2]);
+    // printf("data path = %s\n", config.data_path);
 
     int tenant_number = config.tenant_number;
     long unit;
@@ -50,6 +54,7 @@ int main(int argc, char *argv[])
     double ratio = (double)(config.mean * unit) / GBPS;
     long step_size = (long)((long)config.packet_size / (GBPS / ONE_SECOND_IN_NS));
     long grid_length = ONE_SECOND_IN_NS/config.packet_size;
+    // long grid_length = 100;
     long linkTransmissionInterval = (long)(config.packet_size*(double)ONE_SECOND_IN_NS/(capacity*unit));   //config.packet_size
     // printf("linkTransmissionInterval = %ld\n", linkTransmissionInterval);
     long dequeue_timestamp = 0;
@@ -75,6 +80,7 @@ int main(int argc, char *argv[])
     GCRA *gcras_2 = initializeGCRAs(tenant_number, config.tau_2, config.packet_size);
     read_gcras(&(gcras_2), tenant_number, config.data_path, 2);
 
+#ifdef RECORD_EACH_GRID
     char filename[MAX_PATH_LENGTH];
     sprintf(filename, "%s/packets.csv", config.data_path);
     FILE *file = fopen(filename, "w");
@@ -82,6 +88,8 @@ int main(int argc, char *argv[])
         printf("Failed to open file %s for writing.\n", filename);
         exit(EXIT_FAILURE);
     }  
+#endif
+
     for (long grid = 0; grid < grid_length; grid++){
         int *packets = packet_generation_uniform(grid, ratio, tenant_number);
         // print_packets(packets, tenant_number);
@@ -136,19 +144,25 @@ int main(int argc, char *argv[])
             else goto RECORD;
             
 RECORD:
-            if (*(packets + tenant) != PACKET_LABEL_NO_PACKET)
+            if (*(packets + tenant) != PACKET_LABEL_NO_PACKET){
+                // printf("%d\n", *(packets + tenant));
                 label.labels[tenant][*(packets + tenant)] += 1;
-
+            }
+                
+#ifdef RECORD_EACH_GRID
             if (tenant == tenant_number - 1)
                 fprintf(file, "%d\n", *(packets + tenant));
             else
                 fprintf(file, "%d, ", *(packets + tenant));
+#endif
+            
         }
     }
-  
+
     record_packets_count(count, config.data_path);
     record_link_capacity_queue(link, config.data_path);
     record_packets_label(label, config.data_path);
+    // print_packets_label(label);
     record_gcras(gcras_1, tenant_number, config.data_path, 1);
     record_gcras(gcras_2, tenant_number, config.data_path, 2);
     record_dequeue_timestamp(dequeue_timestamp, config.data_path);
@@ -159,7 +173,8 @@ RECORD:
         (double)window*100.0/config.simulation_time, window, window*step_size*grid_length);
     printf("%f\n", time_taken);
 
+#ifdef RECORD_EACH_GRID
     fclose(file);
-
+#endif
     return EXIT_SUCCESS;
 }

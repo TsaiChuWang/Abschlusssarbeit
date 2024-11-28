@@ -15,32 +15,32 @@ void initQueue(link_capacity_queue *pqueue)
 {
     pqueue->front = -1;
     pqueue->rear = -1;
+
+    for(int index=0;index<MAX_QUEUE_SIZE;index++)
+        pqueue->packets[index] = 0;
 }
 
 int isFull(link_capacity_queue *pqueue){
-    return pqueue->rear == MAX_QUEUE_SIZE - 1;
+    return pqueue->rear == MAX_QUEUE_SIZE-1;
 }
 
 // Check if the queue is empty
-int isEmpty(link_capacity_queue *pqueue)
-{
+int isEmpty(link_capacity_queue *pqueue){
     return pqueue->front == -1;
+    // return pqueue->front == pqueue->rear;
 }
 int enqueue(link_capacity_queue *pqueue)
 {
-    if (isFull(pqueue))
-    {
-        // printf("Queue is full. Packet %d is dropped.\n", packet);
+    if (isFull(pqueue)){
+        // printf("Queue is full. front = %d, rear = %d.\n", pqueue->front, pqueue->rear);
         return PACKET_LABEL_OVER_CAPACITY_DROPPED;
-    }
-    else
-    {
-        if (pqueue->front == -1)
-        {
+    }else{
+        if (pqueue->front == -1){
             pqueue->front = 0; // If it's the first packet
         }
+        pqueue->packets[pqueue->rear] = 1;
         pqueue->rear++;
-        pqueue->packets[pqueue->rear] = 0;
+        
         // printf("Packet %d added to the queue.\n", packet);
         return PACKET_LABEL_ACCEPT;
     }
@@ -48,16 +48,15 @@ int enqueue(link_capacity_queue *pqueue)
 
 void dequeue(link_capacity_queue *pqueue)
 {
-    if (isEmpty(pqueue))
-    {
+    if (isEmpty(pqueue)){
         return; // Queue is empty, nothing to transmit
     }
-    else
-    {
+    else{
         pqueue->front++;
-        if (pqueue->front > pqueue->rear)
-        {
-            pqueue->front = pqueue->rear = -1; // Reset queue if it's empty
+        // printf("dequeue front = %d")
+        if (pqueue->front > pqueue->rear){
+            pqueue->front = -1; // Reset queue if it's empty
+            pqueue->rear = -1;
         }
         return;
     }

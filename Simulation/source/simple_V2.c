@@ -96,11 +96,11 @@ int main(int argc, char *argv[])
         sprintf(command, "../execution/single_window %ld %f %s", window, capacity, CONFIGURATION_PATH);
         system(command);
     
-        sprintf(command, "python3 ../python/statistics.py %s/label.csv", config.data_path);
-        system(command);
+        // sprintf(command, "python3 ../python/statistics.py %s/label.csv", config.data_path);
+        // system(command);
     }
 
-    sprintf(command, "python3 ../python/chart.py %s", CONFIGURATION_PATH);
-    system(command);
+    // sprintf(command, "python3 ../python/chart.py %s", CONFIGURATION_PATH);
+    // system(command);
     return EXIT_SUCCESS;
 }

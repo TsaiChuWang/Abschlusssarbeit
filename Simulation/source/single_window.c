@@ -53,8 +53,8 @@ int main(int argc, char *argv[])
     }
     double ratio = (double)(config.mean * unit) / GBPS;
     long step_size = (long)((long)config.packet_size / (GBPS / ONE_SECOND_IN_NS));
-    long grid_length = ONE_SECOND_IN_NS/config.packet_size;
-    // long grid_length = 100;
+    // long grid_length = ONE_SECOND_IN_NS/config.packet_size;
+    long grid_length = 2000;
     long linkTransmissionInterval = (long)(config.packet_size*(double)ONE_SECOND_IN_NS/(capacity*unit));   //config.packet_size
     // printf("linkTransmissionInterval = %ld\n", linkTransmissionInterval);
     long dequeue_timestamp = 0;
@@ -96,11 +96,19 @@ int main(int argc, char *argv[])
         long timestamp = window*step_size*grid_length + grid * step_size;
         // printf("timestamp = %-ld\n", timestamp);
 
+        int dequeue_count = 0;
+        int enqueue_count = 0;
+        int enqueue_full = 0;
+
         while(dequeue_timestamp <= timestamp){
             dequeue(&link);
             dequeue_timestamp += linkTransmissionInterval;
-            // printf("%ld %ld\n", dequeue_timestamp, timestamp);
+            dequeue_count ++;
+            // printf("%ld %ld %d\n", dequeue_timestamp, timestamp, link.front);
         }
+
+        // if(link.front >0 || link.rear>0)
+            // printf("link :front = %d, rear = %d\n", link.front, link.rear);
 
         for (int tenant = 0; tenant<tenant_number; tenant++){
             // Wheter packet is accepted
@@ -139,8 +147,13 @@ int main(int argc, char *argv[])
                 }
             }else goto RECORD;
 
-            if(*(packets + tenant) == PACKET_LABEL_ACCEPT)
+            if(*(packets + tenant) == PACKET_LABEL_ACCEPT){
                 *(packets + tenant) = enqueue(&link);
+                enqueue_count ++;
+                if(*(packets + tenant) == PACKET_LABEL_OVER_CAPACITY_DROPPED)
+                    enqueue_full ++;
+            }
+                
             else goto RECORD;
             
 RECORD:
@@ -157,6 +170,10 @@ RECORD:
 #endif
             
         }
+
+        // if(enqueue_full>0)
+        //     printf("link :front = %3d, rear = %3d dequeue_count = %3d, enqueue_count = %3d, enqueue_full = %3d Grid[%4d](%ld)\n", link.front, link.rear, dequeue_count, enqueue_count, enqueue_full, grid, timestamp);
+        // printf("link :front = %3d, rear = %3d dequeue_count = %3d, enqueue_count = %3d, enqueue_full = %3d\n", link.front, link.rear, dequeue_count, enqueue_count, enqueue_full);
     }
 
     record_packets_count(count, config.data_path);

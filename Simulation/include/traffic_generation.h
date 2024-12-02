@@ -35,34 +35,27 @@ void showTrafficGenerator(const traffic_generator generate){
     printf("| generate_probability_naughty : %-f\n", generate.generate_probability_naughty);
 }
 
-
-long obtain_grid_length(long simulation_time, long step_size){
-    return (long)(simulation_time * ONE_SECOND_IN_NS / step_size);
-}
-
-int uniform_distribution(int random, double ratio)
-{
+int uniform_distribution(int random, double probability){
     srand((unsigned int)time(NULL) + random);
     double factor = (rand() / (double)RAND_MAX);
-    if (factor <= ratio)
+    if (factor <= probability)
         return PACKET_LABEL_ACCEPT;
     else
         return PACKET_LABEL_NO_PACKET;
 }
 
-int *packet_generation_uniform(int random, double ratio, long grid_length)
-{
-    int *packets = (int *)malloc(sizeof(int) * grid_length);
-    for (long index = 0; index < grid_length; index++)
-    {
-        *(packets + index) = uniform_distribution(random + index, ratio);
+int* packet_generation_uniform(int random, double probability, int tenant_number){
+    int *packets = (int*)malloc(sizeof(int) * tenant_number);
+    for (long index = 0; index < tenant_number; index++){
+        *(packets + index) = uniform_distribution(random + index, probability);
         // printf("[%-10ld] : %-d\n", *(packets + index));
     }
     return packets;
 }
+// int* packets = packet_generation_uniform(0, generator.generate_probability, config.tenant_number);
+// print_packets(packets, config.tenant_number);
 
-int *packet_generation_naughty(int random, double ratio_normal, double ratio_naughty, int tenant_number, int naughty_tenant_number)
-{
+int *packet_generation_naughty(int random, double ratio_normal, double ratio_naughty, int tenant_number, int naughty_tenant_number){
     int *packets = (int *)malloc(sizeof(int) * tenant_number);
     for (int index = 0; index < tenant_number; index++){
         if(index<naughty_tenant_number && GENERATE_BINARY)
@@ -74,19 +67,17 @@ int *packet_generation_naughty(int random, double ratio_normal, double ratio_nau
     return packets;
 }
 
-void print_packets(int *packets, long grid_length)
-{
+void print_packets(int *packets, long tenant_number){
     long sum = 0;
-    printf("sum = %ld, length = %ld %f\n", sum, grid_length, (double)sum / grid_length);
-    for (long index = 0; index < grid_length; index++)
-    {
+    printf("sum = %ld, length = %ld %f\n", sum, tenant_number, (double)sum / tenant_number);
+    for (long index = 0; index < tenant_number; index++){
         if (*(packets + index) == PACKET_LABEL_ACCEPT)
             sum += 1;
 
         printf("[%-10ld] : %-d\n", index, *(packets + index));
     }
 
-    printf("sum = %ld, length = %ld %f\n", sum, grid_length, (double)sum / grid_length);
+    printf("sum = %ld, length = %ld %f\n", sum, tenant_number, (double)sum / tenant_number);
 }
 
 // void record_paclets(const char)

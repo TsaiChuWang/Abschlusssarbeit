@@ -52,7 +52,10 @@ int main(int argc, char *argv[])
     printf("capacity : %f bps\n", capacity * unit);
 
     traffic_generator generator = initializeTrafficGenerator(config);
-    // showTrafficGenerator(generator);
+    showTrafficGenerator(generator);
+    long grids_number = generator.grids_number;
+
+
     
     // long dequeue_timestamp = 0;
     // record_dequeue_timestamp(dequeue_timestamp, config.data_path);

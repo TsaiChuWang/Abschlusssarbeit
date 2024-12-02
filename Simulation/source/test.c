@@ -31,24 +31,12 @@ int main(int argc, char *argv[])
     // configuration.h
     configuration config;
 
-    if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0)
-    {
+    if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0){
         printf("Can't load configuration \"%s\"\n", CONFIGURATION_PATH);
         return EXIT_FAILURE;
     }
-    show_configuration(config);
-
-    // long unit;
-    // switch (config.unit){
-    // case UNIT_MBPS:
-    //     unit = MBPS;
-    //     break;
-    // case UNIT_KBPS:
-    //     unit = KBPS;
-    //     break;
-    // default:
-    //     unit = MBPS;
-    // }
+    long unit = obtainUnit(config);
+    // show_configuration(config);
 
     
     // // print_packets(packets, config.tenant_number);

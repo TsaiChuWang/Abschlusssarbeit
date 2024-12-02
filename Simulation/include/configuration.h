@@ -214,7 +214,7 @@
         }
 
         printf("- Traffic :\n");
-        printf("| input rate                 : %-d\n", config.input_rate);
+        printf("| input rate                 : %-ld\n", config.input_rate);
         printf("| traffic mode               : %-d\n", config.traffic_mode);
         printf("| mean                       : %-d\n", config.mean);
         printf("| standard deviation         : %-d\n", config.standard_deviation);
@@ -229,6 +229,22 @@
         printf("- GCRA :\n");
         printf("| tau_1                      : %-ld\n", config.tau_1);
         printf("| tau_2                      : %-ld\n", config.tau_2);
+    }
+
+    long obtainUnit(const configuration config){
+        switch (config.unit){
+            case UNIT_MBPS:
+                // printf("unit = %ld\n", MBPS);
+                return MBPS;
+                break;
+            case UNIT_KBPS:
+                // printf("unit = %ld\n", KBPS);
+                return KBPS;
+                break;
+            default:
+                // printf("unit = %ld\n", MBPS);
+                return MBPS;
+        }
     }
 #endif
 

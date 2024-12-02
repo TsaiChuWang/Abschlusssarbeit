@@ -16,6 +16,7 @@
     #define INITIAL_CONFIGURATION_ERROR 0.001
     #define INITIAL_CONFIGURATION_UNIT 0
 
+    #define INITIAL_CONFIGURATION_INPUT_RATE (long)1073741824
     #define INITIAL_CONFIGURATION_TRAFFIC_MODE 0
     #define INITIAL_CONFIGURATION_MEAN 120
     #define INITIAL_CONFIGURATION_STANDARD_DEVIATION 40
@@ -45,6 +46,7 @@
 
         // Write the [traffic] section
         fprintf(file, "[traffic]\n");
+        fprintf(file, "input_rate = %ld\n", INITIAL_CONFIGURATION_INPUT_RATE);  
         fprintf(file, "traffic_mode = %d\n", INITIAL_CONFIGURATION_TRAFFIC_MODE);  
         fprintf(file, "mean = %d\n", INITIAL_CONFIGURATION_MEAN); 
         fprintf(file, "standard_deviation = %d\n", INITIAL_CONFIGURATION_STANDARD_DEVIATION);  
@@ -74,6 +76,7 @@
         char*   data_path;
         int     unit;
 
+        long    input_rate;
         int     traffic_mode;           
         int     mean;               
         int     standard_deviation; 
@@ -104,8 +107,10 @@
             pconfig->data_path = temp_str;  
         }
         else if (MATCH("simulation", "unit")) 
-            pconfig->unit = atoi(value);                    
+            pconfig->unit = atoi(value);              
 
+        else if (MATCH("traffic", "input_rate")) 
+            pconfig->input_rate = strtol(value, NULL, 10);   
         else if (MATCH("traffic", "traffic_mode")) 
             pconfig->traffic_mode = atoi(value);                    
         else if (MATCH("traffic", "mean")) 
@@ -170,6 +175,7 @@
 
         // Write the [traffic] section
         fprintf(file, "[traffic]\n");
+        fprintf(file, "input_rate = %d\n", config->input_rate);
         fprintf(file, "traffic_mode = %d\n", config->traffic_mode);  
         fprintf(file, "mean = %d\n", config->mean); 
         fprintf(file, "standard_deviation = %d\n", config->standard_deviation);  
@@ -208,6 +214,7 @@
         }
 
         printf("- Traffic :\n");
+        printf("| input rate                 : %-d\n", config.input_rate);
         printf("| traffic mode               : %-d\n", config.traffic_mode);
         printf("| mean                       : %-d\n", config.mean);
         printf("| standard deviation         : %-d\n", config.standard_deviation);

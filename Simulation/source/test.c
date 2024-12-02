@@ -6,13 +6,13 @@
 #include "../include/general.h"
 #include "./inih/ini.h"
 #include "../include/configuration.h"
-#include "../include/traffic_generation.h"
-#include "../include/GCRA.h"
-#include "../include/link_capacity_queue.h"
-#include "../include/packets_count.h"
+// #include "../include/traffic_generation.h"
+// #include "../include/GCRA.h"
+// #include "../include/link_capacity_queue.h"
+// #include "../include/packets_count.h"
 
 // #define CONFIGURATION_PATH "../configuration/simple_V1.ini"
-#define CONFIGURATION_PATH "../configuration/simple_V1_naughty.ini"
+#define CONFIGURATION_PATH "../configuration/simple_V3.ini"
 
 #define NAME "test"
 #define STORED_PACKET_GENERATION_PATH "../data/test/packet_generation"
@@ -36,75 +36,75 @@ int main(int argc, char *argv[])
         printf("Can't load configuration \"%s\"\n", CONFIGURATION_PATH);
         return EXIT_FAILURE;
     }
-    // show_configuration(config);
+    show_configuration(config);
 
-    long unit;
-    switch (config.unit){
-    case UNIT_MBPS:
-        unit = MBPS;
-        break;
-    case UNIT_KBPS:
-        unit = KBPS;
-        break;
-    default:
-        unit = MBPS;
-    }
+    // long unit;
+    // switch (config.unit){
+    // case UNIT_MBPS:
+    //     unit = MBPS;
+    //     break;
+    // case UNIT_KBPS:
+    //     unit = KBPS;
+    //     break;
+    // default:
+    //     unit = MBPS;
+    // }
 
     
-    // print_packets(packets, config.tenant_number);
+    // // print_packets(packets, config.tenant_number);
 
-    // Clean
-    sprintf(command, "rm -r %s", config.data_path);
-    system(command);
-    sprintf(command, "mkdir %s", config.data_path);
-    system(command);
-    sprintf(command, "mkdir %s/link_queue", config.data_path);
-    system(command);
+    // // Clean
+    // sprintf(command, "rm -r %s", config.data_path);
+    // system(command);
+    // sprintf(command, "mkdir %s", config.data_path);
+    // system(command);
+    // sprintf(command, "mkdir %s/link_queue", config.data_path);
+    // system(command);
 
-    sprintf(command, "python3 " PYTHON_CAPACITY_CALCULATION_PATH " %s %d", CONFIGURATION_PATH, 0);
-    system(command);
+    // sprintf(command, "python3 " PYTHON_CAPACITY_CALCULATION_PATH " %s %d", CONFIGURATION_PATH, 0);
+    // system(command);
 
-    double capacity = obtain_capacity();
-    printf("capacity : %f bps\n", capacity * unit);
+    // double capacity = obtain_capacity();
+    // printf("capacity : %f bps\n", capacity * unit);
 
-    long step_size = (long)((long)config.packet_size / (GBPS / ONE_SECOND_IN_NS));
-    long window_length = obtain_grid_length(config.simulation_time, step_size);
-    long grid_length = ONE_SECOND_IN_NS/config.packet_size;
-    window_length = window_length/grid_length;
-    // long grid_length = 20000;
+    // long step_size = (long)((long)config.packet_size / (GBPS / ONE_SECOND_IN_NS));
+    // long window_length = obtain_grid_length(config.simulation_time, step_size);
+    // long grid_length = ONE_SECOND_IN_NS/config.packet_size;
+    // window_length = window_length/grid_length;
+    // // long grid_length = 20000;
     
-    long dequeue_timestamp = 0;
-    record_dequeue_timestamp(dequeue_timestamp, config.data_path);
-    int tenant_number = config.tenant_number;
-    // int tenant_number = 10;
+    // long dequeue_timestamp = 0;
+    // record_dequeue_timestamp(dequeue_timestamp, config.data_path);
+    // int tenant_number = config.tenant_number;
+    // // int tenant_number = 10;
 
-    link_capacity_queue link;
-    initQueue(&link);
-    record_link_capacity_queue(link, config.data_path);
+    // link_capacity_queue link;
+    // initQueue(&link);
+    // record_link_capacity_queue(link, config.data_path);
 
-    packets_count count;
-    init_Packets_Count(&count, tenant_number, grid_length);
-    record_packets_count(count, config.data_path);
+    // packets_count count;
+    // init_Packets_Count(&count, tenant_number, grid_length);
+    // record_packets_count(count, config.data_path);
 
-    packets_label label;
-    init_Packets_Label(&label, tenant_number, &count);
-    record_packets_label(label, config.data_path);
-    // print_packets_label(label);
+    // packets_label label;
+    // init_Packets_Label(&label, tenant_number, &count);
+    // record_packets_label(label, config.data_path);
+    // // print_packets_label(label);
 
-    GCRA *gcras_1 = initializeGCRAs(tenant_number, config.tau_1, config.packet_size);
-    record_gcras(gcras_1, tenant_number, config.data_path, 1);
+    // GCRA *gcras_1 = initializeGCRAs(tenant_number, config.tau_1, config.packet_size);
+    // record_gcras(gcras_1, tenant_number, config.data_path, 1);
 
-    GCRA *gcras_2 = initializeGCRAs(tenant_number, config.tau_2, config.packet_size);
-    record_gcras(gcras_2, tenant_number, config.data_path, 2);
+    // GCRA *gcras_2 = initializeGCRAs(tenant_number, config.tau_2, config.packet_size);
+    // record_gcras(gcras_2, tenant_number, config.data_path, 2);
 
-    system("gcc ./single_window.c inih/ini.c -o ../execution/single_window -lm");
-    for(long window = 0;window<window_length;window++){
-        sprintf(command, "../execution/single_window %ld %f", window, capacity);
-        system(command);
+    // system("gcc ./single_window.c inih/ini.c -o ../execution/single_window -lm");
+    // for(long window = 0;window<window_length;window++){
+    //     sprintf(command, "../execution/single_window %ld %f", window, capacity);
+    //     system(command);
     
-        sprintf(command, "python3 ../python/statistics.py %s/label.csv", config.data_path);
-        system(command);
-    }
+    //     sprintf(command, "python3 ../python/statistics.py %s/label.csv", config.data_path);
+    //     system(command);
+    // }
     // system("gcc ./single_window_naughty.c inih/ini.c -o ../execution/single_window_naughty -lm");
     // for(long window = 0;window<window_length;window++){
     //     sprintf(command, "../execution/single_window_naughty %ld %f", window, capacity);

@@ -28,6 +28,14 @@ traffic_generator initializeTrafficGenerator(const configuration config){
     return generate; 
 }
 
+long obtain_grid_length(int simulation_time, int step_size){
+    return 1953125;
+}
+
+long obtain_grids_number(int packet_size){
+    return (long)ONE_SECOND_IN_NS/packet_size;
+}
+
 void showTrafficGenerator(const traffic_generator generate){
     printf("| step_size                    : %-ld\n", generate.step_size);
     printf("| grids_number                 : %-ld\n", generate.grids_number);

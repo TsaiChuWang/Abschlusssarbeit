@@ -2,14 +2,14 @@
 
 #ifdef LINK_CAPACITY_QUEUE_H
 
-#define MAX_QUEUE_SIZE 100
+#define MAX_QUEUE_SIZE 8754
 
 typedef struct{
     int packets[MAX_QUEUE_SIZE];
 
     int front;
     int rear;
-} link_capacity_queue;
+} link_capacity_queue;https://www.youtube.com/watch?v=OM7S7zVGPdU&list=PL6LWEStSzmRQazr858SOB-xty4jf5cNce
 
 void initQueue(link_capacity_queue *pqueue)
 {

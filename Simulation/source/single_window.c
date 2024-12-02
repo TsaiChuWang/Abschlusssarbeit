@@ -53,8 +53,8 @@ int main(int argc, char *argv[])
     }
     double ratio = (double)(config.mean * unit) / GBPS;
     long step_size = (long)((long)config.packet_size / (GBPS / ONE_SECOND_IN_NS));
-    // long grid_length = ONE_SECOND_IN_NS/config.packet_size;
-    long grid_length = 2000;
+    long grid_length = ONE_SECOND_IN_NS/config.packet_size;
+    // long grid_length = 2000;
     long linkTransmissionInterval = (long)(config.packet_size*(double)ONE_SECOND_IN_NS/(capacity*unit));   //config.packet_size
     // printf("linkTransmissionInterval = %ld\n", linkTransmissionInterval);
     long dequeue_timestamp = 0;

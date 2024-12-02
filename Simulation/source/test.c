@@ -6,7 +6,7 @@
 #include "../include/general.h"
 #include "./inih/ini.h"
 #include "../include/configuration.h"
-// #include "../include/traffic_generation.h"
+#include "../include/traffic_generation.h"
 // #include "../include/GCRA.h"
 // #include "../include/link_capacity_queue.h"
 // #include "../include/packets_count.h"
@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
 {
     char command[MAX_COMMAND_LENGTH];
 
-
     // configuration.h
     configuration config;
 
@@ -38,28 +37,22 @@ int main(int argc, char *argv[])
     long unit = obtainUnit(config);
     // show_configuration(config);
 
-    
-    // // print_packets(packets, config.tenant_number);
+    // Clean
+    sprintf(command, "rm -r %s", config.data_path);
+    system(command);
+    sprintf(command, "mkdir %s", config.data_path);
+    system(command);
+    sprintf(command, "mkdir %s/link_queue", config.data_path);
+    system(command);
 
-    // // Clean
-    // sprintf(command, "rm -r %s", config.data_path);
-    // system(command);
-    // sprintf(command, "mkdir %s", config.data_path);
-    // system(command);
-    // sprintf(command, "mkdir %s/link_queue", config.data_path);
-    // system(command);
+    sprintf(command, "python3 " PYTHON_CAPACITY_CALCULATION_PATH " %s %d", CONFIGURATION_PATH, 0);
+    system(command);
 
-    // sprintf(command, "python3 " PYTHON_CAPACITY_CALCULATION_PATH " %s %d", CONFIGURATION_PATH, 0);
-    // system(command);
+    double capacity = obtain_capacity();
+    printf("capacity : %f bps\n", capacity * unit);
 
-    // double capacity = obtain_capacity();
-    // printf("capacity : %f bps\n", capacity * unit);
-
-    // long step_size = (long)((long)config.packet_size / (GBPS / ONE_SECOND_IN_NS));
-    // long window_length = obtain_grid_length(config.simulation_time, step_size);
-    // long grid_length = ONE_SECOND_IN_NS/config.packet_size;
-    // window_length = window_length/grid_length;
-    // // long grid_length = 20000;
+    traffic_generator generator = initializeTrafficGenerator(config);
+    // showTrafficGenerator(generator);
     
     // long dequeue_timestamp = 0;
     // record_dequeue_timestamp(dequeue_timestamp, config.data_path);

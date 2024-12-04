@@ -41,7 +41,9 @@ int main(int argc, char *argv[])
     system(command);
     sprintf(command, "mkdir %s", config.data_path);
     system(command);
-    sprintf(command, "mkdir %s/link_queue", config.data_path);
+    sprintf(command, "mkdir %s/link_queue_%d", config.data_path, PACKET_LABEL_OVER_CAPACITY_DROPPED);
+    system(command);
+    sprintf(command, "mkdir %s/link_queue_%d", config.data_path, PACKET_LABEL_OVER_UPPERBOUND_DROPPED);
     system(command);
 
     sprintf(command, "python3 " PYTHON_CAPACITY_CALCULATION_PATH " %s %d", CONFIGURATION_PATH, 0);
@@ -51,8 +53,7 @@ int main(int argc, char *argv[])
     printf("capacity : %f bps\n", capacity * unit);
 
     queue link;
-    initQueue(&link, 8754, config, capacity);
-    // initQueue(&link);
+    initQueue(&link, tenant_number, config, capacity, PACKET_LABEL_OVER_CAPACITY_DROPPED);
     record_queue(link, config.data_path);
     // print_link_queue(link);
 
@@ -65,8 +66,8 @@ int main(int argc, char *argv[])
     record_packets_label(label, config.data_path);
     // print_packets_label(label);
 
-    GCRA *gcras_1 = initializeGCRAs(tenant_number, config.tau_1, config.packet_size);
-    record_gcras(gcras_1, tenant_number, config.data_path, 1);
+    queue* shaping = initQueues(config.tau_1, config, (double)(config.mean+config.standard_deviation), PACKET_LABEL_OVER_UPPERBOUND_DROPPED, tenant_number);
+    record_queues(shaping, config.data_path, tenant_number);
 
     GCRA *gcras_2 = initializeGCRAs(tenant_number, config.tau_2, config.packet_size);
     record_gcras(gcras_2, tenant_number, config.data_path, 2);

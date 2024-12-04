@@ -42,13 +42,13 @@ int main(int argc, char *argv[])
     int tenant_number = config.tenant_number;
 
     traffic_generator generator = initializeTrafficGenerator(config);
-    showTrafficGenerator(generator);
+    // showTrafficGenerator(generator);
     long grids_number = generator.grids_number;
     // generator.grids_number = 2000;
 
     queue link;
-    read_queue(&link, config.data_path);
-    print_link_queue(link);
+    read_queue(&link, config.data_path, PACKET_LABEL_OVER_CAPACITY_DROPPED);
+    // print_link_queue(link);
 
     packets_count count;  
     init_Packets_Count(&count, tenant_number, generator.grids_number);
@@ -60,8 +60,11 @@ int main(int argc, char *argv[])
     read_packets_label(&label, config.data_path);
     // print_packets_label(label);
 
-    GCRA *gcras_1 = initializeGCRAs(tenant_number, config.tau_1, config.packet_size);
-    read_gcras(&(gcras_1), tenant_number, config.data_path, 1);
+    queue* shaping = (queue*)malloc(sizeof(queue)*tenant_number);
+    read_queues(shaping, config.data_path, PACKET_LABEL_OVER_UPPERBOUND_DROPPED, tenant_number);
+    // print_queue(shaping);
+    // GCRA *gcras_1 = initializeGCRAs(tenant_number, config.tau_1, config.packet_size);
+    // read_gcras(&(gcras_1), tenant_number, config.data_path, 1);
 
     GCRA *gcras_2 = initializeGCRAs(tenant_number, config.tau_2, config.packet_size);
     read_gcras(&(gcras_2), tenant_number, config.data_path, 2);
@@ -76,7 +79,7 @@ int main(int argc, char *argv[])
     }  
 #endif
 
-    printf("generator.grids_number = %ld\n", generator.grids_number);
+    // printf("generator.grids_number = %ld\n", generator.grids_number);
     for (long grid = 0; grid < generator.grids_number; grid++){
         int *packets = packet_generation_uniform(grid, generator.generate_probability, tenant_number);
         // print_packets(packets, tenant_number);
@@ -87,10 +90,10 @@ int main(int argc, char *argv[])
         int enqueue_count = 0;
         int enqueue_full = 0;
 
-        while(link.dequeue_timestamp <= timestamp){
+        while(link.dequeue_timestamp <= (double)timestamp){
             dequeue(&link);
             link.dequeue_timestamp += link.dequeue_interval;
-            dequeue_count ++;
+            // dequeue_count ++;
             // printf("%ld %ld %d\n", link.dequeue_timestamp, timestamp, link.front);
         }
 
@@ -104,18 +107,17 @@ int main(int argc, char *argv[])
             else goto RECORD;
 
             if (*(packets + tenant) == PACKET_LABEL_ACCEPT){
-                long rate_1 = (long)(timestamp - (gcras_1 + tenant)->last_time) * (((double)(config.mean + config.standard_deviation) * unit) / ONE_SECOND_IN_NS);
-                // printf("rate = %ld\n", rate_1);
-                long x = (long)(gcras_1 + tenant)->x - rate_1;
-                // printf("rate = %ld\n", x);
-
-                if (x > (gcras_1 + tenant)->tau)
-                    *(packets + tenant) = PACKET_LABEL_OVER_UPPERBOUND_DROPPED;
-                else{
-                    (gcras_1 + tenant)->x = MAX((long)0, x) + (gcras_1 + tenant)->l;
-                    (gcras_1 + tenant)->last_time = timestamp;
-                    *(packets + tenant) = PACKET_LABEL_ACCEPT;
+                while((shaping+tenant)->dequeue_timestamp <= (double)timestamp){
+                    dequeue((queue*)(shaping+tenant));
+                    (shaping+tenant)->dequeue_timestamp += (shaping+tenant)->dequeue_interval;
+                    // dequeue_count ++;
+                    // printf("%ld %ld %d\n", link.dequeue_timestamp, timestamp, link.front);
                 }
+
+                *(packets + tenant) = enqueue((queue*)(shaping+tenant));
+                // enqueue_count ++;
+                // if(*(packets + tenant) == PACKET_LABEL_OVER_UPPERBOUND_DROPPED)
+                //     enqueue_full ++;
             }else goto RECORD;
 
             if(*(packets + tenant) == PACKET_LABEL_ACCEPT){
@@ -136,9 +138,9 @@ int main(int argc, char *argv[])
 
             if(*(packets + tenant) == PACKET_LABEL_ACCEPT){
                 *(packets + tenant) = enqueue(&link);
-                enqueue_count ++;
-                if(*(packets + tenant) == PACKET_LABEL_OVER_CAPACITY_DROPPED)
-                    enqueue_full ++;
+                // enqueue_count ++;
+                // if(*(packets + tenant) == PACKET_LABEL_OVER_CAPACITY_DROPPED)
+                //     enqueue_full ++;
             }
                 
             else goto RECORD;
@@ -158,8 +160,8 @@ RECORD:
             
         }
 
-        // if(enqueue_full>0)
-        //     printf("link :front = %3d, rear = %3d dequeue_count = %3d, enqueue_count = %3d, enqueue_full = %3d Grid[%4d](%ld)\n", link.front, link.rear, dequeue_count, enqueue_count, enqueue_full, grid, timestamp);
+        if(enqueue_full>0)
+            printf("link :front = %3d, rear = %3d dequeue_count = %3d, enqueue_count = %3d, enqueue_full = %3d Grid[%4d](%ld)\n", link.front, link.rear, dequeue_count, enqueue_count, enqueue_full, grid, timestamp);
         // printf("link :front = %3d, rear = %3d dequeue_count = %3d, enqueue_count = %3d, enqueue_full = %3d\n", link.front, link.rear, dequeue_count, enqueue_count, enqueue_full);
     }
 
@@ -167,7 +169,8 @@ RECORD:
     record_queue(link, config.data_path);
     record_packets_label(label, config.data_path);
     // print_packets_label(label);
-    record_gcras(gcras_1, tenant_number, config.data_path, 1);
+    record_queues(shaping, config.data_path, tenant_number);
+    // record_gcras(gcras_1, tenant_number, config.data_path, 1);
     record_gcras(gcras_2, tenant_number, config.data_path, 2);
 
     execute_clock = clock() - execute_clock;

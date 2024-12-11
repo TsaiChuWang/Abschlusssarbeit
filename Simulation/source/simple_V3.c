@@ -53,7 +53,8 @@ int main(int argc, char *argv[])
     printf("capacity : %f bps\n", capacity * unit);
 
     queue link;
-    initQueue(&link, tenant_number, config, capacity, PACKET_LABEL_OVER_CAPACITY_DROPPED);
+    int max_link_queue_buffer = 10000;
+    initQueue(&link, max_link_queue_buffer, config, capacity, PACKET_LABEL_OVER_CAPACITY_DROPPED);
     record_queue(link, config.data_path);
     // print_link_queue(link);
 
@@ -83,5 +84,7 @@ int main(int argc, char *argv[])
 
     sprintf(command, "python3 ../python/chart.py %s", CONFIGURATION_PATH);
     system(command);
+
+    system("python3 ../python/bandwidth.py");
     return EXIT_SUCCESS;
 }

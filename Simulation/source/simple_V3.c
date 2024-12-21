@@ -28,7 +28,8 @@ int main(int argc, char *argv[])
     // configuration.h
     configuration config;
 
-    if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0){
+    if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0)
+    {
         printf("Can't load configuration \"%s\"\n", CONFIGURATION_PATH);
         return EXIT_FAILURE;
     }
@@ -53,7 +54,7 @@ int main(int argc, char *argv[])
     printf("capacity : %f bps\n", capacity * unit);
 
     queue link;
-    int max_link_queue_buffer = 10000;
+    int max_link_queue_buffer = 100;
     initQueue(&link, max_link_queue_buffer, config, capacity, PACKET_LABEL_OVER_CAPACITY_DROPPED);
     record_queue(link, config.data_path);
     // print_link_queue(link);
@@ -67,17 +68,18 @@ int main(int argc, char *argv[])
     record_packets_label(label, config.data_path);
     // print_packets_label(label);
 
-    queue* shaping = initQueues(config.tau_1, config, (double)(config.mean+config.standard_deviation), PACKET_LABEL_OVER_UPPERBOUND_DROPPED, tenant_number);
+    queue *shaping = initQueues(config.tau_1, config, (double)(config.mean + config.standard_deviation), PACKET_LABEL_OVER_UPPERBOUND_DROPPED, tenant_number);
     record_queues(shaping, config.data_path, tenant_number);
 
     GCRA *gcras_2 = initializeGCRAs(tenant_number, config.tau_2, config.packet_size);
     record_gcras(gcras_2, tenant_number, config.data_path, 2);
 
     system("gcc ./single_one_second.c inih/ini.c -o ../execution/single_one_second -lm");
-    for(long window = 0;window<config.simulation_time;window++){
+    for (long window = 0; window < config.simulation_time; window++)
+    {
         sprintf(command, "../execution/single_one_second %ld %f %s", window, capacity, CONFIGURATION_PATH);
         system(command);
-    
+
         sprintf(command, "python3 ../python/statistics.py %s/label.csv", config.data_path);
         system(command);
     }
@@ -85,6 +87,8 @@ int main(int argc, char *argv[])
     sprintf(command, "python3 ../python/chart.py %s", CONFIGURATION_PATH);
     system(command);
 
-    system("python3 ../python/bandwidth.py");
+    sprintf(command, "python3 ../python/bandwidth.py %s", CONFIGURATION_PATH);
+    system(command);
+
     return EXIT_SUCCESS;
 }

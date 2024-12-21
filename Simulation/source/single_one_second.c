@@ -82,7 +82,8 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 #endif
-
+    // tenant_number = 1;
+    // generator.grids_number = 200;
     // printf("generator.grids_number = %ld\n", generator.grids_number);
     for (long grid = 0; grid < generator.grids_number; grid++)
     {
@@ -141,7 +142,7 @@ int main(int argc, char *argv[])
                         shaping_dequeue_count++;
                     }
                 }
-
+                // 51200 281600(0.008342527561)
                 // enqueue_count ++;
                 // if(*(packets + tenant) == PACKET_LABEL_OVER_UPPERBOUND_DROPPED)
                 //     enqueue_full ++;
@@ -152,9 +153,14 @@ int main(int argc, char *argv[])
             if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
             {
                 long rate_2 = (long)(timestamp - (gcras_2 + tenant)->last_time) * (((double)(config.mean) * unit) / ONE_SECOND_IN_NS);
+
                 // printf("rate = %ld\n", rate_2);
                 long x = (long)(gcras_2 + tenant)->x - rate_2;
-
+                // if (x > (gcras_2 + tenant)->tau)
+                if (timestamp - (gcras_2 + tenant)->last_time > 4069)
+                    printf("lst = %9ld, inter = %6ld, rate_2 = %6ld x= %6ld\n", (gcras_2 + tenant)->last_time, timestamp - (gcras_2 + tenant)->last_time, rate_2, x);
+                else
+                    printf("lst = %9ld, inter = \x1B[1;31m%6ld\x1B[0m, rate_2 = %6ld x= %6ld\n", (gcras_2 + tenant)->last_time, timestamp - (gcras_2 + tenant)->last_time, rate_2, x);
                 // printf("x = %ld, tau_2 = %ld\n", x, config.tau_2);
 
                 if (x > (gcras_2 + tenant)->tau)

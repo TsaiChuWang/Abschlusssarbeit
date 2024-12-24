@@ -5,13 +5,15 @@
 #define RECORD_EACH_GRID
 
 // #define PRINT_GRID_COUNT
-
+// #define PRINT_GCRA
 #include "../include/general.h"
 #include "./inih/ini.h"
 #include "../include/configuration.h"
 #include "../include/traffic_generation.h"
 #include "../include/queue.h"
 #include "../include/packets_count.h"
+#include "../include/GCRA.h"
+
 
 #define CONFIGURATION_PATH "../configuration/simple_V1.ini"
 
@@ -34,6 +36,12 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
     // show_configuration(config);
+
+    // Clean
+    sprintf(command, "rm -r %s", config.data_path);
+    system(command);
+    sprintf(command, "mkdir %s", config.data_path);
+    system(command);
     
     traffic_generator generator = initializeTrafficGenerator(config);
 
@@ -51,6 +59,8 @@ int main(int argc, char *argv[])
 
     queue *shaping = initQueues(config.upper_queue_buffer, config, (double)(config.mean + config.standard_deviation), PACKET_LABEL_OVER_UPPERBOUND_DROPPED, tenant_number);
     
+    GCRA *gcras = initializeGCRAs(tenant_number, config.tau, config.packet_size);
+
 #ifdef RECORD_EACH_GRID
     char filename[MAX_PATH_LENGTH];
     sprintf(filename, "%s/packets.csv", config.data_path);
@@ -88,6 +98,27 @@ int main(int argc, char *argv[])
                     }
             }
             else goto RECORD;     
+
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT){
+                long rate = (long)(timestamp - (gcras + tenant)->last_time) * (((double)(config.mean) * config.unit) / ONE_SECOND_IN_NS);
+
+                long x = (long)((gcras + tenant)->x - rate);
+
+#ifdef PRINT_GCRA
+                if (timestamp - (gcras + tenant)->last_time > 4069)
+                    printf("lst = %9lf, time = %-7f, inter = %7lf, rate = %6ld x= %6ld\n", (gcras + tenant)->last_time, timestamp, timestamp - (gcras + tenant)->last_time, rate, x);
+                else
+                    printf("lst = %9lf, time = %-7f, inter = \x1B[1;31m%6lf\x1B[0m, rate = %6ld x= %6ld\n", (gcras + tenant)->last_time, timestamp, timestamp - (gcras + tenant)->last_time, rate, x);
+                printf("x = %ld, tau = %ld\n", x, config.tau);
+#endif
+                if (x > (gcras + tenant)->tau)
+                    *(packets + tenant) = PACKET_LABEL_GCRA_DROPPED;
+                else{
+                    (gcras + tenant)->x = MAX((long)0, x) + (gcras + tenant)->l;
+                    (gcras + tenant)->last_time = timestamp;
+                    *(packets + tenant) = PACKET_LABEL_ACCEPT;
+                }
+            }
 RECORD:
             if (*(packets + tenant) != PACKET_LABEL_NO_PACKET){
                 // printf("%d\n", *(packets + tenant));
@@ -108,7 +139,7 @@ RECORD:
 #endif
 
     for (int tenant = 0; tenant < tenant_number; tenant++)
-        printf("%d : %f\n", tenant, label.labels[tenant][1]/grid_counts);
+        printf("%d : %f\n", tenant, (double)label.labels[tenant][2]/grid_counts);
 
     execute_clock = clock() - execute_clock;
     double time_taken = ((double)execute_clock) / CLOCKS_PER_SEC;

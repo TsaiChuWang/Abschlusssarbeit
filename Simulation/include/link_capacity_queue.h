@@ -9,7 +9,7 @@ typedef struct{
 
     int front;
     int rear;
-} link_capacity_queue;//https://www.youtube.com/watch?v=OM7S7zVGPdU&list=PL6LWEStSzmRQazr858SOB-xty4jf5cNce
+} link_capacity_queue;
 
 void initQueue(link_capacity_queue *pqueue)
 {

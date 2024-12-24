@@ -7,8 +7,8 @@ typedef struct{
   int front;
   int rear;
 
-  double dequeue_interval;
-  double dequeue_timestamp;
+  TIME_TYPE dequeue_interval;
+  TIME_TYPE dequeue_timestamp;
 
   int drop_code;
 } queue;
@@ -20,7 +20,7 @@ void initQueue(queue *pqueue, int max_queue_size, const configuration config, do
 
   long unit =config.unit;
   
-  pqueue->dequeue_interval = (double)(config.packet_size*(double)ONE_SECOND_IN_NS/(bandwidth*unit));
+  pqueue->dequeue_interval = (TIME_TYPE)(config.packet_size*(double)ONE_SECOND_IN_NS/(bandwidth*unit));
 //   printf("dequeue_interval  = %f\n", pqueue->dequeue_interval);
   pqueue->dequeue_timestamp = 0;
 

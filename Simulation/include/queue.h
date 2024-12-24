@@ -18,7 +18,7 @@ void initQueue(queue *pqueue, int max_queue_size, const configuration config, do
   pqueue->front = -1;
   pqueue->rear = -1;
 
-  long unit = obtainUnit(config);
+  long unit =config.unit;
   
   pqueue->dequeue_interval = (double)(config.packet_size*(double)ONE_SECOND_IN_NS/(bandwidth*unit));
 //   printf("dequeue_interval  = %f\n", pqueue->dequeue_interval);

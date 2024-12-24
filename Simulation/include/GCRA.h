@@ -12,7 +12,7 @@
 typedef struct{
     long tau;    
     long l;   
-    long last_time;
+    TIME_TYPE last_time;
 
     long x; // water level
 }GCRA;
@@ -38,12 +38,12 @@ GCRA* initializeGCRAs(int tenant_number, long tau, long l){
 void printGCRA(GCRA gcra){
     printf("tau       = %-ld\n", gcra.tau);
     printf("l         = %-ld\n", gcra.l);
-    printf("last time = %-ld\n", gcra.last_time);
+    printf("last time = %-lf\n", gcra.last_time);
     printf("x         = %-ld\n", gcra.x);
 }
 
-int first_gcra_limit(long timestamp, GCRA* pgcra, long upper_bound, int packet_size, long temp_tau){
-    long x = pgcra->x - (timestamp - pgcra->last_time)*(((int)upper_bound*packet_size)/ONE_SECOND_IN_NS);
+int first_gcra_limit(TIME_TYPE timestamp, GCRA* pgcra, long upper_bound, int packet_size, long temp_tau){
+    long x = (long)(pgcra->x - (timestamp - pgcra->last_time)*(((int)upper_bound*packet_size)/ONE_SECOND_IN_NS));
     
     // printf("%ld %ld %ld\n", pgcra->x, timestamp, (timestamp - pgcra->last_time)*(((int)upper_bound*packet_size)/ONE_SECOND_IN_NS));
     if(x > temp_tau)
@@ -60,8 +60,8 @@ void refresh_gcra(GCRA* pgcra){
     pgcra->x = 0;
 }
 
-int second_gcra_limit(int label, long timestamp, GCRA* pgcra, long mean, int packet_size, long tau){
-    long x = pgcra->x - (timestamp - pgcra->last_time)*(((int)mean*packet_size)/ONE_SECOND_IN_NS);
+int second_gcra_limit(int label, TIME_TYPE timestamp, GCRA* pgcra, long mean, int packet_size, long tau){
+    long x = (long)(pgcra->x - (timestamp - pgcra->last_time)*(((int)mean*packet_size)/ONE_SECOND_IN_NS));
     // printf("%ld %ld %ld\n", pgcra->x, timestamp, (timestamp - pgcra->last_time)*(((int)upper_bound*packet_size)/ONE_SECOND_IN_NS));
     
     if(label == PACKET_LABEL_OVER_UPPERBOUND_DROPPED)
@@ -87,7 +87,7 @@ void record_gcras(GCRA* gcras, int tenant_number,const char* folder_path, int ty
 
     for(int tenant = 0;tenant<tenant_number;tenant++){
         GCRA* pgcra = (GCRA*)(gcras+tenant);
-        fprintf(file, "%ld, %ld\n", pgcra->x, pgcra->last_time);
+        fprintf(file, "%ld, %lf\n", pgcra->x, pgcra->last_time);
     }
 
     fclose(file);
@@ -107,7 +107,8 @@ void read_gcras(GCRA** pgcras, int tenant_number,const char* folder_path, int ty
     size_t row = 0;
     while (fgets(line, sizeof(line), file) && row < tenant_number) {
         // GCRA* pgcra = (GCRA*)(*(pgcras)+row);
-        long x, last_time;
+        long x;
+        TIME_TYPE last_time;
         if (sscanf(line, "%ld, %ld", &x, &last_time) == 2) {
             (*(pgcras)+row)->x = x;
             (*(pgcras)+row)->last_time = last_time;

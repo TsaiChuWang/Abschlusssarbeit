@@ -25,7 +25,7 @@ traffic_generator initializeTrafficGenerator(const configuration config)
     generate.step_size = (long)(config.packet_size * temp);
     generate.grids_number = (long)((double)ONE_SECOND_IN_NS / generate.step_size);
 
-    long unit = obtainUnit(config);
+    long unit = config.unit;
     generate.generate_probability = (double)config.mean * unit / config.input_rate;
     generate.generate_probability_naughty = (double)config.naughty_mean * unit / config.input_rate;
 

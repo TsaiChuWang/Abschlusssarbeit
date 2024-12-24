@@ -6,8 +6,9 @@
 #include "../include/general.h"
 #include "./inih/ini.h"
 #include "../include/configuration.h"
+#include "../include/traffic_generation.h"
 
-// #include "../include/traffic_generation.h"
+
 // #include "../include/GCRA.h"
 // #include "../include/link_capacity_queue.h"
 // #include "../include/packets_count.h"
@@ -31,7 +32,12 @@ int main(int argc, char *argv[])
         printf("Can't load configuration \"%s\"\n", CONFIGURATION_PATH);
         return EXIT_FAILURE;
     }
-    show_configuration(config);
+    // show_configuration(config);
+    
+    traffic_generator generator = initializeTrafficGenerator(config);
+
+    int tenant_number = config.tenant_number;
+    long grids_number = generator.grids_number;
 
     return EXIT_SUCCESS;
 }

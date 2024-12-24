@@ -60,21 +60,21 @@ int enqueueLink(link_capacity_queue *pqueue, int tenant)
     }
 }
 
-// void dequeue(link_capacity_queue *pqueue)
-// {
-//     if (isEmpty(pqueue)){
-//         return; // Queue is empty, nothing to transmit
-//     }
-//     else{
-//         pqueue->front++;
-//         // printf("dequeue front = %d")
-//         if (pqueue->front > pqueue->rear){
-//             pqueue->front = -1; // Reset queue if it's empty
-//             pqueue->rear = -1;
-//         }
-//         return;
-//     }
-// }
+void dequeueLink(link_capacity_queue *pqueue)
+{
+    if (isLinkEmpty(pqueue)){
+        return; // Queue is empty, nothing to transmit
+    }
+    else{
+        pqueue->front++;
+        // printf("dequeue front = %d")
+        if (pqueue->front > pqueue->rear){
+            pqueue->front = -1; // Reset queue if it's empty
+            pqueue->rear = -1;
+        }
+        return;
+    }
+}
 
 // int simulation_link(int label, link_capacity_queue *pqueue)
 // {

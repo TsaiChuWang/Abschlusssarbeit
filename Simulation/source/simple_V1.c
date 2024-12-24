@@ -13,7 +13,7 @@
 #include "../include/queue.h"
 #include "../include/packets_count.h"
 #include "../include/GCRA.h"
-
+#include "../include/link_capacity_queue.h"
 
 #define CONFIGURATION_PATH "../configuration/simple_V1.ini"
 
@@ -43,7 +43,11 @@ int main(int argc, char *argv[])
     sprintf(command, "mkdir %s", config.data_path);
     system(command);
     
+    double capacity = obtain_capacity();
+    printf("capacity : %f bps\n", capacity * config.unit);
+
     traffic_generator generator = initializeTrafficGenerator(config);
+    // showTrafficGenerator(generator);
 
     int tenant_number = config.tenant_number;
     long grids_number = generator.grids_number;
@@ -61,6 +65,9 @@ int main(int argc, char *argv[])
     
     GCRA *gcras = initializeGCRAs(tenant_number, config.tau, config.packet_size);
 
+    link_capacity_queue link;
+    initLinkQueue(&link, tenant_number, config, capacity);
+
 #ifdef RECORD_EACH_GRID
     char filename[MAX_PATH_LENGTH];
     sprintf(filename, "%s/packets.csv", config.data_path);
@@ -74,6 +81,13 @@ int main(int argc, char *argv[])
     while(timestamp<=(TIME_TYPE)(config.simulation_time*ONE_SECOND_IN_NS)){
         timestamp += (TIME_TYPE)(generator.step_size);
         // printf("timestamp : %-lf\n", timestamp);
+
+        int queue_action_count = 0;
+        while (link.dequeue_timestamp <= (double)timestamp){
+            link.dequeue_timestamp += link.dequeue_interval;
+            queue_action_count -= 1;
+        }
+        // printf("queue count = %d\n", queue_action_count);
 
         int *packets = packet_generation_uniform(grid_counts, generator.generate_probability, tenant_number);
 
@@ -118,6 +132,21 @@ int main(int argc, char *argv[])
                     (gcras + tenant)->last_time = timestamp;
                     *(packets + tenant) = PACKET_LABEL_ACCEPT;
                 }
+            }else goto RECORD;  
+
+            if(*(packets + tenant) == PACKET_LABEL_ACCEPT || *(packets + tenant) == PACKET_LABEL_GCRA_DROPPED){
+                if(*(packets + tenant) == PACKET_LABEL_ACCEPT){
+                    queue_action_count += 1;
+                    if (queue_action_count > 0)
+                        *(packets + tenant) = enqueueLink(&link, tenant);
+                    else goto RECORD;  
+                }
+
+                if(*(packets + tenant) == PACKET_LABEL_GCRA_DROPPED){
+                    link.beta ++;
+                    link.beta_ptr_label[link.beta] = tenant;
+                    continue;
+                }
             }
 RECORD:
             if (*(packets + tenant) != PACKET_LABEL_NO_PACKET){
@@ -126,6 +155,17 @@ RECORD:
             }
 
         }
+
+        for(int beta = 0; beta <= link.beta; beta++){
+            queue_action_count += 1;
+            int tenant = link.beta_ptr_label[beta];
+            if(queue_action_count > 0)
+                label.labels[tenant][enqueueLink(&link, tenant)] += 1;
+            else label.labels[tenant][0] += 1;
+        }
+
+        link.beta = -1;
+        memset(link.beta_ptr_label, -1, link.max_buffer);
 
         grid_counts ++;
     }
@@ -139,8 +179,7 @@ RECORD:
 #endif
 
     for (int tenant = 0; tenant < tenant_number; tenant++)
-        printf("%d : %f\n", tenant, (double)label.labels[tenant][2]/grid_counts);
-
+        printf("%2d : %-7lf %\n", tenant, (double)label.labels[tenant][3]/(label.labels[tenant][0]+label.labels[tenant][1]+label.labels[tenant][2]+label.labels[tenant][3]));
     execute_clock = clock() - execute_clock;
     double time_taken = ((double)execute_clock) / CLOCKS_PER_SEC;
     printf("Execute time : %f\n", time_taken);

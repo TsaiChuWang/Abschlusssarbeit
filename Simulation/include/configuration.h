@@ -7,14 +7,11 @@
 #define TRAFFIC_MODE_GAUSSIAN 1
 #define TRAFFIC_MODE_ALL_NAUGHTY 2
 
-#define UNIT_MBPS 0
-#define UNIT_KBPS 1
-
 #ifdef REDUCTION
     #define INITIAL_CONFIGURATION_TENANT_NUMBER 100
     #define INITIAL_CONFIGURATION_SIMULATION_simulation_time 1
     #define INITIAL_CONFIGURATION_ERROR 0.001
-    #define INITIAL_CONFIGURATION_UNIT 0
+    #define INITIAL_CONFIGURATION_UNIT 1048576
 
     #define INITIAL_CONFIGURATION_INPUT_RATE (long)1073741824
     #define INITIAL_CONFIGURATION_TRAFFIC_MODE 0
@@ -26,8 +23,8 @@
     #define INITIAL_CONFIGURATION_NAUGHTY_STANDARD_DEVIATION 10
     #define INITIAL_CONFIGURATION_NAUGHTY_TENANT_NUMBER 50
 
-    #define INITIAL_CONFIGURATION_BUCKET_DEPTH_1 4096
-    #define INITIAL_CONFIGURATION_BUCKET_DEPTH_2 7513
+    #define INITIAL_CONFIGURATION_UPPER_LINK_BUFFER 1   
+    #define INITIAL_CONFIGURATION_BUCKET_DEPTH 7513
 
     void reduction_inif_file(const char* filename){
         FILE* file = fopen(filename, "w");
@@ -39,10 +36,10 @@
 
         fprintf(file, "[simulation]\n");
         fprintf(file, "tenant_number = %d\n", INITIAL_CONFIGURATION_TENANT_NUMBER);  
-        fprintf(file, "simulation_time = %ld\n", INITIAL_CONFIGURATION_SIMULATION_simulation_time);  
+        fprintf(file, "simulation_time = %lf\n", INITIAL_CONFIGURATION_SIMULATION_simulation_time);  
         fprintf(file, "error = %f\n", INITIAL_CONFIGURATION_ERROR);  
         fprintf(file, "data_path = ../data/test\n");  
-        fprintf(file, "unit = %d\n", INITIAL_CONFIGURATION_UNIT);
+        fprintf(file, "unit = %ld\n", INITIAL_CONFIGURATION_UNIT);
 
         // Write the [traffic] section
         fprintf(file, "[traffic]\n");
@@ -56,10 +53,10 @@
         fprintf(file, "naughty_standard_deviation = %d\n", INITIAL_CONFIGURATION_NAUGHTY_STANDARD_DEVIATION);  
         fprintf(file, "naughty_tenant_number = %d\n", INITIAL_CONFIGURATION_NAUGHTY_TENANT_NUMBER);  
 
-        // Write the [GCRA] section
-        fprintf(file, "[GCRA]\n");
-        fprintf(file, "tau_1 = %ld\n", INITIAL_CONFIGURATION_BUCKET_DEPTH_1);  
-        fprintf(file, "tau_2 = %ld\n", INITIAL_CONFIGURATION_BUCKET_DEPTH_2); 
+        // Write the [threshold] section
+        fprintf(file, "[threshold]\n");
+        fprintf(file, "upper_queue_buffer = %ld\n", INITIAL_CONFIGURATION_UPPER_LINK_BUFFER);  
+        fprintf(file, "tau = %ld\n", INITIAL_CONFIGURATION_BUCKET_DEPTH); 
 
         // Close the file
         fclose(file); 
@@ -70,11 +67,11 @@
 #ifdef CONFIG_H
 
     typedef struct {
-        int     tenant_number;  
-        long    simulation_time;  
-        double  error;      
-        char*   data_path;
-        int     unit;
+        int         tenant_number;  
+        TIME_TYPE   simulation_time;  
+        double      error;      
+        char*       data_path;
+        long        unit;
 
         long    input_rate;
         int     traffic_mode;           
@@ -86,8 +83,8 @@
         int     naughty_standard_deviation; 
         int     naughty_tenant_number;     
  
-        long tau_1;
-        long tau_2;
+        long    upper_queue_buffer;
+        long    tau;
     } configuration;
 
     static int handler(void* config, const char* section, const char* name, const char* value){
@@ -98,16 +95,15 @@
         if (MATCH("simulation", "tenant_number")) 
             pconfig->tenant_number = atoi(value);       
         else if (MATCH("simulation", "simulation_time")) 
-            pconfig->simulation_time = (long)atoi(value); 
+            pconfig->simulation_time = atof(value);   
         else if (MATCH("simulation", "error")) 
             pconfig->error = atof(value);              
         else if (MATCH("simulation", "data_path")) {
             char* temp_str = malloc(strlen(value) + 1);  
             strcpy(temp_str, value);  
             pconfig->data_path = temp_str;  
-        }
-        else if (MATCH("simulation", "unit")) 
-            pconfig->unit = atoi(value);              
+        } else if (MATCH("simulation", "unit")) 
+            pconfig->unit = strtol(value, NULL, 10); 
 
         else if (MATCH("traffic", "input_rate")) 
             pconfig->input_rate = strtol(value, NULL, 10);   
@@ -127,10 +123,10 @@
         else if (MATCH("traffic", "naughty_tenant_number")) 
             pconfig->naughty_tenant_number = atoi(value);       
         
-        else if (MATCH("GCRA", "tau_1")) 
-            pconfig->tau_1 = strtol(value, NULL, 10);  
-        else if (MATCH("GCRA", "tau_2")) 
-            pconfig->tau_2 = strtol(value, NULL, 10);  
+        else if (MATCH("threshold", "upper_queue_buffer")) 
+            pconfig->upper_queue_buffer = strtol(value, NULL, 10);  
+        else if (MATCH("threshold", "tau")) 
+            pconfig->tau = strtol(value, NULL, 10);  
 
         return SUCCESS; 
     }
@@ -168,7 +164,7 @@
 
         fprintf(file, "[simulation]\n");
         fprintf(file, "tenant_number = %d\n", config->tenant_number);  
-        fprintf(file, "simulation_time = %ld\n", config->simulation_time);  
+        fprintf(file, "simulation_time = %lf\n", config->simulation_time);  
         fprintf(file, "error = %f\n", config->error);  
         fprintf(file, "data_path = %s\n", config->data_path);  
         fprintf(file, "unit = %d\n", config->unit);
@@ -185,10 +181,10 @@
         fprintf(file, "naughty_standard_deviation = %d\n", config->naughty_standard_deviation);  
         fprintf(file, "naughty_tenant_number = %d\n", config->naughty_tenant_number);  
 
-        // Write the [GCRA] section
-        fprintf(file, "[GCRA]\n");
-        fprintf(file, "tau_1 = %ld\n", config->tau_1);  
-        fprintf(file, "tau_2 = %ld\n", config->tau_2);  
+        // Write the [threshold] section
+        fprintf(file, "[threshold]\n");
+        fprintf(file, "upper_queue_buffer = %ld\n", config->upper_queue_buffer);  
+        fprintf(file, "tau = %ld\n", config->tau);  
 
         // Close the file
         fclose(file); 
@@ -197,15 +193,18 @@
     void show_configuration(const configuration config){
         printf("- Simulation :\n");
         printf("| tenant number              : %-d\n", config.tenant_number);
-        printf("| simulation time            : %-ld\n", config.simulation_time);
+        printf("| simulation time            : %-lf\n", config.simulation_time);
         printf("| error                      : %-f\n", config.error);
         printf("| data path                  : %-s\n", config.data_path);
         
         switch(config.unit){
-            case UNIT_MBPS:
+            case GBPS:
+                printf("| unit                       : Gbps\n");
+                break;
+            case MBPS:
                 printf("| unit                       : Mbps\n");
                 break;
-            case UNIT_KBPS:
+            case KBPS:
                 printf("| unit                       : kbps\n");
                 break;
             default:
@@ -226,25 +225,9 @@
             printf("| naughty tenant number      : %-d\n", config.naughty_tenant_number);
         }
 
-        printf("- GCRA :\n");
-        printf("| tau_1                      : %-ld\n", config.tau_1);
-        printf("| tau_2                      : %-ld\n", config.tau_2);
-    }
-
-    long obtainUnit(const configuration config){
-        switch (config.unit){
-            case UNIT_MBPS:
-                // printf("unit = %ld\n", MBPS);
-                return MBPS;
-                break;
-            case UNIT_KBPS:
-                // printf("unit = %ld\n", KBPS);
-                return KBPS;
-                break;
-            default:
-                // printf("unit = %ld\n", MBPS);
-                return MBPS;
-        }
+        printf("- Threshold :\n");
+        printf("| upper_queue_buffer         : %-ld\n", config.upper_queue_buffer);
+        printf("| tau                        : %-ld\n", config.tau);
     }
 #endif
 

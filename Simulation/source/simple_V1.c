@@ -6,14 +6,13 @@
 #include "../include/general.h"
 #include "./inih/ini.h"
 #include "../include/configuration.h"
-#include "../include/traffic_generation.h"
-#include "../include/GCRA.h"
-#include "../include/link_capacity_queue.h"
-#include "../include/packets_count.h"
+
+// #include "../include/traffic_generation.h"
+// #include "../include/GCRA.h"
+// #include "../include/link_capacity_queue.h"
+// #include "../include/packets_count.h"
 
 #define CONFIGURATION_PATH "../configuration/simple_V1.ini"
-
-#define NAME "simple_V1"
 
 // gcc ./simple_V1.c inih/ini.c -o ../execution/simple_V1 -lm
 // ../execution/simple_V1
@@ -24,7 +23,6 @@ int main(int argc, char *argv[])
 {
     char command[MAX_COMMAND_LENGTH];
 
-
     // configuration.h
     configuration config;
 
@@ -33,7 +31,7 @@ int main(int argc, char *argv[])
         printf("Can't load configuration \"%s\"\n", CONFIGURATION_PATH);
         return EXIT_FAILURE;
     }
-    // show_configuration(config);
+    show_configuration(config);
 
     return EXIT_SUCCESS;
 }

@@ -40,7 +40,8 @@
         "gcra.h": "c",
         "link_capacity_queue.h": "c",
         "packets_count.h": "c",
-        "deque": "cpp"
+        "deque": "cpp",
+        "queue.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true

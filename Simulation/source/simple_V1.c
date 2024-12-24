@@ -1,17 +1,17 @@
 
 // #define REDUCTION
-#define RECORD_PACKETS_GENERATION
-#define RECORD_TIMESTAMP
+// #define RECORD_PACKETS_GENERATION
+// #define RECORD_TIMESTAMP
+#define RECORD_EACH_GRID
+
+// #define PRINT_GRID_COUNT
 
 #include "../include/general.h"
 #include "./inih/ini.h"
 #include "../include/configuration.h"
 #include "../include/traffic_generation.h"
-
-
-// #include "../include/GCRA.h"
-// #include "../include/link_capacity_queue.h"
-// #include "../include/packets_count.h"
+#include "../include/queue.h"
+#include "../include/packets_count.h"
 
 #define CONFIGURATION_PATH "../configuration/simple_V1.ini"
 
@@ -23,12 +23,13 @@
 int main(int argc, char *argv[])
 {
     char command[MAX_COMMAND_LENGTH];
+    clock_t execute_clock = clock();
+
 
     // configuration.h
     configuration config;
 
-    if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0)
-    {
+    if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0){
         printf("Can't load configuration \"%s\"\n", CONFIGURATION_PATH);
         return EXIT_FAILURE;
     }
@@ -38,6 +39,80 @@ int main(int argc, char *argv[])
 
     int tenant_number = config.tenant_number;
     long grids_number = generator.grids_number;
+    TIME_TYPE timestamp = (TIME_TYPE)0;
+
+    int grid_counts = 0;
+
+    packets_count count;
+    init_Packets_Count(&count, tenant_number, obtain_grids_number(config.packet_size));
+
+    packets_label label;
+    init_Packets_Label(&label, tenant_number, &count);
+
+    queue *shaping = initQueues(config.upper_queue_buffer, config, (double)(config.mean + config.standard_deviation), PACKET_LABEL_OVER_UPPERBOUND_DROPPED, tenant_number);
+    
+#ifdef RECORD_EACH_GRID
+    char filename[MAX_PATH_LENGTH];
+    sprintf(filename, "%s/packets.csv", config.data_path);
+    FILE *file = fopen(filename, "w");
+    if (file == NULL){
+        printf("Failed to open file %s for writing.\n", filename);
+        exit(EXIT_FAILURE);
+    }
+#endif
+
+    while(timestamp<=(TIME_TYPE)(config.simulation_time*ONE_SECOND_IN_NS)){
+        timestamp += (TIME_TYPE)(generator.step_size);
+        // printf("timestamp : %-lf\n", timestamp);
+
+        int *packets = packet_generation_uniform(grid_counts, generator.generate_probability, tenant_number);
+
+        for (int tenant = 0; tenant < tenant_number; tenant++){
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
+                *(count.count + tenant) += 1;
+            else goto RECORD;
+
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT){
+                int shaping_dequeue_count = 0;
+                while ((shaping + tenant)->dequeue_timestamp <= (double)timestamp){
+                    shaping_dequeue_count -= 1;
+                    (shaping + tenant)->dequeue_timestamp += (shaping + tenant)->dequeue_interval;
+                }
+                if (shaping_dequeue_count < 0)
+                    *(packets + tenant) = enqueue((queue *)(shaping + tenant));
+
+                if (shaping_dequeue_count < 0)
+                    while (shaping_dequeue_count < -1){
+                        dequeue((queue *)(shaping + tenant));
+                        shaping_dequeue_count++;
+                    }
+            }
+            else goto RECORD;     
+RECORD:
+            if (*(packets + tenant) != PACKET_LABEL_NO_PACKET){
+                // printf("%d\n", *(packets + tenant));
+                label.labels[tenant][*(packets + tenant)] += 1;
+            }
+
+        }
+
+        grid_counts ++;
+    }
+
+#ifdef RECORD_EACH_GRID
+    fclose(file);
+#endif
+
+#ifdef PRINT_GRID_COUNT
+    printf("Gird Count = %d\n", grid_counts);
+#endif
+
+    for (int tenant = 0; tenant < tenant_number; tenant++)
+        printf("%d : %f\n", tenant, label.labels[tenant][1]/grid_counts);
+
+    execute_clock = clock() - execute_clock;
+    double time_taken = ((double)execute_clock) / CLOCKS_PER_SEC;
+    printf("Execute time : %f\n", time_taken);
 
     return EXIT_SUCCESS;
 }

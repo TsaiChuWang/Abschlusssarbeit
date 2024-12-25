@@ -9,7 +9,7 @@
 
 typedef struct
 {
-    long step_size;
+    TIME_TYPE step_size;
     long grids_number;
 
     double generate_probability;
@@ -22,7 +22,7 @@ traffic_generator initializeTrafficGenerator(const configuration config)
 
     double temp = 0;
     temp = (double)ONE_SECOND_IN_NS / config.input_rate;
-    generate.step_size = (long)(config.packet_size * temp);
+    generate.step_size = (TIME_TYPE)(config.packet_size * temp);
     generate.grids_number = (long)((double)ONE_SECOND_IN_NS / generate.step_size);
 
     long unit = config.unit;
@@ -32,11 +32,6 @@ traffic_generator initializeTrafficGenerator(const configuration config)
     return generate;
 }
 
-long obtain_grid_length(int simulation_time, int step_size)
-{
-    return 1953125;
-}
-
 long obtain_grids_number(int packet_size)
 {
     return (long)ONE_SECOND_IN_NS / packet_size;
@@ -44,7 +39,7 @@ long obtain_grids_number(int packet_size)
 
 void showTrafficGenerator(const traffic_generator generate)
 {
-    printf("| step_size                    : %-ld\n", generate.step_size);
+    printf("| step_size                    : %-lF\n", generate.step_size);
     printf("| grids_number                 : %-ld\n", generate.grids_number);
     printf("| generate_probability         : %-f\n", generate.generate_probability);
     printf("| generate_probability_naughty : %-f\n", generate.generate_probability_naughty);

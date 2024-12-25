@@ -2,84 +2,108 @@
 
 #ifdef LINK_CAPACITY_QUEUE_H
 
+#define ALPHA 1
+#define BETA 0
+
 typedef struct{
-    int* alpha_ptr_label;
-    int* beta_ptr_label;
+    int* alpha_ptr_index;
+    int* beta_ptr_index;
 
     int max_buffer;
-    int alpha;
-    int beta;
 
-    int front;
-    int rear;
-
+    int alpha_front;
+    int alpha_rear;
+    int beta_front;
+    int beta_rear;
+    
     TIME_TYPE dequeue_timestamp;
     TIME_TYPE dequeue_interval;
 } link_capacity_queue;
 
 void initLinkQueue(link_capacity_queue *pqueue, int max_buffer, const configuration config, double bandwidth)
 {
-    pqueue->alpha_ptr_label = (int*)malloc(sizeof(int)*max_buffer);
-    memset(pqueue->alpha_ptr_label, -1, max_buffer);
-    pqueue->beta_ptr_label = (int*)malloc(sizeof(int)*max_buffer);
-    memset(pqueue->beta_ptr_label, -1, max_buffer);
+    pqueue->alpha_ptr_index = (int*)malloc(sizeof(int)*max_buffer);
+    memset(pqueue->alpha_ptr_index, -1, max_buffer);
+    pqueue->beta_ptr_index = (int*)malloc(sizeof(int)*max_buffer);
+    memset(pqueue->beta_ptr_index, -1, max_buffer);
 
     pqueue->max_buffer = max_buffer;
-    pqueue->alpha = 0;
-    pqueue->beta = -1;
 
-    pqueue->front = -1;
-    pqueue->rear = -1;
+    pqueue->alpha_front = -1;
+    pqueue->alpha_rear = -1;
+    pqueue->beta_front = -1;
+    pqueue->beta_rear = -1;
 
     pqueue->dequeue_timestamp = 0;
     pqueue->dequeue_interval = (TIME_TYPE)(config.packet_size*(double)ONE_SECOND_IN_NS/(bandwidth*config.unit));
 }
 
-int isLinkFull(link_capacity_queue *pqueue){
-    return pqueue->rear == pqueue->max_buffer-1;
+int isLinkFull(link_capacity_queue *pqueue, int code){
+    if(code == ALPHA)
+        return pqueue->alpha_rear == pqueue->max_buffer-1;
+    else 
+        return (pqueue->alpha_rear - pqueue->alpha_front + 1) + (pqueue->beta_rear - pqueue->beta_front + 1) == 99;  
 }
 
-// Check if the queue is empty
-int isLinkEmpty(link_capacity_queue *pqueue){
-    return pqueue->front == -1;
+int isLinkEmpty(link_capacity_queue *pqueue, int code){
+    if(code == ALPHA)
+        return pqueue->alpha_front == -1;
+    else
+        return pqueue->beta_front == -1;
 }
-int enqueueLink(link_capacity_queue *pqueue, int tenant)
+
+int enqueueLink(link_capacity_queue *pqueue, int tenant, int code)
 {
-    if (isLinkFull(pqueue)){
+    if (isLinkFull(pqueue, code)){
         // printf("Queue is full. front = %d, rear = %d.\n", pqueue->front, pqueue->rear);
         return PACKET_LABEL_OVER_CAPACITY_DROPPED;
     }else{
-        if (pqueue->front == -1){
-            pqueue->front = 0; // If it's the first packet
+        if(code == ALPHA){
+            if (pqueue->alpha_front == -1){
+                pqueue->alpha_front = 0; // If it's the first packet
+            }
+            pqueue->alpha_ptr_index[pqueue->alpha_rear] = tenant;
+            pqueue->alpha_rear++;
+        }else{
+            if (pqueue->beta_front == -1){
+                pqueue->beta_front = 0; // If it's the first packet
+            }
+            pqueue->beta_ptr_index[pqueue->beta_rear] = tenant;
+            pqueue->beta_rear++;            
         }
-        pqueue->alpha_ptr_label[pqueue->rear] = tenant;
-        pqueue->rear++;
-        
-        // printf("Packet %d added to the queue.\n", packet);
         return PACKET_LABEL_ACCEPT;
     }
 }
 
 void dequeueLink(link_capacity_queue *pqueue)
 {
-    if (isLinkEmpty(pqueue)){
-        return; // Queue is empty, nothing to transmit
+    if (isLinkEmpty(pqueue, ALPHA)){
+        if(isLinkEmpty(pqueue, BETA))
+            return; // Queue is empty, nothing to transmit
+        else{
+            pqueue->beta_front++;
+            // printf("dequeue front = %d")
+            if (pqueue->beta_front > pqueue->beta_rear){
+                pqueue->beta_front = -1; // Reset queue if it's empty
+                pqueue->beta_rear = -1;
+            }
+        }
     }
     else{
-        pqueue->front++;
+        pqueue->alpha_front++;
         // printf("dequeue front = %d")
-        if (pqueue->front > pqueue->rear){
-            pqueue->front = -1; // Reset queue if it's empty
-            pqueue->rear = -1;
+        if (pqueue->alpha_front > pqueue->alpha_rear){
+            pqueue->alpha_front = -1; // Reset queue if it's empty
+            pqueue->alpha_rear = -1;
         }
         return;
     }
 }
 
-// int simulation_link(int label, link_capacity_queue *pqueue)
+// int simulation_link(int index, link_capacity_queue *pqueue)
 // {
-//     if (label != PACKET_LABEL_ACCEPT)
-//         return label;
+//     if (index != PACKET_LABEL_ACCEPT)
+//         return index;
 
 //     int result = enqueue(pqueue);
 

@@ -2,7 +2,7 @@
 // #define REDUCTION
 // #define RECORD_PACKETS_GENERATION
 // #define RECORD_TIMESTAMP
-#define RECORD_EACH_GRID
+// #define RECORD_EACH_GRID
 
 // #define PRINT_GRID_COUNT
 // #define PRINT_GCRA
@@ -77,24 +77,26 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 #endif
-
+    // printf("%lf\n", (TIME_TYPE)(config.simulation_time*ONE_SECOND_IN_NS));
     while(timestamp<=(TIME_TYPE)(config.simulation_time*ONE_SECOND_IN_NS)){
         timestamp += (TIME_TYPE)(generator.step_size);
         // printf("timestamp : %-lf\n", timestamp);
+        grid_counts ++;
 
-        int queue_action_count = 0;
+        int dequeue_count = 0;
         while (link.dequeue_timestamp <= (double)timestamp){
             link.dequeue_timestamp += link.dequeue_interval;
-            queue_action_count -= 1;
+            dequeue_count += 1;
         }
         // printf("queue count = %d\n", queue_action_count);
 
         int *packets = packet_generation_uniform(grid_counts, generator.generate_probability, tenant_number);
+        // print_packets(packets, tenant_number);
 
         for (int tenant = 0; tenant < tenant_number; tenant++){
             if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
                 *(count.count + tenant) += 1;
-            else goto RECORD;
+            else continue;
 
             if (*(packets + tenant) == PACKET_LABEL_ACCEPT){
                 int shaping_dequeue_count = 0;
@@ -110,8 +112,7 @@ int main(int argc, char *argv[])
                         dequeue((queue *)(shaping + tenant));
                         shaping_dequeue_count++;
                     }
-            }
-            else goto RECORD;     
+            }else goto RECORD;
 
             if (*(packets + tenant) == PACKET_LABEL_ACCEPT){
                 long rate = (long)(timestamp - (gcras + tenant)->last_time) * (((double)(config.mean) * config.unit) / ONE_SECOND_IN_NS);
@@ -132,42 +133,27 @@ int main(int argc, char *argv[])
                     (gcras + tenant)->last_time = timestamp;
                     *(packets + tenant) = PACKET_LABEL_ACCEPT;
                 }
-            }else goto RECORD;  
+            }
 
             if(*(packets + tenant) == PACKET_LABEL_ACCEPT || *(packets + tenant) == PACKET_LABEL_GCRA_DROPPED){
                 if(*(packets + tenant) == PACKET_LABEL_ACCEPT){
-                    queue_action_count += 1;
-                    if (queue_action_count > 0)
-                        *(packets + tenant) = enqueueLink(&link, tenant);
-                    else goto RECORD;  
+                    *(packets + tenant) = enqueueLink(&link, tenant, ALPHA);
                 }
 
                 if(*(packets + tenant) == PACKET_LABEL_GCRA_DROPPED){
-                    link.beta ++;
-                    link.beta_ptr_label[link.beta] = tenant;
-                    continue;
+                    *(packets + tenant) = enqueueLink(&link, tenant, BETA);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
                 }
             }
+
 RECORD:
-            if (*(packets + tenant) != PACKET_LABEL_NO_PACKET){
-                // printf("%d\n", *(packets + tenant));
+            if(*(packets + tenant) > PACKET_LABEL_ACCEPT)
                 label.labels[tenant][*(packets + tenant)] += 1;
-            }
-
         }
 
-        for(int beta = 0; beta <= link.beta; beta++){
-            queue_action_count += 1;
-            int tenant = link.beta_ptr_label[beta];
-            if(queue_action_count > 0)
-                label.labels[tenant][enqueueLink(&link, tenant)] += 1;
-            else label.labels[tenant][0] += 1;
+        while(dequeue_count>0){
+            dequeueLink(&link);
+            dequeue_count -= 1;
         }
-
-        link.beta = -1;
-        memset(link.beta_ptr_label, -1, link.max_buffer);
-
-        grid_counts ++;
     }
 
 #ifdef RECORD_EACH_GRID
@@ -179,7 +165,7 @@ RECORD:
 #endif
 
     for (int tenant = 0; tenant < tenant_number; tenant++)
-        printf("%2d : %-7lf %\n", tenant, (double)label.labels[tenant][3]/(label.labels[tenant][0]+label.labels[tenant][1]+label.labels[tenant][2]+label.labels[tenant][3]));
+        printf("%2d : %-7lf % (%-7lf)\n", tenant, (double)label.labels[tenant][3]/(label.labels[tenant][0]+label.labels[tenant][1]+label.labels[tenant][2]+label.labels[tenant][3]), (double)*(count.count+tenant)/grid_counts);
     execute_clock = clock() - execute_clock;
     double time_taken = ((double)execute_clock) / CLOCKS_PER_SEC;
     printf("Execute time : %f\n", time_taken);

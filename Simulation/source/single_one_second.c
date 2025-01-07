@@ -87,10 +87,14 @@ int main(int argc, char *argv[])
     // printf("generator.grids_number = %ld\n", generator.grids_number);
     for (long grid = 0; grid < generator.grids_number; grid++)
     {
-        int *packets = packet_generation_uniform(grid, generator.generate_probability, tenant_number);
+        if (config.traffic_mode == TRAFFIC_MODE_INTERVAL)
+            int *packets = packet_generation_uniform(grid, generator.generate_probability, tenant_number);
+        else if (config.traffic_mode == TRAFFIC_MODE_NAUGHTY)
+            int *packets = packet_generation_naughty(grid, generator.generate_probability, generate.generate_probability_naughty, tenant_number, config.naughty_tenant_number);
+
         // print_packets(packets, tenant_number);
         long timestamp = window * generator.step_size * generator.grids_number + grid * generator.step_size;
-        // printf("timestamp = %-ld\n", timestamp);
+        printf("timestamp = %-ld\n", timestamp);
 
         int dequeue_count = 0;
         int enqueue_count = 0;

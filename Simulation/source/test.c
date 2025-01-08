@@ -27,36 +27,39 @@ int main(int argc, char *argv[])
 {
     char command[MAX_COMMAND_LENGTH];
 
-    // configuration.h
-    configuration config;
+    // // configuration.h
+    // configuration config;
 
-    if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0){
-        printf("Can't load configuration \"%s\"\n", CONFIGURATION_PATH);
-        return EXIT_FAILURE;
+    // if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0){
+    //     printf("Can't load configuration \"%s\"\n", CONFIGURATION_PATH);
+    //     return EXIT_FAILURE;
+    // }
+    // long unit = obtainUnit(config);
+    // // show_configuration(config);
+
+    // // Clean
+    // sprintf(command, "rm -r %s", config.data_path);
+    // system(command);
+    // sprintf(command, "mkdir %s", config.data_path);
+    // system(command);
+    // sprintf(command, "mkdir %s/link_queue", config.data_path);
+    // system(command);
+
+    // sprintf(command, "python3 " PYTHON_CAPACITY_CALCULATION_PATH " %s %d", CONFIGURATION_PATH, 0);
+    // system(command);
+
+    // double capacity = obtain_capacity();
+    // printf("capacity : %f bps\n", capacity * unit);
+
+    // traffic_generator generator = initializeTrafficGenerator(config);
+    // showTrafficGenerator(generator);
+    // long grids_number = generator.grids_number;
+
+system("gcc ./simple_V1.c inih/ini.c -o ../execution/simple_V1 -lm");
+    for(int i=1;i<=100;i+=5){
+        sprintf(command, "../execution/simple_V1 %d", i);
+        system(command);
     }
-    long unit = obtainUnit(config);
-    // show_configuration(config);
-
-    // Clean
-    sprintf(command, "rm -r %s", config.data_path);
-    system(command);
-    sprintf(command, "mkdir %s", config.data_path);
-    system(command);
-    sprintf(command, "mkdir %s/link_queue", config.data_path);
-    system(command);
-
-    sprintf(command, "python3 " PYTHON_CAPACITY_CALCULATION_PATH " %s %d", CONFIGURATION_PATH, 0);
-    system(command);
-
-    double capacity = obtain_capacity();
-    printf("capacity : %f bps\n", capacity * unit);
-
-    traffic_generator generator = initializeTrafficGenerator(config);
-    showTrafficGenerator(generator);
-    long grids_number = generator.grids_number;
-
-
-    
     // long dequeue_timestamp = 0;
     // record_dequeue_timestamp(dequeue_timestamp, config.data_path);
     // int tenant_number = config.tenant_number;

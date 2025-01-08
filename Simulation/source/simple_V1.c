@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
     system(command);
 
     double capacity = obtain_capacity();
-    printf("capacity : %f bps\n", capacity * config.unit);
+    // printf("capacity : %f bps\n", capacity * config.unit);
 
     traffic_generator generator = initializeTrafficGenerator(config);
     // showTrafficGenerator(generator);
@@ -66,8 +66,9 @@ int main(int argc, char *argv[])
 
     GCRA *gcras = initializeGCRAs(tenant_number, config.tau, config.packet_size);
 
+    int linkmb = atoi(argv[1]);
     link_capacity_queue link;
-    initLinkQueue(&link, (int)(tenant_number * 0.16), config, capacity);
+    initLinkQueue(&link, linkmb, config, capacity);
 
 #ifdef RECORD_EACH_GRID
     char filename[MAX_PATH_LENGTH];
@@ -94,7 +95,12 @@ int main(int argc, char *argv[])
         }
         // printf("queue count = %d\n", dequeue_count);
 
-        int *packets = packet_generation_uniform(grid_counts, generator.generate_probability, tenant_number);
+        int *packets;
+        if (config.traffic_mode == TRAFFIC_MODE_INTERVAL)
+            packets = packet_generation_uniform(grid_counts, generator.generate_probability, tenant_number);
+        else if (config.traffic_mode == TRAFFIC_MODE_NAUGHTY)
+            packets = packet_generation_naughty(grid_counts, generator.generate_probability, generator.generate_probability_naughty, tenant_number, config.naughty_tenant_number);
+
         // print_packets(packets, tenant_number);
         int packet_time_count = 0;
 
@@ -180,10 +186,10 @@ int main(int argc, char *argv[])
                 label.labels[tenant][*(packets + tenant)] += 1;
         }
 
-        printf("front = %2d rear = %2d front = %2d rear = %2d\n", link.alpha_front,
-               link.alpha_rear,
-               link.beta_front,
-               link.beta_rear);
+        // printf("front = %2d rear = %2d front = %2d rear = %2d\n", link.alpha_front,
+        //        link.alpha_rear,
+        //        link.beta_front,
+        //        link.beta_rear);
 
         while (dequeue_count > 0)
         {
@@ -192,10 +198,10 @@ int main(int argc, char *argv[])
         }
 
         // printf("packet_time_count = %d\n", packet_time_count);
-        printf("front = %2d rear = %2d front = %2d rear = %2d\n", link.alpha_front,
-               link.alpha_rear,
-               link.beta_front,
-               link.beta_rear);
+        // printf("front = %2d rear = %2d front = %2d rear = %2d\n", link.alpha_front,
+        //        link.alpha_rear,
+        //        link.beta_front,
+        //        link.beta_rear);
     }
 
     // printf("GCRA drop = %d\n", GCRAdrop);
@@ -208,14 +214,15 @@ int main(int argc, char *argv[])
     printf("Gird Count = %d\n", grid_counts);
 #endif
 
-    print_packets_label(label);
+    // print_packets_label(label);
+    printf("%2d : (%-7f) %\n", linkmb, (double)label.labels[tenant_number-1][3]*100.0/(label.labels[tenant_number-1][0]+label.labels[tenant_number-1][3]));
     // for (int tenant = 0; tenant < tenant_number; tenant++)
     //     printf("%2d : %-7lf % (%-7lf)\n", tenant, (double)label.labels[tenant][0], (double)*(count.count + tenant));
 
     // printf("%2d : %-7lf % (%-7lf)\n", tenant, (double)label.labels[tenant][3] / (label.labels[tenant][0] + label.labels[tenant][1] + label.labels[tenant][2] + label.labels[tenant][3]), (double)*(count.count + tenant) / grid_counts);
     execute_clock = clock() - execute_clock;
     double time_taken = ((double)execute_clock) / CLOCKS_PER_SEC;
-    printf("Execute time : %f\n", time_taken);
+    // printf("Execute time : %f\n", time_taken);
 
     return EXIT_SUCCESS;
 }

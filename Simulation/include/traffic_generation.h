@@ -83,6 +83,12 @@ int *packet_generation_naughty(int random, double ratio_normal, double ratio_nau
     return packets;
 }
 
+int *packet_generation_full(int tenant_number)
+{
+    int *packets = (int *)malloc(sizeof(int) * tenant_number);
+    memset(packets, PACKET_LABEL_ACCEPT, sizeof(packets));
+    return packets;
+}
 void print_packets(int *packets, long tenant_number)
 {
     long sum = 0;

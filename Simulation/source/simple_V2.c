@@ -15,10 +15,10 @@
 #include "../include/GCRA.h"
 #include "../include/link_capacity_queue.h"
 
-#define CONFIGURATION_PATH "../configuration/simple_V1.ini"
+#define CONFIGURATION_PATH "../configuration/simple_V2.ini"
 
-// gcc ./simple_V1.c inih/ini.c -o ../execution/simple_V1 -lm
-// ../execution/simple_V1
+// gcc ./simple_V2.c inih/ini.c -o ../execution/simple_V2 -lm
+// ../execution/simple_V2
 
 #define GENERATE_TRAFFIC 1
 

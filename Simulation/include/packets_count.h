@@ -106,13 +106,17 @@ void init_Packets_Label(packets_label *plabel, int tenant_number, packets_count 
 
 void print_packets_label(packets_label label)
 {
+  double average_loss = 0.0;
   print_equals_line();
   printf("label =\n");
   printf("ACCEPT    , DROP_OVER , DROP_GCRA , CAPACITY   : LOSS(PURE),  LOSS\n");
-  for (int tenant = 0; tenant < label.tenant_number; tenant++)
+  for (int tenant = 0; tenant < label.tenant_number; tenant++){
     printf("%-10d, %-10d, %-10d, %-10d : %-f % , %-f %\n", label.labels[tenant][0], label.labels[tenant][1], label.labels[tenant][2], label.labels[tenant][3],
            (double)(label.labels[tenant][2]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]),
-           (double)(label.labels[tenant][2] + label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3] + label.labels[tenant][4]));
+           (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3] + label.labels[tenant][4]));
+    average_loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3] + label.labels[tenant][4]);
+  }
+  printf("\x1B[1;31m average loss = %-f\x1B[0m\n", average_loss/label.tenant_number);
   print_equals_line();
 }
 

@@ -73,7 +73,8 @@ int *packet_generation_naughty(int random, double ratio_normal, double ratio_nau
     int *packets = (int *)malloc(sizeof(int) * tenant_number);
     for (int index = 0; index < tenant_number; index++)
     {
-        if (index < naughty_tenant_number && GENERATE_BINARY)
+        // if (index < naughty_tenant_number && GENERATE_BINARY)
+        if (index < naughty_tenant_number)
             *(packets + index) = uniform_distribution(random + index, ratio_naughty);
         else
             *(packets + index) = uniform_distribution(random + index, ratio_normal);
@@ -89,10 +90,38 @@ int *packet_generation_full(int tenant_number)
     memset(packets, PACKET_LABEL_ACCEPT, sizeof(packets));
     return packets;
 }
+
+int *packet_generation_density(int tenant_number, int grid, int window){
+    int *packets = (int *)malloc(sizeof(int) * tenant_number);
+    for (int index = 0; index < tenant_number; index++){
+        double step = 327681.0/window;
+        double r = fmod(grid,step); // grid
+        // printf("r = %d, step = %d\n", r, (int)(step*0.75));
+        if(index%2==0){
+            if(r<step*0.75)
+            *(packets + index) = PACKET_LABEL_ACCEPT;
+        else
+            *(packets + index) = PACKET_LABEL_NO_PACKET;
+        }else{
+            if(r<step*0.25)
+            *(packets + index) = PACKET_LABEL_NO_PACKET;
+        else
+            *(packets + index) = PACKET_LABEL_ACCEPT; 
+        }
+
+    
+        // if(r<step-(int)(step*0.75))
+        //     *(packets + index) = PACKET_LABEL_NO_PACKET;
+        // else
+        //     *(packets + index) = PACKET_LABEL_ACCEPT;
+    }
+    return packets;
+}
+
 void print_packets(int *packets, long tenant_number)
 {
     long sum = 0;
-    printf("sum = %ld, length = %ld %f\n", sum, tenant_number, (double)sum / tenant_number);
+    // printf("sum = %ld, length = %ld %f\n", sum, tenant_number, (double)sum / tenant_number);
     for (long index = 0; index < tenant_number; index++)
     {
         if (*(packets + index) == PACKET_LABEL_ACCEPT)

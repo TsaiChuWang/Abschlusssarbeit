@@ -57,10 +57,11 @@ int main(int argc, char *argv[])
     // long grids_number = generator.grids_number;
 
     system("gcc ./simple_V2.c inih/ini.c -o ../execution/simple_V2 -lm");
-    for (long i = 246000; i <= 298000; i += 1000)
+    for (long i = 1024<<15; i <= 1024<<16; i *= 2)
     {
-        config.tau = i;
-        modify_ini_file(CONFIGURATION_PATH, &config);
-        sprintf(command, "../execution/simple_V2");
+        sprintf(command, "../execution/simple_V2 %d", i);
         system(command);
     }
+
+    return 0;
+}

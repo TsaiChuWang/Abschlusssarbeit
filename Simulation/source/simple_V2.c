@@ -4,7 +4,7 @@
 // #define RECORD_TIMESTAMP
 // #define RECORD_EACH_GRID
 
-// #define PRINT_GRID_COUNT
+#define PRINT_GRID_COUNT
 // #define PRINT_GCRA
 #include "../include/general.h"
 #include "./inih/ini.h"
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     GCRA *gcras = initializeGCRAs(tenant_number, config.tau, config.packet_size);
 
     // int linkmb = atoi(argv[1]);
-    int linkmb = 100;
+    int linkmb = 50;
     link_capacity_queue link;
     initLinkQueue(&link, linkmb, config, capacity);
 
@@ -99,12 +99,19 @@ int main(int argc, char *argv[])
         // printf("queue count = %d\n", dequeue_count);
 
         int *packets;
+        // printf("%d\n", config.traffic_mode);
         if (config.traffic_mode == TRAFFIC_MODE_INTERVAL)
             packets = packet_generation_uniform(grid_counts, generator.generate_probability, tenant_number);
         else if (config.traffic_mode == TRAFFIC_MODE_NAUGHTY)
             packets = packet_generation_naughty(grid_counts, generator.generate_probability, generator.generate_probability_naughty, tenant_number, config.naughty_tenant_number);
         else if (config.traffic_mode == TRAFFIC_MODE_FULL)
             packets = packet_generation_full(tenant_number);
+        else if(config.traffic_mode == TRAFFIC_MODE_DENSITY){
+            // printf("%d\n", atoi(argv[1]));
+            packets = packet_generation_density(tenant_number, grid_counts, atoi(argv[1]));
+            // printf("a\n");
+        }   
+            
         // print_packets(packets, tenant_number);
         int packet_time_count = 0;
 
@@ -224,9 +231,9 @@ int main(int argc, char *argv[])
     printf("Gird Count = %d\n", grid_counts);
 #endif
 
-    // print_packets_label(label);
-    printf("%ld\n", config.tau);
-    print_naughty(label, config.naughty_tenant_number);
+    print_packets_label(label);
+    // printf("%ld\n", config.tau);
+    // print_naughty(label, config.naughty_tenant_number);
     // printf("%2d : (%-7f) %\n", linkmb, (double)label.labels[tenant_number - 1][3] * 100.0 / (label.labels[tenant_number - 1][0] + label.labels[tenant_number - 1][3]));
     // for (int tenant = 0; tenant < tenant_number; tenant++)
     //     printf("%2d : %-7lf % (%-7lf)\n", tenant, (double)label.labels[tenant][0], (double)*(count.count + tenant));

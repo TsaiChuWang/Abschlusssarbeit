@@ -237,9 +237,9 @@ int main(int argc, char *argv[])
 
     execute_clock = clock() - execute_clock;
     double time_taken = ((double)execute_clock) / CLOCKS_PER_SEC;
-    printf("(%6.4f %), Window = %ld, Time start at %15ld : Execute time : ",
-           (double)window * 100.0 / config.simulation_time, window, window * generator.step_size * generator.grids_number);
-    printf("%f\n", time_taken);
+    // printf("(%6.4f %), Window = %ld, Time start at %15ld : Execute time : ",
+    //        (double)window * 100.0 / config.simulation_time, window, window * generator.step_size * generator.grids_number);
+    // printf("%f\n", time_taken);
 
 #ifdef RECORD_EACH_GRID
     fclose(file);

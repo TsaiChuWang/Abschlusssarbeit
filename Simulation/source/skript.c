@@ -57,11 +57,40 @@ int main(int argc, char *argv[])
     // long grids_number = generator.grids_number;
 
     system("gcc ./simple_V2.c inih/ini.c -o ../execution/simple_V2 -lm");
-    for (long i = 1024<<15; i <= 1024<<16; i *= 2)
+
+    system("rm ../data/naughty.csv");
+    FILE *file = fopen("../data/naughty.csv", "a");
+    if (!file)
     {
-        sprintf(command, "../execution/simple_V2 %d", i);
-        system(command);
+        perror("Error opening file");
+        exit(EXIT_FAILURE);
     }
+    fprintf(file, "tau, naughty_mean, regular, regular_loss, naughty_loss\n");
+    fclose(file);
+
+
+    for(int n =130;n<=150;n+=10){
+        config.naughty_mean = n;
+        modify_ini_file(CONFIGURATION_PATH, &config);
+
+        for (long i = 0; i <= 10000; i += 512)
+        {
+            config.tau = i;
+            modify_ini_file(CONFIGURATION_PATH, &config);
+            file = fopen("../data/naughty.csv", "a");
+            if (!file)
+            {
+                perror("Error opening file");
+                exit(EXIT_FAILURE);
+            }
+            fprintf(file, "%ld, %d, ", i, n);
+            fclose(file);
+            
+            system("../execution/simple_V2");
+            // fprintf(file, "\n");
+        }
+    }
+    // fclose(file);
 
     return 0;
 }

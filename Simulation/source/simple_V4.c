@@ -15,10 +15,10 @@
 #include "../include/GCRA.h"
 #include "../include/link_capacity_queue.h"
 
-#define CONFIGURATION_PATH "../configuration/simple_V2.ini"
+#define CONFIGURATION_PATH "../configuration/simple_V4.ini"
 
-// gcc ./simple_V2.c inih/ini.c -o ../execution/simple_V2 -lm
-// ../execution/simple_V2
+// gcc ./simple_V4.c inih/ini.c -o ../execution/simple_V4 -lm
+// ../execution/simple_V4
 
 #define GENERATE_TRAFFIC 1
 
@@ -44,7 +44,8 @@ int main(int argc, char *argv[])
     system(command);
 
     double capacity = obtain_capacity();
-    // printf("capacity : %f bps\n", capacity * config.unit);
+    printf("capacity : %f bps\n", capacity * config.unit);
+    printf("capacity : %f Mbps\n", capacity);
 
     traffic_generator generator = initializeTrafficGenerator(config);
     // showTrafficGenerator(generator);
@@ -66,8 +67,8 @@ int main(int argc, char *argv[])
 
     GCRA *gcras = initializeGCRAs(tenant_number, config.tau, config.packet_size);
 
-    int linkmb = atoi(argv[1]);
-    // int linkmb = 50;
+    // int linkmb = atoi(argv[1]);
+    int linkmb = 100;
     link_capacity_queue link;
     initLinkQueue(&link, linkmb, config, capacity);
 

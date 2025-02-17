@@ -65,31 +65,43 @@ int main(int argc, char *argv[])
         perror("Error opening file");
         exit(EXIT_FAILURE);
     }
-    fprintf(file, "tau, naughty_mean, regular, regular_loss, naughty_loss\n");
+    fprintf(file, "tau, naughty_mean, buffer, naughty_number, regular_loss, naughty_loss\n");
     fclose(file);
 
-
-    for(int n =130;n<=150;n+=10){
-        config.naughty_mean = n;
-        modify_ini_file(CONFIGURATION_PATH, &config);
-
-        for (long i = 0; i <= 10000; i += 512)
-        {
-            config.tau = i;
+    for(int z=0;z<10;z++){
+        for(int m =20;m<=80;m+=20){
+            config.naughty_tenant_number = m;
             modify_ini_file(CONFIGURATION_PATH, &config);
-            file = fopen("../data/naughty.csv", "a");
-            if (!file)
-            {
-                perror("Error opening file");
-                exit(EXIT_FAILURE);
+
+            for(int b = 100; b<=250; b+= 50){
+                for(int n =130;n<=150;n+=10){
+                config.naughty_mean = n;
+                modify_ini_file(CONFIGURATION_PATH, &config);
+
+                for (long i = 15872; i <= 30208; i += 1024)
+                {
+                    config.tau = i;
+                    modify_ini_file(CONFIGURATION_PATH, &config);
+                    file = fopen("../data/naughty.csv", "a");
+                    if (!file)
+                    {
+                        perror("Error opening file");
+                        exit(EXIT_FAILURE);
+                    }
+                    fprintf(file, "%ld, %d, %d, %d, ", i, n, b, m);
+                    fclose(file);
+                    
+                    sprintf(command, "../execution/simple_V2 %d", b);
+                    system(command);
+                    // fprintf(file, "\n");
+                }
             }
-            fprintf(file, "%ld, %d, ", i, n);
-            fclose(file);
+            }
             
-            system("../execution/simple_V2");
-            // fprintf(file, "\n");
         }
     }
+
+
     // fclose(file);
 
     return 0;

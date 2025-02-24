@@ -82,6 +82,7 @@ int main(int argc, char *argv[])
     }
 #endif
 
+    int t = 0;
     int max_x = 0;
     // printf("%lf\n", (TIME_TYPE)(config.simulation_time * ONE_SECOND_IN_NS));
     while (timestamp <= (TIME_TYPE)(config.simulation_time * ONE_SECOND_IN_NS))
@@ -197,10 +198,13 @@ int main(int argc, char *argv[])
                     *(packets + tenant) = enqueueLink(&link, tenant, BETA);
                 }
             }
-            // printf("%d\n", *(packets + tenant));
+            
         RECORD:
             if (*(packets + tenant) >= PACKET_LABEL_ACCEPT)
-                label.labels[tenant][*(packets + tenant)] += 1;
+                if(*(packets + tenant) >=PACKET_LABEL_OVER_CAPACITY_DROPPED)
+                    label.labels[*(packets + tenant)-PACKET_LABEL_OVER_CAPACITY_DROPPED][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1;
+                else
+                    label.labels[tenant][*(packets + tenant)] += 1;
         }
 
         // printf("front = %2d rear = %2d front = %2d rear = %2d\n", link.alpha_front,
@@ -208,6 +212,7 @@ int main(int argc, char *argv[])
         //        link.beta_front,
         //        link.beta_rear);
 
+        int t = -1;
         while (dequeue_count > 0)
         {
             dequeueLink(&link);

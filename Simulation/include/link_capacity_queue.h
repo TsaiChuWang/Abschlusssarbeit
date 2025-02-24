@@ -39,28 +39,48 @@ void initLinkQueue(link_capacity_queue *pqueue, int max_buffer, const configurat
     pqueue->dequeue_interval = (TIME_TYPE)(config.packet_size * (double)ONE_SECOND_IN_NS / (bandwidth * config.unit));
 }
 
-int isLinkFull(link_capacity_queue *pqueue, int code)
-{
-    if (code == ALPHA)
-        return pqueue->alpha_rear == pqueue->max_buffer - 1;
-    else
-        return (pqueue->alpha_rear - pqueue->alpha_front + 1) + (pqueue->beta_rear - pqueue->beta_front + 1) == pqueue->max_buffer - 1;
-}
 
 int isLinkEmpty(link_capacity_queue *pqueue, int code)
 {
+
     if (code == ALPHA)
         return pqueue->alpha_front == -1;
     else
         return pqueue->beta_front == -1;
 }
 
+
+int isLinkFull(link_capacity_queue *pqueue, int code, int* t)
+{
+    if (code == ALPHA){
+        if(pqueue->alpha_rear == pqueue->max_buffer - 1){
+            if (isLinkEmpty(pqueue, BETA)){
+                *t = -1;
+            }else{
+                *t =  pqueue->beta_ptr_index[pqueue->beta_front];
+                pqueue->beta_front--;
+            }
+        }
+        return pqueue->alpha_rear == pqueue->max_buffer - 1;
+    }
+    else{
+        *t = -1;
+        return (pqueue->alpha_rear - pqueue->alpha_front + 1) + (pqueue->beta_rear - pqueue->beta_front + 1) == pqueue->max_buffer - 1;
+    }
+        
+}
+
 int enqueueLink(link_capacity_queue *pqueue, int tenant, int code)
 {
-    if (isLinkFull(pqueue, code))
+    int _t;
+    if (isLinkFull(pqueue, code, &_t))
     {
+        if(_t == -1)
+            return PACKET_LABEL_OVER_CAPACITY_DROPPED + tenant;
+        else 
+            return PACKET_LABEL_OVER_CAPACITY_DROPPED + _t;
         // printf("Queue is full. front = %d, rear = %d.\n", pqueue->front, pqueue->rear);
-        return PACKET_LABEL_OVER_CAPACITY_DROPPED;
+        // return PACKET_LABEL_OVER_CAPACITY_DROPPED;
     }
     else
     {

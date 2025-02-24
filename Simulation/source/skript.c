@@ -18,8 +18,8 @@
 #define STORED_PACKET_GENERATION_PATH "../data/test/packet_generation"
 #define STORED_TIMESTAMP_PATH "../data/test/timestamp"
 
-// gcc ./test.c inih/ini.c -o ../execution/test -lm
-// ../execution/test [traffic_generation_code]
+// gcc ./skript.c inih/ini.c -o ../execution/skript -lm
+// ../execution/skript [traffic_generation_code]
 
 #define GENERATE_TRAFFIC 1
 

@@ -52,17 +52,23 @@
 #define MBPS 1048576
 #define KBPS 1024
 
+#define RED_ELOG "\x1B[1;31m"
+#define RESET "\x1B[0m"
+
 #define GENERAL_H
 #ifdef GENERAL_H
-void print_equals_line() {
+void print_equals_line()
+{
     struct winsize w;
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1) {
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1)
+    {
         perror("Error getting terminal size");
         return;
     }
 
     int width = w.ws_col; // Get the terminal's width
-    for (int i = 0; i < width; i++) {
+    for (int i = 0; i < width; i++)
+    {
         putchar('=');
     }
     putchar('\n'); // Add a newline at the end

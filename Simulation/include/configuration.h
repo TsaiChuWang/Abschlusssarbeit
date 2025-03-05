@@ -91,6 +91,7 @@ typedef struct
 
     long upper_queue_buffer;
     long tau;
+    int link_queue_buffer;
 } configuration;
 
 static int handler(void *config, const char *section, const char *name, const char *value)
@@ -136,7 +137,8 @@ static int handler(void *config, const char *section, const char *name, const ch
         pconfig->upper_queue_buffer = strtol(value, NULL, 10);
     else if (MATCH("threshold", "tau"))
         pconfig->tau = strtol(value, NULL, 10);
-
+    else if (MATCH("threshold", "link_queue_buffer"))
+        pconfig->link_queue_buffer = atoi(value);
     return SUCCESS;
 }
 
@@ -199,6 +201,7 @@ void modify_ini_file(const char *filename, configuration *config)
     fprintf(file, "[threshold]\n");
     fprintf(file, "upper_queue_buffer = %ld\n", config->upper_queue_buffer);
     fprintf(file, "tau = %ld\n", config->tau);
+    fprintf(file, "link_queue_buffer = %d\n", config->link_queue_buffer);
 
     // Close the file
     fclose(file);
@@ -244,6 +247,7 @@ void show_configuration(const configuration config)
     printf("- Threshold :\n");
     printf("| upper_queue_buffer         : %-ld\n", config.upper_queue_buffer);
     printf("| tau                        : %-ld\n", config.tau);
+    printf("| link_queue_buffer          : %-d\n", config.link_queue_buffer);
 }
 #endif
 

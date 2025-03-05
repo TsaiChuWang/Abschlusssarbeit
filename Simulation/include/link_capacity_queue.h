@@ -21,8 +21,9 @@ typedef struct
     TIME_TYPE dequeue_interval;
 } link_capacity_queue;
 
-void initLinkQueue(link_capacity_queue *pqueue, int max_buffer, const configuration config, double bandwidth)
+void initLinkQueue(link_capacity_queue *pqueue, const configuration config, double bandwidth)
 {
+    int max_buffer = config.link_queue_buffer;
     pqueue->alpha_ptr_index = (int *)malloc(sizeof(int) * max_buffer);
     memset(pqueue->alpha_ptr_index, -1, max_buffer);
     pqueue->beta_ptr_index = (int *)malloc(sizeof(int) * max_buffer);
@@ -39,7 +40,6 @@ void initLinkQueue(link_capacity_queue *pqueue, int max_buffer, const configurat
     pqueue->dequeue_interval = (TIME_TYPE)(config.packet_size * (double)ONE_SECOND_IN_NS / (bandwidth * config.unit));
 }
 
-
 int isLinkEmpty(link_capacity_queue *pqueue, int code)
 {
 
@@ -49,25 +49,29 @@ int isLinkEmpty(link_capacity_queue *pqueue, int code)
         return pqueue->beta_front == -1;
 }
 
-
-int isLinkFull(link_capacity_queue *pqueue, int code, int* t)
+int isLinkFull(link_capacity_queue *pqueue, int code, int *t)
 {
-    if (code == ALPHA){
-        if(pqueue->alpha_rear == pqueue->max_buffer - 1){
-            if (isLinkEmpty(pqueue, BETA)){
+    if (code == ALPHA)
+    {
+        if (pqueue->alpha_rear == pqueue->max_buffer - 1)
+        {
+            if (isLinkEmpty(pqueue, BETA))
+            {
                 *t = -1;
-            }else{
-                *t =  pqueue->beta_ptr_index[pqueue->beta_front];
+            }
+            else
+            {
+                *t = pqueue->beta_ptr_index[pqueue->beta_front];
                 pqueue->beta_front--;
             }
         }
         return pqueue->alpha_rear == pqueue->max_buffer - 1;
     }
-    else{
+    else
+    {
         *t = -1;
         return (pqueue->alpha_rear - pqueue->alpha_front + 1) + (pqueue->beta_rear - pqueue->beta_front + 1) == pqueue->max_buffer - 1;
     }
-        
 }
 
 int enqueueLink(link_capacity_queue *pqueue, int tenant, int code)
@@ -75,9 +79,9 @@ int enqueueLink(link_capacity_queue *pqueue, int tenant, int code)
     int _t;
     if (isLinkFull(pqueue, code, &_t))
     {
-        if(_t == -1)
+        if (_t == -1)
             return PACKET_LABEL_OVER_CAPACITY_DROPPED + tenant;
-        else 
+        else
             return PACKET_LABEL_OVER_CAPACITY_DROPPED + _t;
         // printf("Queue is full. front = %d, rear = %d.\n", pqueue->front, pqueue->rear);
         // return PACKET_LABEL_OVER_CAPACITY_DROPPED;

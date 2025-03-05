@@ -5,6 +5,8 @@
 #define ALPHA 1
 #define BETA 0
 
+// #define PRINT_QUEUE_VARIATION
+
 typedef struct
 {
     int *alpha_ptr_index;
@@ -24,48 +26,55 @@ typedef struct
 void initLinkQueue(link_capacity_queue *pqueue, const configuration config, double bandwidth)
 {
     int max_buffer = config.link_queue_buffer;
-    pqueue->alpha_ptr_index = (int *)malloc(sizeof(int) * max_buffer);
+    pqueue->alpha_ptr_index = (int *)calloc(sizeof(int), max_buffer);
     memset(pqueue->alpha_ptr_index, -1, max_buffer);
-    pqueue->beta_ptr_index = (int *)malloc(sizeof(int) * max_buffer);
+    pqueue->beta_ptr_index = (int *)calloc(sizeof(int), max_buffer);
     memset(pqueue->beta_ptr_index, -1, max_buffer);
 
     pqueue->max_buffer = max_buffer;
 
-    pqueue->alpha_front = -1;
-    pqueue->alpha_rear = -1;
-    pqueue->beta_front = -1;
-    pqueue->beta_rear = -1;
+    pqueue->alpha_front = 0;
+    pqueue->alpha_rear = 0;
+    pqueue->beta_front = 0;
+    pqueue->beta_rear = 0;
 
     pqueue->dequeue_timestamp = 0;
     pqueue->dequeue_interval = (TIME_TYPE)(config.packet_size * (double)ONE_SECOND_IN_NS / (bandwidth * config.unit));
 }
 
+int obtain_length(link_capacity_queue *pqueue, int code)
+{
+    if (code == ALPHA)
+        return pqueue->alpha_rear - pqueue->alpha_front;
+    else
+        return pqueue->beta_rear - pqueue->beta_front;
+}
+
 int isLinkEmpty(link_capacity_queue *pqueue, int code)
 {
-
     if (code == ALPHA)
-        return pqueue->alpha_front == -1;
+        return pqueue->alpha_front == pqueue->alpha_rear;
     else
-        return pqueue->beta_front == -1;
+        return pqueue->beta_front == pqueue->beta_rear;
 }
 
 int isLinkFull(link_capacity_queue *pqueue, int code, int *t)
 {
+    *t = -1;
     if (code == ALPHA)
     {
         if (pqueue->alpha_rear == pqueue->max_buffer - 1)
+            return TRUE;
+        else if ((pqueue->alpha_rear - pqueue->alpha_front + 1) + (pqueue->beta_rear - pqueue->beta_front + 1) == pqueue->max_buffer - 1)
         {
             if (isLinkEmpty(pqueue, BETA))
-            {
-                *t = -1;
-            }
-            else
-            {
-                *t = pqueue->beta_ptr_index[pqueue->beta_front];
-                pqueue->beta_front--;
-            }
+                return TRUE;
+            *t = pqueue->beta_ptr_index[pqueue->beta_rear];
+            pqueue->beta_rear--;
+            return FALSE;
         }
-        return pqueue->alpha_rear == pqueue->max_buffer - 1;
+
+        return FALSE;
     }
     else
     {
@@ -74,40 +83,92 @@ int isLinkFull(link_capacity_queue *pqueue, int code, int *t)
     }
 }
 
-int enqueueLink(link_capacity_queue *pqueue, int tenant, int code)
+int enqueueLink(link_capacity_queue *pqueue, int tenant, int code, int *drop_tenant)
 {
-    int _t;
-    if (isLinkFull(pqueue, code, &_t))
+    *drop_tenant = tenant;
+    int alpha_length = obtain_length(pqueue, ALPHA);
+    int beta_length = obtain_length(pqueue, BETA);
+    int total_length = alpha_length + beta_length;
+    if (code == ALPHA)
     {
-        if (_t == -1)
-            return PACKET_LABEL_OVER_CAPACITY_DROPPED + tenant;
-        else
-            return PACKET_LABEL_OVER_CAPACITY_DROPPED + _t;
-        // printf("Queue is full. front = %d, rear = %d.\n", pqueue->front, pqueue->rear);
-        // return PACKET_LABEL_OVER_CAPACITY_DROPPED;
+        if (alpha_length <= pqueue->max_buffer && total_length <= pqueue->max_buffer - 1)
+        {
+            pqueue->alpha_ptr_index[pqueue->alpha_rear++] = tenant;
+#ifdef PRINT_QUEUE_VARIATION
+            printf("Enqueued %d to alpha queue\n", tenant);
+#endif
+            return PACKET_LABEL_ACCEPT;
+        }
+        else if (alpha_length > pqueue->max_buffer - 1)
+        {
+            // Case 2.2: Alpha queue is full and beta queue must be empty, throw the object
+#ifdef PRINT_QUEUE_VARIATION
+            printf("Alpha queue full, discarding %d\n", tenant);
+#endif
+            return PACKET_LABEL_OVER_CAPACITY_DROPPED;
+        }
+        else if (alpha_length <= pqueue->max_buffer && total_length > pqueue->max_buffer - 1)
+        {
+            // Case 2.3: Beta queue must not be empty, remove from beta and enqueue in alpha
+            *drop_tenant = pqueue->beta_ptr_index[pqueue->beta_front];
+#ifdef PRINT_QUEUE_VARIATION
+            printf("Buffer full. Dropping beta queue element: %d\n", pqueue->beta_ptr_index[pqueue->beta_front]);
+#endif
+            pqueue->beta_front++;
+            pqueue->alpha_ptr_index[pqueue->alpha_rear++] = tenant;
+#ifdef PRINT_QUEUE_VARIATION
+            printf("Enqueued %d to alpha queue\n", tenant);
+#endif
+            return PACKET_LABEL_ACCEPT;
+        }
+        return PACKET_LABEL_OVER_CAPACITY_DROPPED;
     }
     else
     {
-        if (code == ALPHA)
+        if (total_length > pqueue->max_buffer - 1)
         {
-            if (pqueue->alpha_front == -1)
-            {
-                pqueue->alpha_front = 0; // If it's the first packet
-            }
-            pqueue->alpha_ptr_index[pqueue->alpha_rear] = tenant;
-            pqueue->alpha_rear++;
+#ifdef PRINT_QUEUE_VARIATION
+            printf("Buffer full. Cannot enqueue %d to beta queue\n", tenant);
+#endif
+            return PACKET_LABEL_OVER_CAPACITY_DROPPED;
         }
-        else
-        {
-            if (pqueue->beta_front == -1)
-            {
-                pqueue->beta_front = 0; // If it's the first packet
-            }
-            pqueue->beta_ptr_index[pqueue->beta_rear] = tenant;
-            pqueue->beta_rear++;
-        }
+        pqueue->beta_ptr_index[pqueue->beta_rear++] = tenant;
+        // printf("Enqueued %d to beta queue\n", value);
         return PACKET_LABEL_ACCEPT;
     }
+    return PACKET_LABEL_ACCEPT;
+
+    // int _t;
+    // if (isLinkFull(pqueue, code, &_t))
+    // {
+    //     if (_t == -1)
+    //         return PACKET_LABEL_OVER_CAPACITY_DROPPED + tenant;
+    //     else
+    // }
+    // else
+    // {
+    //     if (code == ALPHA)
+    //     {
+    //         if (pqueue->alpha_front == -1)
+    //         {
+    //             pqueue->alpha_front = 0; // If it's the first packet
+    //         }
+    //         pqueue->alpha_ptr_index[pqueue->alpha_rear] = tenant;
+    //         pqueue->alpha_rear++;
+    //     }
+    //     else
+    //     {
+    //         if (pqueue->beta_front == -1)
+    //         {
+    //             pqueue->beta_front = 0; // If it's the first packet
+    //         }
+    //         pqueue->beta_ptr_index[pqueue->beta_rear] = tenant;
+    //         pqueue->beta_rear++;
+    //     }
+    // }
+
+    // return PACKET_LABEL_ACCEPT;
+    // return PACKET_LABEL_OVER_CAPACITY_DROPPED + _t;
 }
 
 void dequeueLink(link_capacity_queue *pqueue)
@@ -140,6 +201,21 @@ void dequeueLink(link_capacity_queue *pqueue)
     }
 }
 
+void printLinkQueue(link_capacity_queue *pqueue)
+{
+    printf("alpha : %-3d - %-3d (%-3d)\n", pqueue->alpha_front, pqueue->alpha_rear, obtain_length(pqueue, ALPHA));
+    printf("beta  : %-3d - %-3d (%-3d)\n", pqueue->beta_front, pqueue->beta_rear, obtain_length(pqueue, BETA));
+
+    printf("alpha: ");
+    for (int i = 0; i < pqueue->max_buffer; i++)
+        printf("%-2d ", pqueue->alpha_ptr_index[i]);
+    printf("\n");
+
+    printf("beta: ");
+    for (int i = 0; i < pqueue->max_buffer; i++)
+        printf("%-2d ", pqueue->beta_ptr_index[i]);
+    printf("\n");
+}
 // int simulation_link(int index, link_capacity_queue *pqueue)
 // {
 //     if (index != PACKET_LABEL_ACCEPT)

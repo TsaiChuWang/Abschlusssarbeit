@@ -110,13 +110,14 @@ void print_packets_label(packets_label label)
   print_equals_line();
   printf("label =\n");
   printf("ACCEPT    , DROP_OVER , DROP_GCRA , CAPACITY   : LOSS(PURE),  LOSS\n");
-  for (int tenant = 0; tenant < label.tenant_number; tenant++){
+  for (int tenant = 0; tenant < label.tenant_number; tenant++)
+  {
     printf("%-10d, %-10d, %-10d, %-10d : %-f % , %-f %\n", label.labels[tenant][0], label.labels[tenant][1], label.labels[tenant][2], label.labels[tenant][3],
            (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]),
            (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3] + label.labels[tenant][4]));
     average_loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3] + label.labels[tenant][4]);
   }
-  printf("\x1B[1;31m average loss = %-f\x1B[0m\n", average_loss/label.tenant_number);
+  printf("\x1B[1;31m average loss = %-f\x1B[0m\n", average_loss / label.tenant_number);
   print_equals_line();
 }
 
@@ -189,7 +190,7 @@ void print_naughty(packets_label label, int naughty_tenant_number)
   double regular_GCRA = 0;
   double regular_Loss = 0;
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
-    if (tenant < naughty_tenant_number)
+    if (tenant >= naughty_tenant_number)
     {
       naughty_GCRA += label.labels[tenant][2];
       naughty_Loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3] + label.labels[tenant][4]);
@@ -208,4 +209,35 @@ void print_naughty(packets_label label, int naughty_tenant_number)
   fclose(file);
 }
 
+void calculate_tau_variation(packets_label label, int naughty_tenant_number)
+{
+  FILE *file = fopen("../data/tau_variation.csv", "a");
+  if (!file)
+  {
+    perror("Error opening file");
+    exit(EXIT_FAILURE);
+  }
+  double naughty_GCRA = 0;
+  double naughty_Loss = 0;
+  double regular_GCRA = 0;
+  double regular_Loss = 0;
+  for (int tenant = 0; tenant < label.tenant_number; tenant++)
+    if (tenant >= naughty_tenant_number)
+    {
+      naughty_GCRA += label.labels[tenant][2];
+      naughty_Loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3] + label.labels[tenant][4]);
+    }
+    else
+    {
+
+      regular_GCRA += label.labels[tenant][2];
+      regular_Loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3] + label.labels[tenant][4]);
+    }
+
+  printf("regular : GCRA : %-7f Loss :%-7f% \n", regular_GCRA / (label.tenant_number - naughty_tenant_number), regular_Loss / (label.tenant_number - naughty_tenant_number));
+
+  printf("naughty : GCRA : %-7f Loss :%-7f% \n", naughty_GCRA / naughty_tenant_number, naughty_Loss / naughty_tenant_number);
+  fprintf(file, "%f, %f\n", regular_Loss / (label.tenant_number - naughty_tenant_number), naughty_Loss / naughty_tenant_number);
+  fclose(file);
+}
 #endif

@@ -68,41 +68,28 @@ int main(int argc, char *argv[])
     fprintf(file, "tau, naughty_mean, buffer, naughty_number, regular_loss, naughty_loss\n");
     fclose(file);
 
-    for(int z=0;z<10;z++){
-        for(int m =20;m<=80;m+=20){
-            config.naughty_tenant_number = m;
-            modify_ini_file(CONFIGURATION_PATH, &config);
-
-            for(int b = 100; b<=250; b+= 50){
-                for(int n =130;n<=150;n+=10){
-                config.naughty_mean = n;
-                modify_ini_file(CONFIGURATION_PATH, &config);
-
-                for (long i = 15872; i <= 30208; i += 1024)
-                {
-                    config.tau = i;
-                    modify_ini_file(CONFIGURATION_PATH, &config);
-                    file = fopen("../data/naughty.csv", "a");
-                    if (!file)
+    for (int retimes = 0; retimes < 10; retimes++)
+        for (int naughty_tenant_number = 20; naughty_tenant_number <= 80; naughty_tenant_number += 20)
+            for (int link_queue_buffer = 100; link_queue_buffer <= 250; link_queue_buffer += 50)
+                for (int naughty_mean = 130; naughty_mean <= 150; naughty_mean += 10)
+                    for (long tau = 15872; tau <= 30208; tau += 1024)
                     {
-                        perror("Error opening file");
-                        exit(EXIT_FAILURE);
+                        config.naughty_tenant_number = naughty_tenant_number;
+                        config.link_queue_buffer = link_queue_buffer;
+                        config.naughty_mean = naughty_mean;
+                        config.tau = tau;
+                        modify_ini_file(CONFIGURATION_PATH, &config);
+
+                        file = fopen("../data/naughty.csv", "a");
+                        if (!file)
+                        {
+                            perror("Error opening file");
+                            exit(EXIT_FAILURE);
+                        }
+                        fprintf(file, "%ld, %d, %d, %d, ", tau, naughty_mean, link_queue_buffer, naughty_tenant_number);
+                        fclose(file);
+                        system("../execution/simple_V2");
                     }
-                    fprintf(file, "%ld, %d, %d, %d, ", i, n, b, m);
-                    fclose(file);
-                    
-                    sprintf(command, "../execution/simple_V2 %d", b);
-                    system(command);
-                    // fprintf(file, "\n");
-                }
-            }
-            }
-            
-        }
-    }
-
-
-    // fclose(file);
 
     return 0;
 }

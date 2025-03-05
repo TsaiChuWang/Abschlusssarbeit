@@ -7,6 +7,7 @@
 // #define PRINT_GRID_COUNT
 // #define PRINT_TRAFFIC_MODE
 // #define PRINT_GCRA
+// #define PRINT_MAX_X
 
 #include "../include/general.h"
 #include "./inih/ini.h"
@@ -19,7 +20,7 @@
 
 #define CONFIGURATION_PATH "../configuration/simple_V2.ini"
 
-// gcc./ simple_V2.c inih / ini.c - o../ execution / simple_V2 - lm
+// gcc ./simple_V2.c ./inih/ini.c -o ../execution/simple_V2 -lm
 // ../execution/simple_V2
 
 #define GENERATE_TRAFFIC 1
@@ -60,6 +61,9 @@ int main(int argc, char *argv[])
     // Statistical variables
     int grid_counts = 0;
     int GCRAdrop = 0;
+#ifdef PRINT_MAX_X
+    int max_x = 0;
+#endif
 
     packets_count count;
     init_Packets_Count(&count, tenant_number, obtain_grids_number(config.packet_size));
@@ -73,6 +77,7 @@ int main(int argc, char *argv[])
 
     link_capacity_queue link;
     initLinkQueue(&link, config, capacity);
+    int drop_tenant = -1;
 
 #ifdef RECORD_EACH_GRID
     char filename[MAX_PATH_LENGTH];
@@ -86,7 +91,6 @@ int main(int argc, char *argv[])
 #endif
 
     //     int t = 0;
-    //     int max_x = 0;
 
     while (timestamp <= (TIME_TYPE)(config.simulation_time * ONE_SECOND_IN_NS))
     {
@@ -136,99 +140,106 @@ int main(int argc, char *argv[])
             break;
         }
 
-        //         // print_packets(packets, tenant_number);
-        //         int packet_time_count = 0;
+        // print_packets(packets, tenant_number);
+        int packet_time_count = 0;
 
-        //         for (int tenant = 0; tenant < tenant_number; tenant++)
-        //         {
-        //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
-        //             {
-        //                 packet_time_count += 1;
-        //                 *(count.count + tenant) += 1;
-        //             }
+        for (int tenant = 0; tenant < tenant_number; tenant++)
+        {
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
+            {
+                packet_time_count += 1;
+                *(count.count + tenant) += 1;
+            }
+            else
+                continue;
 
-        //             else
-        //                 continue;
+            // if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
+            // {
+            //     int shaping_dequeue_count = 0;
+            //     while ((shaping + tenant)->dequeue_timestamp <= (double)timestamp)
+            //     {
+            //         shaping_dequeue_count -= 1;
+            //         (shaping + tenant)->dequeue_timestamp += (shaping + tenant)->dequeue_interval;
+            //     }
+            //     if (shaping_dequeue_count < 0)
+            //         *(packets + tenant) = enqueue((queue *)(shaping + tenant));
 
-        //             // if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
-        //             // {
-        //             //     int shaping_dequeue_count = 0;
-        //             //     while ((shaping + tenant)->dequeue_timestamp <= (double)timestamp)
-        //             //     {
-        //             //         shaping_dequeue_count -= 1;
-        //             //         (shaping + tenant)->dequeue_timestamp += (shaping + tenant)->dequeue_interval;
-        //             //     }
-        //             //     if (shaping_dequeue_count < 0)
-        //             //         *(packets + tenant) = enqueue((queue *)(shaping + tenant));
+            //     if (shaping_dequeue_count < 0)
+            //         while (shaping_dequeue_count < -1)
+            //         {
+            //             dequeue((queue *)(shaping + tenant));
+            //             shaping_dequeue_count++;
+            //         }
+            // }
+            // else
+            //     goto RECORD;
 
-        //             //     if (shaping_dequeue_count < 0)
-        //             //         while (shaping_dequeue_count < -1)
-        //             //         {
-        //             //             dequeue((queue *)(shaping + tenant));
-        //             //             shaping_dequeue_count++;
-        //             //         }
-        //             // }
-        //             // else
-        //             //     goto RECORD;
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
+            {
+                long rate = (long)(timestamp - (gcras + tenant)->last_time) * (((double)(config.mean) * config.unit) / ONE_SECOND_IN_NS);
 
-        //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
-        //             {
-        //                 long rate = (long)(timestamp - (gcras + tenant)->last_time) * (((double)(config.mean) * config.unit) / ONE_SECOND_IN_NS);
+                long x = (long)((gcras + tenant)->x - rate);
 
-        //                 long x = (long)((gcras + tenant)->x - rate);
+#ifdef PRINT_MAX_X
+                if (x > max_x)
+                    max_x = x;
+#endif
 
-        //                 if (x > max_x)
-        //                     max_x = x;
+#ifdef PRINT_GCRA
+                if (timestamp - (gcras + tenant)->last_time > 4069)
+                    printf("[%2d]lst = %9lf, time = %-7f, inter = %7lf, rate = %6ld x= %6ld\n", tenant, (gcras + tenant)->last_time, timestamp, timestamp - (gcras + tenant)->last_time, rate, x);
+                else
+                    printf("[%2d]lst = %9lf, time = %-7f, inter = \x1B[1;31m%6lf\x1B[0m, rate = %6ld x= %6ld\n", tenant, (gcras + tenant)->last_time, timestamp, timestamp - (gcras + tenant)->last_time, rate, x);
+                printf("x = %ld, tau = %ld %d\n", x, (gcras + tenant)->tau, x > (gcras + tenant)->tau);
+#endif
+                if (x > (gcras + tenant)->tau)
+                    *(packets + tenant) = PACKET_LABEL_GCRA_DROPPED;
+                else
+                {
+                    (gcras + tenant)->x = MAX((long)0, x) + (gcras + tenant)->l;
+                    (gcras + tenant)->last_time = timestamp;
+                    *(packets + tenant) = PACKET_LABEL_ACCEPT;
+                }
+            }
 
-        // #ifdef PRINT_GCRA
-        //                 if (timestamp - (gcras + tenant)->last_time > 4069)
-        //                     printf("[%2d]lst = %9lf, time = %-7f, inter = %7lf, rate = %6ld x= %6ld\n", tenant, (gcras + tenant)->last_time, timestamp, timestamp - (gcras + tenant)->last_time, rate, x);
-        //                 else
-        //                     printf("[%2d]lst = %9lf, time = %-7f, inter = \x1B[1;31m%6lf\x1B[0m, rate = %6ld x= %6ld\n", tenant, (gcras + tenant)->last_time, timestamp, timestamp - (gcras + tenant)->last_time, rate, x);
-        //                 printf("x = %ld, tau = %ld %d\n", x, (gcras + tenant)->tau, x > (gcras + tenant)->tau);
-        // #endif
-        //                 if (x > (gcras + tenant)->tau)
-        //                     *(packets + tenant) = PACKET_LABEL_GCRA_DROPPED;
-        //                 else
-        //                 {
-        //                     (gcras + tenant)->x = MAX((long)0, x) + (gcras + tenant)->l;
-        //                     (gcras + tenant)->last_time = timestamp;
-        //                     *(packets + tenant) = PACKET_LABEL_ACCEPT;
-        //                 }
-        //             }
+            if (*(packets + tenant) == PACKET_LABEL_GCRA_DROPPED)
+            {
+                GCRAdrop += 1;
+                label.labels[tenant][*(packets + tenant)] += 1;
+            }
 
-        //             if (*(packets + tenant) == PACKET_LABEL_GCRA_DROPPED)
-        //             {
-        //                 GCRAdrop += 1;
-        //                 label.labels[tenant][*(packets + tenant)] += 1;
-        //             }
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT || *(packets + tenant) == PACKET_LABEL_GCRA_DROPPED)
+            {
 
-        //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT || *(packets + tenant) == PACKET_LABEL_GCRA_DROPPED)
-        //             {
+                if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
+                {
+                    *(packets + tenant) = enqueueLink(&link, tenant, ALPHA, &drop_tenant);
+                    if (dequeue_count > 0)
+                    {
+                        dequeueLink(&link);
+                        dequeue_count -= 1;
+                    }
+                }
 
-        //                 if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
-        //                 {
-        //                     *(packets + tenant) = enqueueLink(&link, tenant, ALPHA);
-        //                     if (dequeue_count > 0)
-        //                     {
-        //                         dequeueLink(&link);
-        //                         dequeue_count -= 1;
-        //                     }
-        //                 }
+                if (*(packets + tenant) == PACKET_LABEL_GCRA_DROPPED)
+                {
+                    *(packets + tenant) = enqueueLink(&link, tenant, BETA, &drop_tenant);
+                }
+            }
 
-        //                 if (*(packets + tenant) == PACKET_LABEL_GCRA_DROPPED)
-        //                 {
-        //                     *(packets + tenant) = enqueueLink(&link, tenant, BETA);
-        //                 }
-        //             }
+            // printf("teant = %d drop_tenant = %d\n", tenant, drop_tenant);
+            if (drop_tenant != tenant && drop_tenant < tenant_number)
+                label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1;
 
-        //         RECORD:
-        //             if (*(packets + tenant) >= PACKET_LABEL_ACCEPT)
-        //                 if (*(packets + tenant) >= PACKET_LABEL_OVER_CAPACITY_DROPPED)
-        //                     label.labels[*(packets + tenant) - PACKET_LABEL_OVER_CAPACITY_DROPPED][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1;
-        //                 else
-        //                     label.labels[tenant][*(packets + tenant)] += 1;
-        //         }
+            // RECORD:
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
+                if (*(packets + tenant) == PACKET_LABEL_OVER_CAPACITY_DROPPED)
+                {
+                    label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1;
+                }
+                else
+                    label.labels[tenant][*(packets + tenant)] += 1;
+        }
 
         //         // printf("front = %2d rear = %2d front = %2d rear = %2d\n", link.alpha_front,
         //         //        link.alpha_rear,
@@ -236,11 +247,11 @@ int main(int argc, char *argv[])
         //         //        link.beta_rear);
 
         //         int t = -1;
-        //         while (dequeue_count > 0)
-        //         {
-        //             dequeueLink(&link);
-        //             dequeue_count -= 1;
-        //         }
+        while (dequeue_count > 0)
+        {
+            dequeueLink(&link);
+            dequeue_count -= 1;
+        }
 
         // printf("packet_time_count = %d\n", packet_time_count);
         // printf("front = %2d rear = %2d front = %2d rear = %2d\n", link.alpha_front,
@@ -249,8 +260,10 @@ int main(int argc, char *argv[])
         //        link.beta_rear);
     }
 
-    //     // printf("GCRA drop = %d(%d)\n", GCRAdrop, GCRAdrop - 8192025);
-    //     // printf("maxx = %d\n", max_x);
+    // printf("GCRA drop = %d(%d)\n", GCRAdrop, GCRAdrop - 8192025);
+#ifdef PRINT_MAX_X
+    printf("max_x = %d\n", max_x);
+#endif
     // #ifdef RECORD_EACH_GRID
     //     fclose(file);
     // #endif
@@ -259,17 +272,16 @@ int main(int argc, char *argv[])
     printf("Gird Count = %d\n", grid_counts);
 #endif
 
-    //     print_packets_label(label);
-    //     // printf("%ld\n", config.tau);
-    //     print_naughty(label, config.naughty_tenant_number);
+    print_packets_label(label);
+    print_naughty(label, config.naughty_tenant_number);
     //     // printf("%2d : (%-7f) %\n", linkmb, (double)label.labels[tenant_number - 1][3] * 100.0 / (label.labels[tenant_number - 1][0] + label.labels[tenant_number - 1][3]));
     //     // for (int tenant = 0; tenant < tenant_number; tenant++)
     //     //     printf("%2d : %-7lf % (%-7lf)\n", tenant, (double)label.labels[tenant][0], (double)*(count.count + tenant));
 
     //     // printf("%2d : %-7lf % (%-7lf)\n", tenant, (double)label.labels[tenant][3] / (label.labels[tenant][0] + label.labels[tenant][1] + label.labels[tenant][2] + label.labels[tenant][3]), (double)*(count.count + tenant) / grid_counts);
-    //     execute_clock = clock() - execute_clock;
-    //     double time_taken = ((double)execute_clock) / CLOCKS_PER_SEC;
-    //     // printf("Execute time : %f\n", time_taken);
+    execute_clock = clock() - execute_clock;
+    double time_taken = ((double)execute_clock) / CLOCKS_PER_SEC;
+    printf("Execute time : %f\n", time_taken);
 
     return EXIT_SUCCESS;
 }

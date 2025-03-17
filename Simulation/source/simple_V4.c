@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     fprintf(file, "tau, regular_loss, naughty_loss\n");
     fclose(file);
 
-    for (long tau = 512; tau <= 1000000; tau += 1024)
+    for (long tau = 1000448; tau >= 512; tau += 1024)
     {
         config.tau = tau;
         modify_ini_file(CONFIGURATION_PATH, &config);

@@ -69,10 +69,10 @@ int main(int argc, char *argv[])
     fclose(file);
 
     for (int retimes = 0; retimes < 10; retimes++)
-        for (int naughty_tenant_number = 20; naughty_tenant_number <= 80; naughty_tenant_number += 20)
-            for (int link_queue_buffer = 100; link_queue_buffer <= 250; link_queue_buffer += 50)
-                for (int naughty_mean = 130; naughty_mean <= 150; naughty_mean += 10)
-                    for (long tau = 15872; tau <= 30208; tau += 1024)
+        for (int naughty_tenant_number = 80; naughty_tenant_number >= 20; naughty_tenant_number -= 20)
+            for (int link_queue_buffer = 250; link_queue_buffer >= 100; link_queue_buffer -= 50)
+                for (int naughty_mean = 150; naughty_mean >= 130; naughty_mean -= 10)
+                    for (long tau = 30208; tau >= 15872; tau -= 1024)
                     {
                         config.naughty_tenant_number = naughty_tenant_number;
                         config.link_queue_buffer = link_queue_buffer;

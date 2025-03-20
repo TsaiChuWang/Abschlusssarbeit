@@ -93,32 +93,45 @@ void reduction_inif_file(const char *filename)
 
 #ifdef CONFIG_H
 
-// struct define the configuration items
+// Struct defining the configuration items for simulation
 typedef struct
 {
-    int tenant_number;
-    TIME_TYPE simulation_time;
-    double error;
-    char *data_path;
-    long unit;
+    // Simulation settings
+    int tenant_number;         // Number of tenants in the simulation
+    TIME_TYPE simulation_time; // Simulation time
+    double error;              // Simulation error margin
+    char *data_path;           // Path to data storage or files
+    long unit;                 // Unit of measurement (e.g., Mbps, Gbps)
 
-    long input_rate;
-    int traffic_mode;
-    int mean;
-    int standard_deviation;
-    int packet_size;
+    // Traffic settings
+    long input_rate;           // Input traffic rate
+    int traffic_mode;          // Traffic mode (e.g., constant, Gaussian)
+    int mean;                  // Mean value for traffic characteristics
+    int standard_deviation;    // Standard deviation for traffic distribution
+    int packet_size;           // Size of traffic packets
 
-    int naughty_mean;
-    int naughty_standard_deviation;
-    int naughty_tenant_number;
+    // Naughty traffic settings (non-standard or outlier traffic)
+    int naughty_mean;          // Mean value for naughty traffic
+    int naughty_standard_deviation; // Standard deviation for naughty traffic
+    int naughty_tenant_number; // Number of tenants generating naughty traffic
 
-    double state_r;
+    // Threshold and flow control settings
+    double state_r;            // State variable for traffic control
 
-    long upper_queue_buffer;
-    long tau;
-    int link_queue_buffer;
+    long upper_queue_buffer;   // Upper queue buffer size
+    long tau;                  // Time constant or threshold value
+    int link_queue_buffer;     // Link queue buffer size
 } configuration;
 
+/**
+ * @brief Handler function to populate configuration structure from key-value pairs in the INI file.
+ *
+ * @param config Pointer to the configuration structure.
+ * @param section Section name in the configuration file.
+ * @param name Key name in the section.
+ * @param value Value corresponding to the key.
+ * @return Status of the operation (SUCCESS or FAILURE).
+ */
 static int handler(void *config, const char *section, const char *name, const char *value)
 {
     configuration *pconfig = (configuration *)config;
@@ -169,6 +182,11 @@ static int handler(void *config, const char *section, const char *name, const ch
     return SUCCESS;
 }
 
+/**
+ * @brief Obtain the system capacity from a file.
+ *
+ * @return The system capacity in double, or FAILED on error.
+ */
 double obtain_capacity()
 {
     FILE *file;
@@ -194,6 +212,12 @@ double obtain_capacity()
     return capacity;
 }
 
+/**
+ * @brief Modify the INI file with the current configuration.
+ *
+ * @param filename Path to the INI file.
+ * @param config Pointer to the configuration structure to be written to the file.
+ */
 void modify_ini_file(const char *filename, configuration *config)
 {
     FILE *file = fopen(filename, "w");
@@ -234,6 +258,11 @@ void modify_ini_file(const char *filename, configuration *config)
     fclose(file);
 }
 
+/**
+ * @brief Show the configuration values.
+ *
+ * @param config Configuration structure to be printed.
+ */
 void show_configuration(const configuration config)
 {
     printf("- Simulation :\n");

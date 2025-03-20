@@ -23,12 +23,12 @@ regular_loss = regular_loss[m:n]
 naughty_loss = naughty_loss[m:n]
 
 plt.plot(tau, regular_loss, linestyle='-', label='regular_loss')
-# plt.plot(tau, naughty_loss, linestyle='-', label='naughty_loss')
-# plt.plot(tau, [0.1 for i in tau], linestyle='-', color = 'red', label='epsilon')
+plt.plot(tau, naughty_loss, linestyle='-', label='naughty_loss')
+plt.plot(tau, [0.1 for i in tau], linestyle='-', color = 'red', label='ε')
 
-plt.title('Loss with different tau')
-plt.xlabel('tau')
-plt.ylabel('Loss')
+plt.title('Packet Loss with different τ')
+plt.xlabel('τ')
+plt.ylabel('Loss (%)')
 plt.legend()
 plt.grid(True)
 

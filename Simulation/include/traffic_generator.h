@@ -7,6 +7,13 @@
 
 #ifdef TRAFFIC_GENERATION_H
 
+typedef struct{
+    int state;
+
+    double r;
+    double p;
+}state_machine;
+
 typedef struct
 {
     TIME_TYPE step_size;
@@ -14,6 +21,8 @@ typedef struct
 
     double generate_probability;
     double generate_probability_naughty;
+
+    state_machine* state;
 } traffic_generator;
 
 traffic_generator initializeTrafficGenerator(const configuration config)
@@ -28,9 +37,15 @@ traffic_generator initializeTrafficGenerator(const configuration config)
     long unit = config.unit;
     generate.generate_probability = (double)config.mean * unit / config.input_rate;
     generate.generate_probability_naughty = (double)config.naughty_mean * unit / config.input_rate;
-
-
-
+    
+    if(config.traffic_mode == TRAFFIC_MODE_BRUSTY_ALL || config.traffic_mode == TRAFFIC_MODE_BRUSTY_REGULAR || config.traffic_mode == TRAFFIC_MODE_BRUSTY_NAUGHTY){
+        generate.state = (state_machine*)malloc(sizeof(state_machine)*config.tenant_number);
+        for(int i=0;i<config.tenant_number;i++){
+            *(generate.state + i)->state = PACKET_LABEL_NO_PACKET;
+            *(generate.state + i)->p = 0;
+            *(generate.state + i)->r = 0;
+        }
+    }else generate.state = NULL;
 
     return generate;
 }

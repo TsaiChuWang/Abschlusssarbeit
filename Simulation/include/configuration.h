@@ -3,12 +3,17 @@
 
 #define CONFIG_H
 
-#define TRAFFIC_MODE_INTERVAL 0
-#define TRAFFIC_MODE_GAUSSIAN 1
-#define TRAFFIC_MODE_ALL_NAUGHTY 2
-#define TRAFFIC_MODE_NAUGHTY 3
-#define TRAFFIC_MODE_FULL 4
-#define TRAFFIC_MODE_DENSITY 5
+/**  
+ * @brief Enumeration defining the various traffic modes used for regulating tenant network behavior.  
+ */  
+#define TRAFFIC_MODE_INTERVAL 0          /**< All tenants follow the rules: traffic occurs within the specified interval, following a uniform distribution. */
+#define TRAFFIC_MODE_GAUSSIAN 1          /**< All tenants follow the rules: traffic occurs within the specified interval, following a normal distribution. */
+#define TRAFFIC_MODE_ALL_NAUGHTY 2       /**< All tenants violate the rules: the long-term mean traffic exceeds the specified mean (μ), following a uniform distribution. */
+#define TRAFFIC_MODE_NAUGHTY 3           /**< Some tenants violate the rules, while others comply; traffic follows a uniform distribution. */
+#define TRAFFIC_MODE_DENSITY 4           /**< All tenants transmit traffic at the upper bound of the allowed volume. */
+#define TRAFFIC_MODE_BURSTY_ALL 5        /**< Some tenants violate the rules, while others comply; all traffic bursts are determined by a state machine. */
+#define TRAFFIC_MODE_BURSTY_REGULAR 6    /**< Some tenants violate the rules, while others comply; regular tenants' traffic bursts are determined by a state machine. */
+#define TRAFFIC_MODE_BURSTY_NAUGHTY 7    /**< Some tenants violate the rules, while others comply; naughty tenants' traffic bursts are determined by a state machine. */
 
 #ifdef REDUCTION
 #define INITIAL_CONFIGURATION_TENANT_NUMBER 100
@@ -88,6 +93,8 @@ typedef struct
     int naughty_mean;
     int naughty_standard_deviation;
     int naughty_tenant_number;
+
+    double state_r;
 
     long upper_queue_buffer;
     long tau;

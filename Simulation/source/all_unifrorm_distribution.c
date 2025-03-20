@@ -273,7 +273,7 @@ int main(int argc, char *argv[])
 #endif
 
     print_packets_label(label);
-    print_naughty(label, config.naughty_tenant_number);
+    record_all_unifrorm_distribution(label, config.naughty_tenant_number);
     //     // printf("%2d : (%-7f) %\n", linkmb, (double)label.labels[tenant_number - 1][3] * 100.0 / (label.labels[tenant_number - 1][0] + label.labels[tenant_number - 1][3]));
     //     // for (int tenant = 0; tenant < tenant_number; tenant++)
     //     //     printf("%2d : %-7lf % (%-7lf)\n", tenant, (double)label.labels[tenant][0], (double)*(count.count + tenant));

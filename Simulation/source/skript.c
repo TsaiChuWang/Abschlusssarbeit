@@ -56,6 +56,15 @@ int main(int argc, char *argv[])
         config.tau = tau;
         modify_ini_file(CONFIGURATION_PATH, &config);
 
+        file = fopen("../data/all_unifrorm_distribution.csv", "a");
+        if (!file)
+        {
+            perror("Error opening file");
+            exit(EXIT_FAILURE);
+        }
+        fprintf(file, "%ld, ", tau);
+        fclose(file);
+
         system("../execution/all_unifrorm_distribution");
 
         if(tau >= step*10)

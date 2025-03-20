@@ -15,25 +15,41 @@
 #define TRAFFIC_MODE_BURSTY_REGULAR 6    /**< Some tenants violate the rules, while others comply; regular tenants' traffic bursts are determined by a state machine. */
 #define TRAFFIC_MODE_BURSTY_NAUGHTY 7    /**< Some tenants violate the rules, while others comply; naughty tenants' traffic bursts are determined by a state machine. */
 
+/// @brief Define REDUCTION to recover the default configuration.
 #ifdef REDUCTION
-#define INITIAL_CONFIGURATION_TENANT_NUMBER 100
-#define INITIAL_CONFIGURATION_SIMULATION_simulation_time 1
-#define INITIAL_CONFIGURATION_ERROR 0.001
-#define INITIAL_CONFIGURATION_UNIT 1048576
 
-#define INITIAL_CONFIGURATION_INPUT_RATE (long)1073741824
-#define INITIAL_CONFIGURATION_TRAFFIC_MODE 0
-#define INITIAL_CONFIGURATION_MEAN 120
-#define INITIAL_CONFIGURATION_STANDARD_DEVIATION 40
-#define INITIAL_CONFIGURATION_PACKET_SIZE 512
+/**  
+ * @brief Parameters related to the basic simulation.  
+ */
+#define INITIAL_CONFIGURATION_TENANT_NUMBER 100                /**< Number of tenants in the initial configuration. */
+#define INITIAL_CONFIGURATION_SIMULATION_TIME 4                /**< Total simulation time in the initial configuration. */
+#define INITIAL_CONFIGURATION_ERROR 0.001                      /**< Error tolerance in the initial configuration. */
+#define INITIAL_CONFIGURATION_UNIT_DATA_PATH "../data"         /**< Path for unit data storage. */
+#define INITIAL_CONFIGURATION_UNIT 1048576                     /**< Unit definition for the simulation. */
 
-#define INITIAL_CONFIGURATION_NAUGHTY_MEAN 150
-#define INITIAL_CONFIGURATION_NAUGHTY_STANDARD_DEVIATION 10
-#define INITIAL_CONFIGURATION_NAUGHTY_TENANT_NUMBER 50
+/**  
+ * @brief Parameters related to traffic generation.  
+ */
+#define INITIAL_CONFIGURATION_INPUT_RATE (long)1073741824      /**< Input rate for traffic generation. */
+#define INITIAL_CONFIGURATION_TRAFFIC_MODE 0                   /**< Traffic mode setting. */
+#define INITIAL_CONFIGURATION_MEAN 120                         /**< Mean value for traffic generation. */
+#define INITIAL_CONFIGURATION_STANDARD_DEVIATION 40           /**< Standard deviation for traffic generation. */
+#define INITIAL_CONFIGURATION_PACKET_SIZE 512                  /**< Packet size in bytes. */
 
-#define INITIAL_CONFIGURATION_UPPER_LINK_BUFFER 1
-#define INITIAL_CONFIGURATION_BUCKET_DEPTH 7513
+#define INITIAL_CONFIGURATION_NAUGHTY_MEAN 140                 /**< Mean traffic for 'naughty' tenants. */
+#define INITIAL_CONFIGURATION_NAUGHTY_STANDARD_DEVIATION 10    /**< Standard deviation for 'naughty' tenants. */
+#define INITIAL_CONFIGURATION_NAUGHTY_TENANT_NUMBER 50         /**< Number of 'naughty' tenants. */
+#define INITIAL_CONFIGURATION_STATE_R (float)0.0               /**< State parameter for traffic generation. */
 
+/**  
+ * @brief Parameters related to thresholds.  
+ * These values cannot be obtained through formulaic calculations.  
+ */
+#define INITIAL_CONFIGURATION_UPPER_LINK_BUFFER 1              /**< Upper link buffer size. */
+#define INITIAL_CONFIGURATION_BUCKET_DEPTH 916                 /**< Depth of the bucket buffer. */
+#define INITIAL_CONFIGURATION_LINK_QUEUE_BUFFER 100            /**< (Missing value) Buffer size for link queue. */
+
+// modifiy the specified path configuration file to the default configuration
 void reduction_inif_file(const char *filename)
 {
     FILE *file = fopen(filename, "w");
@@ -62,20 +78,22 @@ void reduction_inif_file(const char *filename)
     fprintf(file, "naughty_mean = %d\n", INITIAL_CONFIGURATION_NAUGHTY_MEAN);
     fprintf(file, "naughty_standard_deviation = %d\n", INITIAL_CONFIGURATION_NAUGHTY_STANDARD_DEVIATION);
     fprintf(file, "naughty_tenant_number = %d\n", INITIAL_CONFIGURATION_NAUGHTY_TENANT_NUMBER);
+    fprintf(file, "state_r = %f\n", INITIAL_CONFIGURATION_STATE_R);
 
     // Write the [threshold] section
     fprintf(file, "[threshold]\n");
     fprintf(file, "upper_queue_buffer = %ld\n", INITIAL_CONFIGURATION_UPPER_LINK_BUFFER);
     fprintf(file, "tau = %ld\n", INITIAL_CONFIGURATION_BUCKET_DEPTH);
+    fprintf(file, "link_queue_buffer = %ld\n", INITIAL_CONFIGURATION_LINK_QUEUE_BUFFER);
 
     // Close the file
     fclose(file);
 }
-
-#endif
+#endif // REDUCTION
 
 #ifdef CONFIG_H
 
+// struct define the configuration items
 typedef struct
 {
     int tenant_number;
@@ -139,6 +157,8 @@ static int handler(void *config, const char *section, const char *name, const ch
         pconfig->naughty_standard_deviation = atoi(value);
     else if (MATCH("traffic", "naughty_tenant_number"))
         pconfig->naughty_tenant_number = atoi(value);
+    else if (MATCH("traffic", "state_r"))
+        pconfig->state_r = (double)atof(value);
 
     else if (MATCH("threshold", "upper_queue_buffer"))
         pconfig->upper_queue_buffer = strtol(value, NULL, 10);
@@ -171,7 +191,6 @@ double obtain_capacity()
     }
 
     fclose(file);
-
     return capacity;
 }
 
@@ -203,6 +222,7 @@ void modify_ini_file(const char *filename, configuration *config)
     fprintf(file, "naughty_mean = %d\n", config->naughty_mean);
     fprintf(file, "naughty_standard_deviation = %d\n", config->naughty_standard_deviation);
     fprintf(file, "naughty_tenant_number = %d\n", config->naughty_tenant_number);
+    fprintf(file, "state_r = %f\n", config->state_r);
 
     // Write the [threshold] section
     fprintf(file, "[threshold]\n");
@@ -251,38 +271,12 @@ void show_configuration(const configuration config)
         printf("| naughty tenant number      : %-d\n", config.naughty_tenant_number);
     }
 
+    if(config.traffic_mode > TRAFFIC_MODE_DENSITY)
+        printf("| state r                    : %-f\n", config.state_r);
+
     printf("- Threshold :\n");
     printf("| upper_queue_buffer         : %-ld\n", config.upper_queue_buffer);
     printf("| tau                        : %-ld\n", config.tau);
     printf("| link_queue_buffer          : %-d\n", config.link_queue_buffer);
 }
-#endif
-
-// Test Module
-// #define REDUCTION
-
-// #include "../Enthalten/include.h"
-// #include "../Enthalten/config.h"
-// #include "./inih/ini.h"
-
-// #define CONFIGURATION_PATH "../configuration/simple_V10_1.ini"
-
-// // gcc ./simple_V10_1.c inih/ini.c -o ../Ausführung/simple_V10_1
-// // ../Ausführung/simple_V10_1
-
-// int main(int argc, char *argv[]){
-//     configuration config;
-
-//     if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0) {
-//         printf("Can't load configuration\"%s\"\n", CONFIGURATION_PATH);
-//         return EXIT_FAILURE;
-//     }
-
-//     show_configuration(config);
-
-//     config.packet_size = 512;
-//     modify_ini_file(CONFIGURATION_PATH, &config);
-
-//     reduction_inif_file(CONFIGURATION_PATH);
-//     return EXIT_SUCCESS;
-// }
+#endif 

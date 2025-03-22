@@ -1,84 +1,53 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
-// #define REDUCTION
-#define RECORD_PACKETS_GENERATION
-#define RECORD_TIMESTAMP
+typedef enum { STATE_NO_PACKET, STATE_CREATE_PACKET } state_t;
 
-#include "../include/general.h"
-#include "./inih/ini.h"
-#include "../include/configuration.h"
-#include "../include/traffic_generation.h"
-#include "../include/link_capacity_queue.h"
-// #include "../include/GCRA.h"
-// #include "../include/link_capacity_queue.h"
-// #include "../include/packets_count.h"
+typedef struct {
+  state_t state;
+  double p;  // Probability of staying in STATE_NO_PACKET
+  double r;  // Probability of staying in STATE_CREATE_PACKET
+} state_machine;
 
-// #define CONFIGURATION_PATH "../configuration/simple_V1.ini"
-#define CONFIGURATION_PATH "../configuration/simple_V2.ini"
-
-#define NAME "test"
-
-// gcc ./test.c inih/ini.c -o ../execution/test -lm
-// ../execution/test [traffic_generation_code]
-
-#define GENERATE_TRAFFIC 1
-
-int main(int argc, char *argv[])
-{
-    char command[MAX_COMMAND_LENGTH];
-
-    // configuration.h
-    configuration config;
-
-    if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0)
-    {
-        printf("Can't load configuration \"%s\"\n", CONFIGURATION_PATH);
-        return EXIT_FAILURE;
+void change_state(state_machine* pstate) {
+  double factor = drand48();  // 產生 0~1 之間的隨機數
+  
+  if (pstate->state == STATE_CREATE_PACKET) {
+    if (factor < pstate->r) {
+      pstate->state = STATE_CREATE_PACKET;
+    } else {
+      pstate->state = STATE_NO_PACKET;
     }
+  } else {
+    if (factor < pstate->p) {
+      pstate->state = STATE_NO_PACKET;
+    } else {
+      pstate->state = STATE_CREATE_PACKET;
+    }
+  }
+}
 
-    link_capacity_queue link;
-    initLinkQueue(&link, config, 100);
+int main() {
+  srand48(time(NULL));  // 只初始化一次隨機種子
+  
+  state_machine sm = {STATE_NO_PACKET, 0.875, 0.982};
 
-    int code = 0;
-    int drop_tenant = -1;
+  // **預跑 50 萬次，確保達到穩態**
+  for (int i = 0; i < 500000; i++) {
+    change_state(&sm);
+  }
 
-    printf("\n");
-    code = enqueueLink(&link, 1, ALPHA, &drop_tenant);
-    printf("code = %d,  drop_tenant = %d\n", code, drop_tenant);
-    printLinkQueue(&link);
+  int count = 0;
+  int total_steps = 327680;
 
-    printf("\n");
-    code = enqueueLink(&link, 2, ALPHA, &drop_tenant);
-    printf("code = %d,  drop_tenant = %d\n", code, drop_tenant);
-    printLinkQueue(&link);
+  for (int i = 0; i < total_steps; i++) {
+    change_state(&sm);
+    if (sm.state == STATE_CREATE_PACKET) {
+      count++;
+    }
+  }
 
-    printf("\n");
-    code = enqueueLink(&link, 3, ALPHA, &drop_tenant);
-    printf("code = %d,  drop_tenant = %d\n", code, drop_tenant);
-    printLinkQueue(&link);
-
-    printf("\n");
-    code = enqueueLink(&link, 4, ALPHA, &drop_tenant);
-    printf("code = %d,  drop_tenant = %d\n", code, drop_tenant);
-    printLinkQueue(&link);
-
-    // printf("\n");
-    // code = enqueueLink(&link, 1, ALPHA, &drop_tenant);
-    // printf("code = %d,  drop_tenant = %d\n", code, drop_tenant);
-    // printLinkQueue(&link);
-
-    // printf("\n");
-    // code = enqueueLink(&link, 2, ALPHA, &drop_tenant);
-    // printf("code = %d,  drop_tenant = %d\n", code, drop_tenant);
-    // printLinkQueue(&link);
-
-    // printf("\n");
-    // code = enqueueLink(&link, 3, BETA, &drop_tenant);
-    // printf("code = %d,  drop_tenant = %d\n", code, drop_tenant);
-    // printLinkQueue(&link);
-
-    // printf("\n");
-    // code = enqueueLink(&link, 4, ALPHA, &drop_tenant);
-    // printf("code = %d,  drop_tenant = %d\n", code, drop_tenant);
-    // printLinkQueue(&link);
-    return EXIT_SUCCESS;
+  printf("STATE_CREATE_PACKET count: %d (%.2f%%)\n", count, count / (double)total_steps * 100);
+  return 0;
 }

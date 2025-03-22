@@ -29,7 +29,9 @@ traffic_generator initializeTrafficGenerator(const configuration config)
     generate.generate_probability = (double)config.mean * unit / config.input_rate;
     generate.generate_probability_naughty = (double)config.naughty_mean * unit / config.input_rate;
 
-
+    // if(config.traffic_mode == TRAFFIC_MODE_BRUSTY_ALL || config.traffic_mode == TRAFFIC_MODE_BRUSTY_REGULAR || config.traffic_mode == TRAFFIC_MODE_BRUSTY_NAUGHTY){
+    //     generate.state
+    // }
 
 
     return generate;

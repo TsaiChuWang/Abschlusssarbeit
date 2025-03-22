@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     }
 #endif
 
-    //     int t = 0;
+    int t = 0;
 
     while (timestamp <= (TIME_TYPE)(config.simulation_time * ONE_SECOND_IN_NS))
     {
@@ -122,12 +122,12 @@ int main(int argc, char *argv[])
             printf("Traffic Mode : NAUGHTY (There are specified tenants are naughty tenants with different statistical properties.)\n");
 #endif
             break;
-        case TRAFFIC_MODE_FULL:
-            packets = packet_generation_full(tenant_number);
-#ifdef PRINT_TRAFFIC_MODE
-            printf("Traffic Mode : FULL (All the tenants send upper bound traffics.)\n");
-#endif
-            break;
+//         case TRAFFIC_MODE_FULL:
+//             packets = packet_generation_full(tenant_number);
+// #ifdef PRINT_TRAFFIC_MODE
+//             printf("Traffic Mode : FULL (All the tenants send upper bound traffics.)\n");
+// #endif
+//             break;
         case TRAFFIC_MODE_DENSITY:
             packets = packet_generation_density(tenant_number, grid_counts, atoi(argv[1]));
 #ifdef PRINT_TRAFFIC_MODE
@@ -186,14 +186,23 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef PRINT_GCRA
-                if (timestamp - (gcras + tenant)->last_time > 4069)
-                    printf("[%2d]lst = %9lf, time = %-7f, inter = %7lf, rate = %6ld x= %6ld\n", tenant, (gcras + tenant)->last_time, timestamp, timestamp - (gcras + tenant)->last_time, rate, x);
-                else
-                    printf("[%2d]lst = %9lf, time = %-7f, inter = \x1B[1;31m%6lf\x1B[0m, rate = %6ld x= %6ld\n", tenant, (gcras + tenant)->last_time, timestamp, timestamp - (gcras + tenant)->last_time, rate, x);
-                printf("x = %ld, tau = %ld %d\n", x, (gcras + tenant)->tau, x > (gcras + tenant)->tau);
+                if (tenant == 99)
+                {
+                    if (timestamp - (gcras + tenant)->last_time > 4069)
+                        printf("[%2d]lst = %9lf, time = %-7f, inter = %7lf, rate = %6ld x= %6ld\n", tenant, (gcras + tenant)->last_time, timestamp, timestamp - (gcras + tenant)->last_time, rate, x);
+                    else
+                        printf("[%2d]lst = %9lf, time = %-7f, inter = \x1B[1;31m%6lf\x1B[0m, rate = %6ld x= %6ld drop = %d\n", tenant, (gcras + tenant)->last_time, timestamp, timestamp - (gcras + tenant)->last_time, rate, x, t);
+                    printf("x = %ld, tau = %ld %d\n", x, (gcras + tenant)->tau, x > (gcras + tenant)->tau);
+                }
 #endif
                 if (x > (gcras + tenant)->tau)
+                {
+                    if (tenant == 99)
+                        t += 1;
+                    GCRAdrop += 1;
                     *(packets + tenant) = PACKET_LABEL_GCRA_DROPPED;
+                    label.labels[tenant][*(packets + tenant)] += 1;
+                }
                 else
                 {
                     (gcras + tenant)->x = MAX((long)0, x) + (gcras + tenant)->l;
@@ -202,15 +211,13 @@ int main(int argc, char *argv[])
                 }
             }
 
-            if (*(packets + tenant) == PACKET_LABEL_GCRA_DROPPED)
-            {
-                GCRAdrop += 1;
-                label.labels[tenant][*(packets + tenant)] += 1;
-            }
+            // if (*(packets + tenant) == PACKET_LABEL_GCRA_DROPPED)
+            // {
+            //     // GCRAdrop += 1;
+            //             }
 
             if (*(packets + tenant) == PACKET_LABEL_ACCEPT || *(packets + tenant) == PACKET_LABEL_GCRA_DROPPED)
             {
-
                 if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
                 {
                     *(packets + tenant) = enqueueLink(&link, tenant, ALPHA, &drop_tenant);
@@ -228,17 +235,17 @@ int main(int argc, char *argv[])
             }
 
             // printf("teant = %d drop_tenant = %d\n", tenant, drop_tenant);
-            if (drop_tenant != tenant && drop_tenant < tenant_number)
+            if (drop_tenant != -1 && drop_tenant < tenant_number)
                 label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1;
 
+            // printf("%d %d\n", *(packets + tenant), *(packets + tenant) == PACKET_LABEL_OVER_CAPACITY_DROPPED);
             // RECORD:
-            if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
-                if (*(packets + tenant) == PACKET_LABEL_OVER_CAPACITY_DROPPED)
-                {
-                    label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1;
-                }
-                else
-                    label.labels[tenant][*(packets + tenant)] += 1;
+            if (*(packets + tenant) == PACKET_LABEL_OVER_CAPACITY_DROPPED)
+            {
+                label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1;
+            }
+            else
+                label.labels[tenant][*(packets + tenant)] += 1;
         }
 
         //         // printf("front = %2d rear = %2d front = %2d rear = %2d\n", link.alpha_front,
@@ -260,7 +267,7 @@ int main(int argc, char *argv[])
         //        link.beta_rear);
     }
 
-    // printf("GCRA drop = %d(%d)\n", GCRAdrop, GCRAdrop - 8192025);
+    printf("GCRA drop = %d(%d)\n", GCRAdrop, GCRAdrop - 8192025);
 #ifdef PRINT_MAX_X
     printf("max_x = %d\n", max_x);
 #endif

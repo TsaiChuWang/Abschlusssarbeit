@@ -48,6 +48,36 @@ int main() {
     }
   }
 
+  for (int i = 1; i <= 6; i++) {
+    printf("if(a == '%.f' and rn == 'r'):\n", (0.9+(double)i*0.0125)*10000);
+    printf("\tr%.f = sum_chunks(r%.f, 10)\n", (0.9+(double)i*0.0125)*10000, (0.9+(double)i*0.0125)*10000);
+    printf("\tx = [(i+1)*3051 for i in range(len(r%.f))]\n", (0.9+(double)i*0.0125)*10000, (0.9+(double)i*0.0125)*10000);
+    printf("\tplt.plot(x, r%.f, linestyle='-', label='regular')\n", (0.9+(double)i*0.0125)*10000);
+    printf("\tplt.plot(x, [0.75 for i in x], linestyle='-', color = 'red', label='preficted mean')\n");
+    printf("\tplt.title('State Machine r= %.4f Regular')\n\n", (0.9+(double)i*0.0125));
+
+    printf("if(a == '%.f' and rn == 'n'):\n", (0.9+(double)i*0.0125)*10000);
+    printf("\tn%.f = sum_chunks(n%.f, 10)\n", (0.9+(double)i*0.0125)*10000, (0.9+(double)i*0.0125)*10000);
+    printf("\tx = [(i+1)*3051 for i in range(len(n%.f))]\n", (0.9+(double)i*0.0125)*10000, (0.9+(double)i*0.0125)*10000);
+    printf("\tplt.plot(x, n%.f, linestyle='-', label='naughty')\n", (0.9+(double)i*0.0125)*10000);
+    printf("\tplt.plot(x, [0.75 for i in x], linestyle='-', color = 'red', label='preficted mean')\n");
+    printf("\tplt.title('State Machine r= %.4f Naughty')\n", (0.9+(double)i*0.0125));
+  }
+  printf("\n");
+
+  // for (int i = 1; i <= 8; i++) {
+  //   printf("if((states_%d)->state == STATE_CREATE_PACKET){\n", i);
+  //   printf("\tfprintf(file, \"1,\");\n");
+  //   printf("\t*(arr+%d) += 1;\n", i*2);  
+  //   printf("}else fprintf(file, \"0,\");\n");
+  //   printf("if((states_%d+1)->state == STATE_CREATE_PACKET){\n", i);
+  //   printf("\tfprintf(file, \"1,\");\n");
+  //   printf("\t*(arr+%d) += 1;\n", i*2+1);  
+  //   printf("}else fprintf(file, \"0,\");\n"); 
+  //   printf("\n");
+  // }
+  
+
   printf("STATE_CREATE_PACKET count: %d (%.2f%%)\n", count, count / (double)total_steps * 100);
   return 0;
 }

@@ -1,23 +1,28 @@
-#define GCRA_H
 
-// #define PACKET_LABEL_ACCEPT 0
-// #define PACKET_LABEL_OVER_UPPERBOUND_DROPPED 1
-// #define PACKET_LABEL_GCRA_DROPPED 2
-// #define PACKET_LABEL_OVER_CAPACITY_DROPPED 3
+#define GCRA_H
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-#ifdef GCRA_H
+#ifdef GCRA_H 
 
-typedef struct{
-    long tau;    
-    long l;   
-    TIME_TYPE last_time;
+/**
+ * @brief Structure representing a Generic Cell Rate Algorithm (GCRA) token bucket.
+ */
+typedef struct {
+    long tau;     /**< Time interval for token replenishment */
+    long l;       /**< Bucket depth or allowable burst size */
+    TIME_TYPE last_time; /**< Timestamp of the last packet arrival */
+    long x;       /**< Current token count */
+} GCRA;
 
-    long x; // water level
-}GCRA;
-
-GCRA initializeGCRA(long tau, long l){
+/**
+ * @brief Initializes a GCRA (Generic Cell Rate Algorithm) struct.
+ *
+ * @param tau The time interval for token replenishment.
+ * @param l The bucket depth or allowable burst size.
+ * @return A GCRA struct initialized with the given parameters.
+ */
+GCRA initializeGCRA(long tau, long l) {
     GCRA gcra;
 
     gcra.tau = tau;
@@ -28,98 +33,86 @@ GCRA initializeGCRA(long tau, long l){
     return gcra;
 }
 
-GCRA* initializeGCRAs(int tenant_number, long tau, long l){
-    GCRA* gcras = (GCRA*)malloc(sizeof(GCRA)*tenant_number);
-    for(int index=0;index<tenant_number;index++)
-        *(gcras+index) = initializeGCRA(tau, l);
+/**
+ * @brief Allocates and initializes an array of GCRA structures.
+ *
+ * @param tenant_number The number of tenants (or flows) requiring GCRA instances.
+ * @param tau The time interval for token replenishment.
+ * @param l The bucket depth or allowable burst size.
+ * @return A pointer to an allocated array of GCRA structs.
+ */
+GCRA* initializeGCRAs(int tenant_number, long tau, long l) {
+    GCRA* gcras = (GCRA*)malloc(sizeof(GCRA) * tenant_number);
+    if (!gcras) {
+        perror("Memory allocation failed");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int index = 0; index < tenant_number; index++) {
+        *(gcras + index) = initializeGCRA(tau, l);
+    }
     return gcras;
 }
 
-void printGCRA(GCRA gcra){
+/**
+ * @brief Displays the properties of a given GCRA (Generic Cell Rate Algorithm) instance.
+ *
+ * @param gcra The GCRA instance to display.
+ */
+void show_GCRA(GCRA gcra) {
     printf("tau       = %-ld\n", gcra.tau);
     printf("l         = %-ld\n", gcra.l);
     printf("last time = %-lf\n", gcra.last_time);
     printf("x         = %-ld\n", gcra.x);
 }
 
-int first_gcra_limit(TIME_TYPE timestamp, GCRA* pgcra, long upper_bound, int packet_size, long temp_tau){
-    long x = (long)(pgcra->x - (timestamp - pgcra->last_time)*(((int)upper_bound*packet_size)/ONE_SECOND_IN_NS));
-    
-    // printf("%ld %ld %ld\n", pgcra->x, timestamp, (timestamp - pgcra->last_time)*(((int)upper_bound*packet_size)/ONE_SECOND_IN_NS));
-    if(x > temp_tau)
-        return PACKET_LABEL_OVER_UPPERBOUND_DROPPED;
-    else{
-        pgcra->x = MAX((long)0, x)+pgcra->l;
-        pgcra->last_time = timestamp;
-        return PACKET_LABEL_ACCEPT;
-    }
-}
-
-void refresh_gcra(GCRA* pgcra){
+/**
+ * @brief Resets a GCRA instance by clearing its last time and accumulated value.
+ *
+ * @param pgcra Pointer to the GCRA instance to reset.
+ */
+void refresh_gcra(GCRA* pgcra) {
     pgcra->last_time = 0;
     pgcra->x = 0;
 }
 
-int second_gcra_limit(int label, TIME_TYPE timestamp, GCRA* pgcra, long mean, int packet_size, long tau){
-    long x = (long)(pgcra->x - (timestamp - pgcra->last_time)*(((int)mean*packet_size)/ONE_SECOND_IN_NS));
-    // printf("%ld %ld %ld\n", pgcra->x, timestamp, (timestamp - pgcra->last_time)*(((int)upper_bound*packet_size)/ONE_SECOND_IN_NS));
-    
-    if(label == PACKET_LABEL_OVER_UPPERBOUND_DROPPED)
-        return PACKET_LABEL_OVER_UPPERBOUND_DROPPED;
+/**
+ * @brief Updates the GCRA (Generic Cell Rate Algorithm) state and determines whether a packet is accepted or labeled as GCRA-dropped.
+ *
+ * @param timestamp The current timestamp in nanoseconds.
+ * @param pgcra Pointer to the GCRA instance being updated.
+ * @param config Configuration parameters for traffic shaping.
+ * @return PACKET_LABEL_GCRA_LABELED if the packet is dropped due to exceeding the threshold, otherwise PACKET_LABEL_ACCEPT.
+ */
+int gcra_update(TIME_TYPE timestamp, GCRA* pgcra, const configuration config) {
+    // Calculate the rate based on the time interval and mean traffic rate
+    long rate = (long)(timestamp - pgcra->last_time) * (((double)(config.mean) * config.unit) / ONE_SECOND_IN_NS);
+    long x = (long)(pgcra->x - rate);
 
-    if(x > tau)
-        return PACKET_LABEL_GCRA_DROPPED;
-    else{
-        pgcra->x = MAX((long)0, x)+pgcra->l;
+#ifdef PRINT_GCRA_UPDATE
+    // Compute upper bound for valid timestamp intervals
+    double upper = (double)(ONE_SECOND_IN_NS * config.packet_size) / (config.mean * config.unit);
+    if (timestamp - pgcra->last_time > (long)(upper))
+        printf("lst = %9lf, time = %-7f, inter = %7lf, rate = %6ld x= %6ld\n", 
+               pgcra->last_time, timestamp, timestamp - pgcra->last_time, rate, x);
+    else
+        printf("lst = %9lf, time = %-7f, inter = \x1B[1;31m%6lf\x1B[0m, rate = %6ld x= %6ld\n", 
+               pgcra->last_time, timestamp, timestamp - pgcra->last_time, rate, x);
+    
+    printf("x = %ld, tau = %ld %d\n", x, pgcra->tau, x > pgcra->tau);
+#endif
+
+    // Check if the packet exceeds the threshold and should be dropped
+    if (x > pgcra->tau) {
+        return PACKET_LABEL_GCRA_LABELED;
+    } else {
+        // Update GCRA state and accept the packet
+        pgcra->x = MAX((long)0, x) + pgcra->l;
         pgcra->last_time = timestamp;
         return PACKET_LABEL_ACCEPT;
     }
+
+    return PACKET_LABEL_ACCEPT; // Redundant but kept for safety
 }
 
-void record_gcras(GCRA* gcras, int tenant_number,const char* folder_path, int type){
-    char data_path[MAX_PATH_LENGTH];
-    sprintf(data_path, "%s/GCRA_%d.csv", folder_path, type);
-    FILE* file = fopen(data_path, "w+");
-    if (!file) {
-        perror("Error opening file");
-        return;
-    }
-
-    for(int tenant = 0;tenant<tenant_number;tenant++){
-        GCRA* pgcra = (GCRA*)(gcras+tenant);
-        fprintf(file, "%ld, %lf\n", pgcra->x, pgcra->last_time);
-    }
-
-    fclose(file);
-}
-
-void read_gcras(GCRA** pgcras, int tenant_number,const char* folder_path, int type){
-    char data_path[MAX_PATH_LENGTH];
-    sprintf(data_path, "%s/GCRA_%d.csv", folder_path, type);
-    FILE* file = fopen(data_path, "r");
-    if (!file) {
-        perror("Error opening file");
-        return;
-    }
-
-    // Read and parse each line
-    char line[MAX_BUFFER_SIZE];
-    size_t row = 0;
-    while (fgets(line, sizeof(line), file) && row < tenant_number) {
-        // GCRA* pgcra = (GCRA*)(*(pgcras)+row);
-        long x;
-        TIME_TYPE last_time;
-        if (sscanf(line, "%ld, %ld", &x, &last_time) == 2) {
-            (*(pgcras)+row)->x = x;
-            (*(pgcras)+row)->last_time = last_time;
-            row++;
-        } else {
-            fprintf(stderr, "Error parsing line: %s\n", line);
-        }
-    }
-
-    fclose(file);
-}
-#endif
-
-// printGCRA(*(gcras));
+#endif // GCRA_H

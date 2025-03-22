@@ -1,6 +1,7 @@
 
 #define CLEAN_DATA_PATH
 
+#define PRINT_GRID_COUNT
 #define PRINT_EXECUTION_TIME 
 // #define PRINT_CAPACITY
 // #define PRINT_REGULAR_AND_NAUGHTY
@@ -9,7 +10,7 @@
 // #define PRINT_EACH_TIMESTAMP
 // #define PRINT_EACH_GRID_PACKET
 #define PRINT_PACKET_COUNTS
-#define PRINT_PACKET_LABEL
+// #define PRINT_PACKET_LABEL
 
 #define RECORD_REGULAR_AND_NAUGHTY_TAU
 #define RECORD_REGULAR_AND_NAUGHTY_ALL
@@ -86,7 +87,7 @@ int main(int argc, char *argv[])
 
     /** @brief Initializes the traffic generator based on the configuration. */
     traffic_generator generator = initializeTrafficGenerator(config);
-    // showTrafficGenerator(generator);  ///< Uncomment to display generator details.
+    showTrafficGenerator(generator);  ///< Uncomment to display generator details.
 
     /** @brief Number of tenants in the simulation.(Float) */
     int tenant_number = config.tenant_number;
@@ -96,10 +97,10 @@ int main(int argc, char *argv[])
     /** @brief The simulation timestamp. */
     TIME_TYPE timestamp = (TIME_TYPE)0;
 
-     /** @brief Structure to store packet counts for each tenant. */
+    /** @brief Structure to store packet counts for each tenant. */
     packets_count count;
     /**  @brief Initializes packet count tracking. */
-    init_packets_count(&count, tenant_number, obtain_grids_number(config.packet_size));
+    init_packets_count(&count, tenant_number, obtain_grids_number(config));
     
     /** @brief Structure to label packets based on their classification. */ 
     packets_label label;
@@ -155,121 +156,11 @@ int main(int argc, char *argv[])
             if(*(packets + tenant) == PACKET_LABEL_GCRA_LABELED)
                 label.labels[tenant][PACKET_LABEL_GCRA_LABELED] += 1;
         }
-//         int dequeue_count = 0;
-//         while (link.dequeue_timestamp <= (double)timestamp)
-//         {
-//             link.dequeue_timestamp += link.dequeue_interval;
-//             dequeue_count += 1;
-//         }
-//         // printf("dequeue_count = %d\n", dequeue_count);
-
-//         int packet_time_count = 0;
-
-//         for (int tenant = 0; tenant < tenant_number; tenant++)
-//         {
-//             if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
-//             {
-//                 packet_time_count += 1;
-//                 *(count.count + tenant) += 1;
-//             }
-//             else
-//                 continue;
-
-
-//             if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
-//             {
-//                 long rate = (long)(timestamp - (gcras + tenant)->last_time) * (((double)(config.mean) * config.unit) / ONE_SECOND_IN_NS);
-
-//                 long x = (long)((gcras + tenant)->x - rate);
-
-// #ifdef PRINT_MAX_X
-//                 if (x > max_x)
-//                     max_x = x;
-// #endif
-
-// #ifdef PRINT_GCRA
-//                 if (tenant == 99)
-//                 {
-//                     if (timestamp - (gcras + tenant)->last_time > 4069)
-//                         printf("[%2d]lst = %9lf, time = %-7f, inter = %7lf, rate = %6ld x= %6ld\n", tenant, (gcras + tenant)->last_time, timestamp, timestamp - (gcras + tenant)->last_time, rate, x);
-//                     else
-//                         printf("[%2d]lst = %9lf, time = %-7f, inter = \x1B[1;31m%6lf\x1B[0m, rate = %6ld x= %6ld drop = %d\n", tenant, (gcras + tenant)->last_time, timestamp, timestamp - (gcras + tenant)->last_time, rate, x, t);
-//                     printf("x = %ld, tau = %ld %d\n", x, (gcras + tenant)->tau, x > (gcras + tenant)->tau);
-//                 }
-// #endif
-//                 if (x > (gcras + tenant)->tau)
-//                 {
-//                     if (tenant == 99)
-//                         t += 1;
-//                     GCRAdrop += 1;
-//                     *(packets + tenant) = PACKET_LABEL_GCRA_DROPPED;
-//                     label.labels[tenant][*(packets + tenant)] += 1;
-//                 }
-//                 else
-//                 {
-//                     (gcras + tenant)->x = MAX((long)0, x) + (gcras + tenant)->l;
-//                     (gcras + tenant)->last_time = timestamp;
-//                     *(packets + tenant) = PACKET_LABEL_ACCEPT;
-//                 }
-//             }
-
-//             // if (*(packets + tenant) == PACKET_LABEL_GCRA_DROPPED)
-//             // {
-//             //     // GCRAdrop += 1;
-//             //             }
-
-//             if (*(packets + tenant) == PACKET_LABEL_ACCEPT || *(packets + tenant) == PACKET_LABEL_GCRA_DROPPED)
-//             {
-//                 if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
-//                 {
-//                     *(packets + tenant) = enqueueLink(&link, tenant, ALPHA, &drop_tenant);
-//                     if (dequeue_count > 0)
-//                     {
-//                         dequeueLink(&link);
-//                         dequeue_count -= 1;
-//                     }
-//                 }
-
-//                 if (*(packets + tenant) == PACKET_LABEL_GCRA_DROPPED)
-//                 {
-//                     *(packets + tenant) = enqueueLink(&link, tenant, BETA, &drop_tenant);
-//                 }
-//             }
-
-//             // printf("teant = %d drop_tenant = %d\n", tenant, drop_tenant);
-//             if (drop_tenant != -1 && drop_tenant < tenant_number)
-//                 label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1;
-
-//             // printf("%d %d\n", *(packets + tenant), *(packets + tenant) == PACKET_LABEL_OVER_CAPACITY_DROPPED);
-//             // RECORD:
-//             if (*(packets + tenant) == PACKET_LABEL_OVER_CAPACITY_DROPPED)
-//             {
-//                 label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1;
-//             }
-//             else
-//                 label.labels[tenant][*(packets + tenant)] += 1;
-//         }
-
-//         //         // printf("front = %2d rear = %2d front = %2d rear = %2d\n", link.alpha_front,
-//         //         //        link.alpha_rear,
-//         //         //        link.beta_front,
-//         //         //        link.beta_rear);
-
-//         //         int t = -1;
-//         while (dequeue_count > 0)
-//         {
-//             dequeueLink(&link);
-//             dequeue_count -= 1;
-//         }
-
-//         // printf("packet_time_count = %d\n", packet_time_count);
-//         // printf("front = %2d rear = %2d front = %2d rear = %2d\n", link.alpha_front,
-//         //        link.alpha_rear,
-//         //        link.beta_front,
-//         //        link.beta_rear);
     }
 
-
+#ifdef PRINT_GRID_COUNT
+    printf("grid numbers= %d\n", grid_counts);
+#endif
 
 #ifdef PRINT_PACKET_COUNTS
     show_packets_count(count);

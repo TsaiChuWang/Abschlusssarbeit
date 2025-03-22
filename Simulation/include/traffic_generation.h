@@ -71,17 +71,19 @@ traffic_generator initializeTrafficGenerator(const configuration config)
 }
 
 /**
- * @brief Obtains the number of grids based on packet size.
- *
- * This function calculates the number of grids needed for a packet size 
- * based on the constant `ONE_SECOND_IN_NS`.
- *
- * @param packet_size The size of the packet in nanoseconds.
- * @return The number of grids required for the given packet size.
+ * @brief Calculate the total number of grids required for the simulation.
+ * @details This function calculates the number of grids based on the time interval to transmit a packet 
+ *          and the total simulation time. The number of grids is computed by dividing one second 
+ *          by the packet transmission time, then multiplying by the simulation time.
+ * 
+ * @param config The configuration structure containing the packet size, input rate, and simulation time.
+ * @return long The total number of grids for the simulation.
  */
-long obtain_grids_number(int packet_size)
+long obtain_grids_number(const configuration config)
 {
-    return (long)ONE_SECOND_IN_NS / packet_size; /**< Return the number of grids. */
+    double time_interval = (double)config.packet_size*(double)ONE_SECOND_IN_NS/(double)config.input_rate; // Time interval that transmit a packet
+    long grids_number = (long)((double)ONE_SECOND_IN_NS/time_interval);
+    return  grids_number*config.simulation_time+1;
 }
 
 /**

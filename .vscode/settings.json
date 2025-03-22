@@ -41,7 +41,10 @@
         "link_capacity_queue.h": "c",
         "packets_count.h": "c",
         "deque": "cpp",
-        "queue.h": "c"
+        "queue.h": "c",
+        "string": "c",
+        "unordered_map": "c",
+        "iterator": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true

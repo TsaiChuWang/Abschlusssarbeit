@@ -130,7 +130,7 @@ void show_packets_label(packets_label label)
 
   print_equals_line(); /**< Print a separator line. */
   printf("label =\n");
-  printf("ACCEPT    , DROP_OVER , DROP_GCRA , CAPACITY   : LOSS(PURE),  LOSS\n");
+  printf("ACCEPT    , DROP_OVER , DROP_LABELED , CAPACITY   : LOSS(PURE),  LOSS\n");
 
   // Loop through each tenant and display the label counts and loss percentages.
   for (int tenant = 0; tenant < label.tenant_number; tenant++)

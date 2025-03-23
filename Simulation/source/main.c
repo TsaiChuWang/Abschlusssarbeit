@@ -1,16 +1,17 @@
 
 #define CLEAN_DATA_PATH
 
-#define PRINT_GRID_COUNT
+// #define PRINT_GRID_COUNT
 #define PRINT_EXECUTION_TIME 
-// #define PRINT_CAPACITY
+#define PRINT_CAPACITY
 // #define PRINT_REGULAR_AND_NAUGHTY
 // #define PRINT_FIRST_INIT_GCRA
 // #define PRINT_GCRA_UPDATE
 // #define PRINT_EACH_TIMESTAMP
 // #define PRINT_EACH_GRID_PACKET
 #define PRINT_PACKET_COUNTS
-// #define PRINT_PACKET_LABEL
+#define PRINT_PACKET_LABEL
+// #define PRINT_DEQUEUE_COUNT
 
 #define RECORD_REGULAR_AND_NAUGHTY_TAU
 #define RECORD_REGULAR_AND_NAUGHTY_ALL
@@ -23,10 +24,7 @@
 #include "../include/traffic_generation.h"
 #include "../include/packets_count.h"
 #include "../include/GCRA.h"
-
-// #include "../include/link_capacity_queue.h"
-
-// #include "../include/link_capacity_queue.h"
+#include "../include/link_capacity_queue.h"
 
 
 #define CONFIGURATION_PATH "../configuration/main.ini"
@@ -79,7 +77,7 @@ int main(int argc, char *argv[])
 
 #ifdef PRINT_CAPACITY
     /**  @brief Prints the calculated network capacity. */
-    printf("capacity : %f bps\n", capacity * config.unit);
+    printf("capacity : %f bps\n", capacity );
 #endif
 
     /** @brief Initializes the random seed for random number generation.*/
@@ -87,7 +85,7 @@ int main(int argc, char *argv[])
 
     /** @brief Initializes the traffic generator based on the configuration. */
     traffic_generator generator = initializeTrafficGenerator(config);
-    showTrafficGenerator(generator);  ///< Uncomment to display generator details.
+    // showTrafficGenerator(generator);  ///< Uncomment to display generator details.
 
     /** @brief Number of tenants in the simulation.(Float) */
     int tenant_number = config.tenant_number;
@@ -117,8 +115,14 @@ int main(int argc, char *argv[])
 #endif
 
 
+    link_priority_queue link;
+    initlink_priority_queue(&link, config.link_queue_buffer, config, capacity); // Max buffer size
+
+    
     /** @brief Stores the total number of grids processed. */
     int grid_counts = 0;
+    int drop_tenant = UNFOUND;
+    
 
     /**
      * @brief Main loop for simulating the traffic over time.
@@ -127,7 +131,21 @@ int main(int argc, char *argv[])
      */
     while (timestamp <= (TIME_TYPE)(config.simulation_time * ONE_SECOND_IN_NS))
     {
+        
         timestamp += (TIME_TYPE)(generator.step_size);
+
+        // Count the dequeue times
+        int dequeue_count = 0;
+
+        while (link.dequeue_timestamp <= (double)timestamp)
+        {
+            link.dequeue_timestamp += link.dequeue_interval;
+            dequeue_count += 1;
+        }
+
+#ifdef PRINT_DEQUEUE_COUNT
+        printf("dequeue_count = %d\n", dequeue_count);
+#endif
 
 #ifdef PRINT_EACH_TIMESTAMP
         printf("timestamp : %-lf\n", timestamp);
@@ -155,7 +173,45 @@ int main(int argc, char *argv[])
             // Statistic th number of packet labeled as GCRA
             if(*(packets + tenant) == PACKET_LABEL_GCRA_LABELED)
                 label.labels[tenant][PACKET_LABEL_GCRA_LABELED] += 1;
+
+                
+            // Link queue enqueue
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT || *(packets + tenant) == PACKET_LABEL_GCRA_LABELED)
+            {
+                if (*(packets + tenant) == PACKET_LABEL_ACCEPT)
+                {
+                    if (dequeue_count > 0)
+                    {
+                        int index = dequeue(&link);
+                        if(index != UNFOUND)
+                            label.labels[index][PACKET_LABEL_ACCEPT] += 1;
+                        dequeue_count -= 1;
+                    }
+                    enqueue(&link, ALPHA, tenant, &drop_tenant);
+
+                    if(drop_tenant != UNFOUND)
+                        if(drop_tenant != tenant)
+                            label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1;
+                        else label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1;
+                }
+
+                if (*(packets + tenant) == PACKET_LABEL_GCRA_LABELED)
+                {
+                    enqueue(&link, BETA, tenant, &drop_tenant);
+                    if(drop_tenant != UNFOUND)
+                        label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1;
+                }
+            }
         }
+
+        while (dequeue_count > 0)
+        {
+            int index = dequeue(&link);
+            if(index != UNFOUND)
+                label.labels[index][PACKET_LABEL_ACCEPT] += 1;
+            dequeue_count -= 1;
+        }
+        // show_LinkQueue(&link);
     }
 
 #ifdef PRINT_GRID_COUNT
@@ -177,7 +233,7 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef RECORD_REGULAR_AND_NAUGHTY_TAU
-    if(config.traffic_mode == TRAFFIC_MODE_NAUGHTY || config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL){
+    if(config.traffic_mode == TRAFFIC_MODE_NAUGHTY || config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL ){
         record_regular_and_naughty_tau(label, config);
     }
 #endif

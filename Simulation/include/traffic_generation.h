@@ -163,7 +163,7 @@ int *packet_generation_naughty(traffic_generator generator, const configuration 
     for (int index = 0; index < config.tenant_number; index++)
     {
         // Naughty tenants use a different probability for packet generation.
-        if (index >= config.naughty_tenant_number)
+        if (index >= (config.tenant_number-config.naughty_tenant_number))
             *(packets + index) = uniform_distribution(generator.generate_probability_naughty);
         else
             *(packets + index) = uniform_distribution(generator.generate_probability);
@@ -257,7 +257,7 @@ int *packet_generation_brusty_regular(traffic_generator generator, const configu
     change_states(generator.states, config.tenant_number); /**< Update states for all tenants. */
     for (int index = 0; index < config.tenant_number; index++)
     {
-        if (index >= config.naughty_tenant_number)
+        if (index >= (config.tenant_number-config.naughty_tenant_number))
             *(packets + index) = uniform_distribution(generator.generate_probability_naughty); /**< Naughty tenants use naughty probability. */
         else
         {
@@ -287,7 +287,7 @@ int *packet_generation_brusty_naughty(traffic_generator generator, const configu
     change_states(generator.states, config.tenant_number); /**< Update states for all tenants. */
     for (int index = 0; index < config.tenant_number; index++)
     {
-        if (index >= config.naughty_tenant_number)
+        if (index >= (config.tenant_number-config.naughty_tenant_number))
         {
             if((generator.states+index)->state == STATE_CREATE_PACKET)
                 *(packets+index) = PACKET_LABEL_ACCEPT; /**< Accept packet if state is STATE_CREATE_PACKET for naughty tenants. */

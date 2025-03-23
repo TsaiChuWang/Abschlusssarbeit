@@ -83,7 +83,7 @@ state_machine* initialize_state_machines(double state_r, double generate_probabi
   state_machine* states = (state_machine*)malloc(sizeof(state_machine) * tenant_number);  /**< Allocate memory for state machines. */
   
   for (int tenant = 0; tenant < tenant_number; tenant++) {  /**< Iterate over all tenants. */
-    if (tenant >= naughty_tenant_number) {
+    if (tenant >= (tenant_number-naughty_tenant_number)) {
       *(states + tenant) = initialize_state_machine(state_r, generate_probability_naughty);  /**< Initialize naughty tenants with different probability. */
     } else {
       *(states + tenant) = initialize_state_machine(state_r, generate_probability);  /**< Initialize regular tenants with default probability. */

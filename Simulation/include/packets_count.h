@@ -172,7 +172,7 @@ void print_regular_and_naughty(packets_label label, int naughty_tenant_number){
 
   // Loop through each tenant and accumulate statistics based on their type (regular or naughty).
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
-    if (tenant >= naughty_tenant_number)
+    if (tenant >= (label.tenant_number-naughty_tenant_number))
     {
       naughty_GCRA += label.labels[tenant][2];  /**< Accumulate GCRA for naughty tenants. */
       naughty_Loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]);  /**< Calculate loss percentage for naughty tenants. */
@@ -254,7 +254,7 @@ void record_regular_and_naughty_all(packets_label label, const configuration con
 
   // Loop through each tenant and calculate the loss percentage for regular and naughty tenants.
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
-    if (tenant >= config.naughty_tenant_number)
+    if (tenant >= (label.tenant_number-config.naughty_tenant_number))
     {
       naughty_Loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]);  /**< Calculate loss percentage for naughty tenants. */
     }

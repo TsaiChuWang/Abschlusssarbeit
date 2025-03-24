@@ -150,36 +150,42 @@ int main() {
     
     for(int i=0;i<9;i++){
       enqueue(&pqueue, ALPHA, i, &drop_value);
-      // printf("total_size = %d\n", total_size(&pqueue));
     }
+    printf("Enqueue 9 item to alpha queue\n");
     printf("drop = %d \n", drop_value);
     print_queue(&pqueue);
+
+    printf("Enqueue 1 item to beta queue\n");
     enqueue(&pqueue, BETA, 9, &drop_value);
     printf("drop = %d \n", drop_value);
     print_queue(&pqueue);
 
-    // 
-    print_queue(&pqueue);
+    printf("Enqueue 1 item to alpha queue(predict drop beta queue)\n");
     enqueue(&pqueue, ALPHA, 10, &drop_value);
     printf("drop = %d \n", drop_value);
     print_queue(&pqueue);
 
+    printf("Validation of dequeue\n");
     printf("Dequeued: %d\n", dequeue(&pqueue));
-    enqueue(&pqueue, BETA, 9, &drop_value);
-    print_queue(&pqueue);
-    enqueue(&pqueue, ALPHA, 10, &drop_value);
     print_queue(&pqueue);
 
-    printf("Dequeued: %d\n", dequeue(&pqueue));
-    print_queue(&pqueue);
+    printf("Validation of alpha queue drop situation(add two items 10 and 11 in alpha queue)\n");
     enqueue(&pqueue, ALPHA, 10, &drop_value);
-    printf("drop = %d \n", drop_value);
-    print_queue(&pqueue);
-    
-    print_queue(&pqueue);
     enqueue(&pqueue, ALPHA, 11, &drop_value);
     printf("drop = %d \n", drop_value);
     print_queue(&pqueue);
+
+    printf("Validation of Circular queue\n");
+    printf("Dequeued: %d\n", dequeue(&pqueue));
+    enqueue(&pqueue, ALPHA, 10, &drop_value);
+    printf("drop = %d \n", drop_value);
+    print_queue(&pqueue);
+    // print_queue(&pqueue);
+    
+    // print_queue(&pqueue);
+    // enqueue(&pqueue, ALPHA, 11, &drop_value);
+    // printf("drop = %d \n", drop_value);
+    // print_queue(&pqueue);
 
     // enqueue(&pqueue, BETA, 10, &drop_value);
     // enqueue(&pqueue, BETA, 20, &drop_value);

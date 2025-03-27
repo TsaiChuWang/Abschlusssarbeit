@@ -267,7 +267,7 @@ void record_regular_and_naughty_all(packets_label label, const configuration con
     }
 
   // Append the results to the CSV file with additional configuration details.
-  fprintf(file, "%ld, %d, %d, %f, %d, %d, %f, %f\n", config.tau, config.naughty_mean, config.naughty_tenant_number, state_r, config.upper_queue_buffer, config.link_queue_buffer, regular_Loss, naughty_Loss);
+  fprintf(file, "%ld, %d, %d, %f, %d, %d, %f, %f\n", config.tau, config.naughty_mean, config.naughty_tenant_number, config.state_r, config.upper_queue_buffer, config.link_queue_buffer, regular_Loss, naughty_Loss);
   fclose(file); /**< Close the file after writing. */
 }
 
@@ -302,7 +302,7 @@ void record_average_loss(packets_label label, const configuration config)
   }
 
   // Append the results to the CSV file.
-  fprintf(file, "%ld, %d, %d, %f, %d, %d, %f\n", config.tau, config.naughty_mean, config.naughty_tenant_number, state_r, config.upper_queue_buffer, config.link_queue_buffer, average_loss);
+  fprintf(file, "%ld, %d, %d, %f, %d, %d, %f\n", config.tau, config.naughty_mean, config.naughty_tenant_number, config.state_r, config.upper_queue_buffer, config.link_queue_buffer, average_loss);
   fclose(file); /**< Close the file after writing. */
 }
 

@@ -21,20 +21,20 @@
 /**
  * @brief Parameters related to the basic simulation.
  */
-#define INITIAL_CONFIGURATION_TENANT_NUMBER 100             /**< Number of tenants in the initial configuration. */
-#define INITIAL_CONFIGURATION_SIMULATION_TIME 5             /**< Total simulation time in the initial configuration. */
-#define INITIAL_CONFIGURATION_ERROR 0.001                   /**< Error tolerance in the initial configuration. */
-#define INITIAL_CONFIGURATION_UNIT_DATA_PATH "../data/main" /**< Path for unit data storage. */
-#define INITIAL_CONFIGURATION_UNIT 1048576                  /**< Unit definition for the simulation. */
+#define INITIAL_CONFIGURATION_TENANT_NUMBER 100        /**< Number of tenants in the initial configuration. */
+#define INITIAL_CONFIGURATION_SIMULATION_TIME 5.0      /**< Total simulation time in the initial configuration. */
+#define INITIAL_CONFIGURATION_ERROR 0.001              /**< Error tolerance in the initial configuration. */
+#define INITIAL_CONFIGURATION_DATA_PATH "../data/main" /**< Path for unit data storage. */
+#define INITIAL_CONFIGURATION_UNIT 1048576             /**< Unit definition for the simulation. */
 
 /**
  * @brief Parameters related to traffic generation.
  */
-#define INITIAL_CONFIGURATION_INPUT_RATE (long)1073741824 /**< Input rate for traffic generation. */
-#define INITIAL_CONFIGURATION_TRAFFIC_MODE 0              /**< Traffic mode setting. */
-#define INITIAL_CONFIGURATION_MEAN 120                    /**< Mean value for traffic generation. */
-#define INITIAL_CONFIGURATION_STANDARD_DEVIATION 40       /**< Standard deviation for traffic generation. */
-#define INITIAL_CONFIGURATION_PACKET_SIZE 512             /**< Packet size in bytes. */
+#define INITIAL_CONFIGURATION_INPUT_RATE (long)167772160 /**< Input rate for traffic generation. */
+#define INITIAL_CONFIGURATION_TRAFFIC_MODE 0             /**< Traffic mode setting. */
+#define INITIAL_CONFIGURATION_MEAN 120                   /**< Mean value for traffic generation. */
+#define INITIAL_CONFIGURATION_STANDARD_DEVIATION 40      /**< Standard deviation for traffic generation. */
+#define INITIAL_CONFIGURATION_PACKET_SIZE 512            /**< Packet size in bytes. */
 
 #define INITIAL_CONFIGURATION_NAUGHTY_MEAN 150              /**< Mean traffic for 'naughty' tenants. */
 #define INITIAL_CONFIGURATION_NAUGHTY_STANDARD_DEVIATION 10 /**< Standard deviation for 'naughty' tenants. */
@@ -62,9 +62,9 @@ void reduction_inif_file(const char *filename)
 
     fprintf(file, "[simulation]\n");
     fprintf(file, "tenant_number = %d\n", INITIAL_CONFIGURATION_TENANT_NUMBER);
-    fprintf(file, "simulation_time = %lf\n", INITIAL_CONFIGURATION_SIMULATION_simulation_time);
+    fprintf(file, "simulation_time = %lf\n", INITIAL_CONFIGURATION_SIMULATION_TIME);
     fprintf(file, "error = %f\n", INITIAL_CONFIGURATION_ERROR);
-    fprintf(file, "data_path = ../data/test\n");
+    fprintf(file, "data_path = %s\n", INITIAL_CONFIGURATION_DATA_PATH);
     fprintf(file, "unit = %ld\n", INITIAL_CONFIGURATION_UNIT);
 
     // Write the [traffic] section

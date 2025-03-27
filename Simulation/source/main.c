@@ -4,9 +4,9 @@
 
 // #define CLEAN_DATA_PATH ///< Enable to clean data path before processing
 
-// #define PRINT_GRID_COUNT ///< Enable to print the count of grids during execution
-// #define PRINT_EXECUTION_TIME ///< Enable to print the execution time of processes
-#define PRINT_CAPACITY ///< Enable to print the capacity information
+#define PRINT_GRID_COUNT     ///< Enable to print the count of grids during execution
+#define PRINT_EXECUTION_TIME ///< Enable to print the execution time of processes
+#define PRINT_CAPACITY       ///< Enable to print the capacity information
 // #define PRINT_REGULAR_AND_NAUGHTY ///< Enable to print regular and naughty data
 // #define PRINT_FIRST_INIT_GCRA ///< Enable to print information on the first GCRA initialization
 // #define PRINT_GCRA_UPDATE ///< Enable to print updates related to GCRA
@@ -16,9 +16,9 @@
 #define PRINT_PACKET_LABEL  ///< Enable to print labels for packets processed
 // #define PRINT_DEQUEUE_COUNT ///< Enable to print the count of dequeued items
 
-// #define RECORD_REGULAR_AND_NAUGHTY_TAU ///< Enable to record tau for regular and naughty data
-// #define RECORD_REGULAR_AND_NAUGHTY_ALL ///< Enable to record all regular and naughty data
-#define RECORD_AVERAGE_LOSS ///< Enable to record the average loss during processing
+#define RECORD_REGULAR_AND_NAUGHTY_TAU ///< Enable to record tau for regular and naughty data
+#define RECORD_REGULAR_AND_NAUGHTY_ALL ///< Enable to record all regular and naughty data
+#define RECORD_AVERAGE_LOSS            ///< Enable to record the average loss during processing
 
 /**
  * @file main.c
@@ -81,6 +81,8 @@ int main(int argc, char *argv[])
 #endif
 
     /** @brief Calculates the link capacity. */
+    sprintf(command, "python3 ../python/capacity.py %s 0", CONFIGURATION_PATH);
+    system(command);
     double capacity = obtain_capacity();
 
 #ifdef PRINT_CAPACITY
@@ -93,7 +95,7 @@ int main(int argc, char *argv[])
 
     /** @brief Initializes the traffic generator based on the configuration. */
     traffic_generator generator = initializeTrafficGenerator(config);
-    // showTrafficGenerator(generator);  ///< Uncomment to display generator details.
+    // showTrafficGenerator(generator); ///< Uncomment to display generator details.
 
     /** @brief Number of tenants in the simulation.(Float) */
     int tenant_number = config.tenant_number;

@@ -3,51 +3,51 @@
 
 #define CONFIG_H
 
-/**  
- * @brief Enumeration defining the various traffic modes used for regulating tenant network behavior.  
- */  
-#define TRAFFIC_MODE_INTERVAL 0          /**< All tenants follow the rules: traffic occurs within the specified interval, following a uniform distribution. */
-#define TRAFFIC_MODE_GAUSSIAN 1          /**< All tenants follow the rules: traffic occurs within the specified interval, following a normal distribution. */
-#define TRAFFIC_MODE_ALL_NAUGHTY 2       /**< All tenants violate the rules: the long-term mean traffic exceeds the specified mean (μ), following a uniform distribution. */
-#define TRAFFIC_MODE_NAUGHTY 3           /**< Some tenants violate the rules, while others comply; traffic follows a uniform distribution. */
-#define TRAFFIC_MODE_DENSITY 4           /**< All tenants transmit traffic at the upper bound of the allowed volume. */
-#define TRAFFIC_MODE_BURSTY_ALL 5        /**< Some tenants violate the rules, while others comply; all traffic bursts are determined by a state machine. */
-#define TRAFFIC_MODE_BURSTY_REGULAR 6    /**< Some tenants violate the rules, while others comply; regular tenants' traffic bursts are determined by a state machine. */
-#define TRAFFIC_MODE_BURSTY_NAUGHTY 7    /**< Some tenants violate the rules, while others comply; naughty tenants' traffic bursts are determined by a state machine. */
+/**
+ * @brief Enumeration defining the various traffic modes used for regulating tenant network behavior.
+ */
+#define TRAFFIC_MODE_INTERVAL 0       /**< All tenants follow the rules: traffic occurs within the specified interval, following a uniform distribution. */
+#define TRAFFIC_MODE_GAUSSIAN 1       /**< All tenants follow the rules: traffic occurs within the specified interval, following a normal distribution. */
+#define TRAFFIC_MODE_ALL_NAUGHTY 2    /**< All tenants violate the rules: the long-term mean traffic exceeds the specified mean (μ), following a uniform distribution. */
+#define TRAFFIC_MODE_NAUGHTY 3        /**< Some tenants violate the rules, while others comply; traffic follows a uniform distribution. */
+#define TRAFFIC_MODE_DENSITY 4        /**< All tenants transmit traffic at the upper bound of the allowed volume. */
+#define TRAFFIC_MODE_BURSTY_ALL 5     /**< Some tenants violate the rules, while others comply; all traffic bursts are determined by a state machine. */
+#define TRAFFIC_MODE_BURSTY_REGULAR 6 /**< Some tenants violate the rules, while others comply; regular tenants' traffic bursts are determined by a state machine. */
+#define TRAFFIC_MODE_BURSTY_NAUGHTY 7 /**< Some tenants violate the rules, while others comply; naughty tenants' traffic bursts are determined by a state machine. */
 
 /// @brief Define REDUCTION to recover the default configuration.
 #ifdef REDUCTION
 
-/**  
- * @brief Parameters related to the basic simulation.  
+/**
+ * @brief Parameters related to the basic simulation.
  */
-#define INITIAL_CONFIGURATION_TENANT_NUMBER 100                /**< Number of tenants in the initial configuration. */
-#define INITIAL_CONFIGURATION_SIMULATION_TIME 4                /**< Total simulation time in the initial configuration. */
-#define INITIAL_CONFIGURATION_ERROR 0.001                      /**< Error tolerance in the initial configuration. */
-#define INITIAL_CONFIGURATION_UNIT_DATA_PATH "../data"         /**< Path for unit data storage. */
-#define INITIAL_CONFIGURATION_UNIT 1048576                     /**< Unit definition for the simulation. */
+#define INITIAL_CONFIGURATION_TENANT_NUMBER 100             /**< Number of tenants in the initial configuration. */
+#define INITIAL_CONFIGURATION_SIMULATION_TIME 5             /**< Total simulation time in the initial configuration. */
+#define INITIAL_CONFIGURATION_ERROR 0.001                   /**< Error tolerance in the initial configuration. */
+#define INITIAL_CONFIGURATION_UNIT_DATA_PATH "../data/main" /**< Path for unit data storage. */
+#define INITIAL_CONFIGURATION_UNIT 1048576                  /**< Unit definition for the simulation. */
 
-/**  
- * @brief Parameters related to traffic generation.  
+/**
+ * @brief Parameters related to traffic generation.
  */
-#define INITIAL_CONFIGURATION_INPUT_RATE (long)1073741824      /**< Input rate for traffic generation. */
-#define INITIAL_CONFIGURATION_TRAFFIC_MODE 0                   /**< Traffic mode setting. */
-#define INITIAL_CONFIGURATION_MEAN 120                         /**< Mean value for traffic generation. */
-#define INITIAL_CONFIGURATION_STANDARD_DEVIATION 40           /**< Standard deviation for traffic generation. */
-#define INITIAL_CONFIGURATION_PACKET_SIZE 512                  /**< Packet size in bytes. */
+#define INITIAL_CONFIGURATION_INPUT_RATE (long)1073741824 /**< Input rate for traffic generation. */
+#define INITIAL_CONFIGURATION_TRAFFIC_MODE 0              /**< Traffic mode setting. */
+#define INITIAL_CONFIGURATION_MEAN 120                    /**< Mean value for traffic generation. */
+#define INITIAL_CONFIGURATION_STANDARD_DEVIATION 40       /**< Standard deviation for traffic generation. */
+#define INITIAL_CONFIGURATION_PACKET_SIZE 512             /**< Packet size in bytes. */
 
-#define INITIAL_CONFIGURATION_NAUGHTY_MEAN 140                 /**< Mean traffic for 'naughty' tenants. */
-#define INITIAL_CONFIGURATION_NAUGHTY_STANDARD_DEVIATION 10    /**< Standard deviation for 'naughty' tenants. */
-#define INITIAL_CONFIGURATION_NAUGHTY_TENANT_NUMBER 50         /**< Number of 'naughty' tenants. */
-#define INITIAL_CONFIGURATION_STATE_R (float)0.0               /**< State parameter for traffic generation. */
+#define INITIAL_CONFIGURATION_NAUGHTY_MEAN 150              /**< Mean traffic for 'naughty' tenants. */
+#define INITIAL_CONFIGURATION_NAUGHTY_STANDARD_DEVIATION 10 /**< Standard deviation for 'naughty' tenants. */
+#define INITIAL_CONFIGURATION_NAUGHTY_TENANT_NUMBER 50      /**< Number of 'naughty' tenants. */
+#define INITIAL_CONFIGURATION_STATE_R (float)0.9375         /**< State parameter for traffic generation. */
 
-/**  
- * @brief Parameters related to thresholds.  
- * These values cannot be obtained through formulaic calculations.  
+/**
+ * @brief Parameters related to thresholds.
+ * These values cannot be obtained through formulaic calculations.
  */
-#define INITIAL_CONFIGURATION_UPPER_LINK_BUFFER 1              /**< Upper link buffer size. */
-#define INITIAL_CONFIGURATION_BUCKET_DEPTH 916                 /**< Depth of the bucket buffer. */
-#define INITIAL_CONFIGURATION_LINK_QUEUE_BUFFER 100            /**< (Missing value) Buffer size for link queue. */
+#define INITIAL_CONFIGURATION_UPPER_LINK_BUFFER 1   /**< Upper link buffer size. */
+#define INITIAL_CONFIGURATION_BUCKET_DEPTH 916      /**< Depth of the bucket buffer. */
+#define INITIAL_CONFIGURATION_LINK_QUEUE_BUFFER 100 /**< (Missing value) Buffer size for link queue. */
 
 // modifiy the specified path configuration file to the default configuration
 void reduction_inif_file(const char *filename)
@@ -104,23 +104,23 @@ typedef struct
     long unit;                 // Unit of measurement (e.g., Mbps, Gbps)
 
     // Traffic settings
-    long input_rate;           // Input traffic rate
-    int traffic_mode;          // Traffic mode (e.g., constant, Gaussian)
-    int mean;                  // Mean value for traffic characteristics
-    int standard_deviation;    // Standard deviation for traffic distribution
-    int packet_size;           // Size of traffic packets
+    long input_rate;        // Input traffic rate
+    int traffic_mode;       // Traffic mode (e.g., constant, Gaussian)
+    int mean;               // Mean value for traffic characteristics
+    int standard_deviation; // Standard deviation for traffic distribution
+    int packet_size;        // Size of traffic packets
 
     // Naughty traffic settings (non-standard or outlier traffic)
-    int naughty_mean;          // Mean value for naughty traffic
+    int naughty_mean;               // Mean value for naughty traffic
     int naughty_standard_deviation; // Standard deviation for naughty traffic
-    int naughty_tenant_number; // Number of tenants generating naughty traffic
+    int naughty_tenant_number;      // Number of tenants generating naughty traffic
 
     // Threshold and flow control settings
-    double state_r;            // State variable for traffic control
+    double state_r; // State variable for traffic control
 
-    long upper_queue_buffer;   // Upper queue buffer size
-    long tau;                  // Time constant or threshold value
-    int link_queue_buffer;     // Link queue buffer size
+    long upper_queue_buffer; // Upper queue buffer size
+    long tau;                // Time constant or threshold value
+    int link_queue_buffer;   // Link queue buffer size
 } configuration;
 
 /**
@@ -300,7 +300,7 @@ void show_configuration(const configuration config)
         printf("| naughty tenant number      : %-d\n", config.naughty_tenant_number);
     }
 
-    if(config.traffic_mode > TRAFFIC_MODE_DENSITY)
+    if (config.traffic_mode > TRAFFIC_MODE_DENSITY)
         printf("| state r                    : %-f\n", config.state_r);
 
     printf("- Threshold :\n");
@@ -308,4 +308,4 @@ void show_configuration(const configuration config)
     printf("| tau                        : %-ld\n", config.tau);
     printf("| link_queue_buffer          : %-d\n", config.link_queue_buffer);
 }
-#endif 
+#endif

@@ -45,7 +45,8 @@
         "string": "c",
         "unordered_map": "c",
         "iterator": "c",
-        "ioctl.h": "c"
+        "ioctl.h": "c",
+        "algorithm": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true

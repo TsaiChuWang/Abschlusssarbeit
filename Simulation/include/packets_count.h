@@ -24,6 +24,16 @@
  */
 #define RECORD_AVERAGE_LOSS_HEADER "tau,naughty_mean,naughty_tenant_number,state_r,upper_queue_buffer,link_queue_buffer,average_loss\n"
 
+/**
+ * @def RECORD_PACKET_SITUATION_HEADER
+ * @brief Header for the packet situation record.
+ *
+ * This macro defines the header line for the packet situation log,
+ * indicating the columns for packets and dequeue status.
+ */
+#define RECORD_PACKET_SITUATION_HEADER "packets,dequeue\n"
+
+
 #ifdef PACKETS_COUNT_H
 
 /**
@@ -305,5 +315,41 @@ void record_average_loss(packets_label label, const configuration config)
   fprintf(file, "%ld, %d, %d, %f, %d, %d, %f\n", config.tau, config.naughty_mean, config.naughty_tenant_number, config.state_r, config.upper_queue_buffer, config.link_queue_buffer, average_loss);
   fclose(file); /**< Close the file after writing. */
 }
+
+/**
+ * @brief Records the packet situation in a CSV file.
+ *
+ * This function appends the number of accepted packets and the dequeue count
+ * to a CSV file specified in the configuration.
+ *
+ * @param packets Pointer to an array of packet labels.
+ * @param dequeue_count The count of packets that were dequeued.
+ * @param config A configuration structure containing the data path and tenant number.
+ */
+void record_packet_situation_agrid(int* packets, const int dequeue_count, const configuration config)
+{
+    char file_path[MAX_PATH_LENGTH];
+    sprintf(file_path, "%s/record_packet_situation.csv", config.data_path);
+
+    FILE *file = fopen(file_path, "a");
+    if (!file)
+    {
+        perror("Error opening file"); /**< Handle file open errors. */
+        exit(EXIT_FAILURE);
+    }
+
+    int packet_number = 0;
+    
+    for (int index = 0; index < config.tenant_number; index++)
+    {
+        if (*(packets + index) == PACKET_LABEL_ACCEPT)
+            packet_number += 1; 
+    }
+
+    // Append the results to the CSV file.
+    fprintf(file, "%d, %d\n", packet_number, dequeue_count);
+    fclose(file); /**< Close the file after writing. */
+}
+
 
 #endif /* PACKETS_COUNT_H */

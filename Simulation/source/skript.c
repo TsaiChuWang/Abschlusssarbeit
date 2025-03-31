@@ -4,8 +4,11 @@
 #define BURSTY_REGULAR 2
 #define BURSTY_NAUGHTY 3
 
+#define TRAFFIC_BRUSTY_SITUATION 4
+
 #define INTERVAL 0
 #define NAUGHTY 1
+
 
 #define REDUCTION
 
@@ -65,7 +68,17 @@ int main(int argc, char *argv[])
             system("python3 ../python/average_loss.py");
         }
         break;
+    case TRAFFIC_BRUSTY_SITUATION:
+        double state_r_step = 0.01;
+        config.traffic_mode = TRAFFIC_MODE_BURSTY_ALL;
+        config.naughty_mean = 140;
+        for(double state_r = 0.9675; state_r<0.99;state_r+=state_r_step){
+            config.state_r = state_r;
+            modify_ini_file(CONFIGURATION_PATH, &config);
 
+            system("../execution/main");
+        }
+        break;
     default:
         long step = 32;
         for (long tau = 0; tau <= 51200; tau += step)

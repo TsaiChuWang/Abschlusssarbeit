@@ -19,6 +19,7 @@
 #define RECORD_REGULAR_AND_NAUGHTY_TAU ///< Enable to record tau for regular and naughty data
 #define RECORD_REGULAR_AND_NAUGHTY_ALL ///< Enable to record all regular and naughty data
 #define RECORD_AVERAGE_LOSS            ///< Enable to record the average loss during processing
+#define RECORD_PACKETS_SITUATION       ///< Macro for recording packet situations.
 
 /**
  * @file main.c
@@ -42,7 +43,7 @@
 #define NAME "main" ///< Name of the application
 
 // gcc ./main.c inih/ini.c -o ../execution/main -lm ///< Command to compile the application
-// ../execution/main [traffic_generation_code] ///< Command to execute the compiled application with traffic generation code
+// ../execution/main///< Command to execute the compiled application with traffic generation code
 
 int main(int argc, char *argv[])
 {
@@ -135,6 +136,29 @@ int main(int argc, char *argv[])
     int grid_counts = 0;
     int drop_tenant = UNFOUND;
 
+#ifdef RECORD_PACKETS_SITUATION 
+    /**
+     * @brief Creates and opens a CSV file for recording packet situations.
+     *
+     * This block of code defines the file path for the packet situation 
+     * CSV file, opens it for writing, and handles any errors that occur 
+     * during file operations.
+     */
+    char file_path_packet_situation[MAX_PATH_LENGTH];
+    sprintf(file_path_packet_situation, "%s/record_packet_situation.csv", config.data_path);
+
+    FILE *file = fopen(file_path_packet_situation, "w+");
+    if (!file)
+    {
+        perror("Error opening file"); /**< Handle file open errors. */
+        exit(EXIT_FAILURE);
+    }
+    
+    fprintf(file, RECORD_PACKET_SITUATION_HEADER); // Placeholder for writing data to the file.
+    fclose(file);
+#endif
+
+
     /**
      * @brief Main loop for simulating the traffic over time.
      * @details This loop runs until the timestamp exceeds the total simulation time.
@@ -176,6 +200,14 @@ int main(int argc, char *argv[])
 #ifdef PRINT_EACH_GRID_PACKET
         print_packets(packets, config.tenant_number);
 #endif
+
+#ifdef RECORD_PACKETS_SITUATION 
+    /**
+     * @brief Records the packet situation if RECORD_PACKETS_SITUATION is defined.
+     */
+    record_packet_situation_agrid(packets, dequeue_count, config);
+#endif
+
 
         for (int tenant = 0; tenant < tenant_number; tenant++)
         {
@@ -321,6 +353,10 @@ int main(int argc, char *argv[])
 
 #ifdef RECORD_AVERAGE_LOSS
     record_average_loss(label, config);
+#endif
+
+#ifdef RECORD_PACKETS_SITUATION 
+    system("python3 ../python/packet_situation.py");
 #endif
 
 #ifdef PRINT_EXECUTION_TIME

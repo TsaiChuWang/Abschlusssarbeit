@@ -9,7 +9,6 @@
 #define INTERVAL 0
 #define NAUGHTY 1
 
-
 #define REDUCTION
 
 #include "../include/general.h"
@@ -51,13 +50,16 @@ int main(int argc, char *argv[])
     fclose(file);
 
     reduction_inif_file(CONFIGURATION_PATH);
+
+    long step = 32;
+    double state_r_step = 0.01;
     switch (atoi(argv[1]))
     {
     case UNIFORM_DISTRIBUTION:
         if (atoi(argv[2]) == INTERVAL)
         {
-            long step = 32;
-            for (long tau = 0; tau <= 51200; tau += step)
+
+            for (long tau = 0; tau <= 25600; tau += step)
             {
                 config.tau = tau;
                 modify_ini_file(CONFIGURATION_PATH, &config);
@@ -69,15 +71,36 @@ int main(int argc, char *argv[])
         }
         break;
     case TRAFFIC_BRUSTY_SITUATION:
-        double state_r_step = 0.01;
         config.traffic_mode = TRAFFIC_MODE_BURSTY_ALL;
         config.naughty_mean = 140;
-        for(double state_r = 0.9675; state_r<0.99;state_r+=state_r_step){
+        for (double state_r = 0.9675; state_r < 0.99; state_r += state_r_step)
+        {
             config.state_r = state_r;
             modify_ini_file(CONFIGURATION_PATH, &config);
 
             system("../execution/main");
         }
+
+        break;
+
+    case BURSTY_ALL:
+        config.traffic_mode = TRAFFIC_MODE_BURSTY_ALL;
+        config.naughty_tenant_number = 50;
+        config.naughty_mean = 150;
+        for (long tau = 0; tau <= 25600; tau += step)
+        {
+            for (double state_r = 0.9675; state_r < 0.99; state_r += state_r_step)
+            {
+                config.tau = tau;
+                config.state_r = state_r;
+                modify_ini_file(CONFIGURATION_PATH, &config);
+
+                system("../execution/main");
+            }
+
+            system("python3 ../python/average_loss_all.py");
+        }
+
         break;
     default:
         long step = 32;

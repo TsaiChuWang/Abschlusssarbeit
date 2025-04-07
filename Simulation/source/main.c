@@ -7,7 +7,7 @@
 #define PRINT_GRID_COUNT     ///< Enable to print the count of grids during execution
 #define PRINT_EXECUTION_TIME ///< Enable to print the execution time of processes
 #define PRINT_CAPACITY       ///< Enable to print the capacity information
-// #define PRINT_REGULAR_AND_NAUGHTY ///< Enable to print regular and naughty data
+#define PRINT_REGULAR_AND_NAUGHTY ///< Enable to print regular and naughty data
 // #define PRINT_FIRST_INIT_GCRA ///< Enable to print information on the first GCRA initialization
 // #define PRINT_GCRA_UPDATE ///< Enable to print updates related to GCRA
 // #define PRINT_EACH_TIMESTAMP ///< Enable to print each timestamp during execution

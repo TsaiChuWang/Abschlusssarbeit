@@ -228,11 +228,11 @@ void record_regular_and_naughty_tau(packets_label label, const configuration con
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
     if (tenant >= config.naughty_tenant_number)
     {
-      naughty_Loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for naughty tenants. */
+      naughty_Loss += (double)(label.labels[tenant][3])  / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for naughty tenants. */
     }
     else
     {
-      regular_Loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for regular tenants. */
+      regular_Loss += (double)(label.labels[tenant][3])  / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for regular tenants. */
     }
 
   // Append the results to the CSV file.
@@ -269,11 +269,11 @@ void record_regular_and_naughty_all(packets_label label, const configuration con
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
     if (tenant >= (label.tenant_number - config.naughty_tenant_number))
     {
-      naughty_Loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for naughty tenants. */
+      naughty_Loss += (double)(label.labels[tenant][3])  / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for naughty tenants. */
     }
     else
     {
-      regular_Loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for regular tenants. */
+      regular_Loss += (double)(label.labels[tenant][3])  / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for regular tenants. */
     }
 
   // Append the results to the CSV file with additional configuration details.
@@ -308,7 +308,7 @@ void record_average_loss(packets_label label, const configuration config)
   // Loop through each tenant and calculate the average loss.
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
   {
-    average_loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate average loss percentage. */
+    average_loss += (double)(label.labels[tenant][3]) / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate average loss percentage. */
   }
 
   // Append the results to the CSV file.

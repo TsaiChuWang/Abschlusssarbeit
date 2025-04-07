@@ -4,7 +4,7 @@
  *
  * This header file declares the `traffic_generator` structure, which is used
  * for managing traffic generation parameters and associated state machines.
- * 
+ *
  * The file includes the necessary header for the state machine functionality
  * and defines a macro for ensuring proper inclusion guards.
  */
@@ -20,7 +20,7 @@
  *
  * This structure holds the configuration for the traffic generator, including
  * the step size, the number of grids, and the probabilities for packet generation.
- * It also contains a pointer to an array of `state_machine` structures, which are 
+ * It also contains a pointer to an array of `state_machine` structures, which are
  * used to track the state of the traffic generation process.
  */
 typedef struct
@@ -31,14 +31,14 @@ typedef struct
     double generate_probability;         /**< Probability for generating a packet. */
     double generate_probability_naughty; /**< Probability for generating a "naughty" packet. */
 
-    state_machine* states; /**< Pointer to an array of state machines. */
+    state_machine *states; /**< Pointer to an array of state machines. */
 } traffic_generator;
 
 /**
  * @brief Initializes a traffic generator with configuration parameters.
  *
- * This function computes the necessary traffic generation parameters, such as 
- * the step size, grid number, and generation probabilities. It also initializes 
+ * This function computes the necessary traffic generation parameters, such as
+ * the step size, grid number, and generation probabilities. It also initializes
  * the state machines based on the configuration, depending on the traffic mode.
  *
  * @param config Configuration structure containing the parameters for traffic generation.
@@ -49,21 +49,24 @@ traffic_generator initializeTrafficGenerator(const configuration config)
     traffic_generator generate;
 
     double temp = 0;
-    temp = (double)ONE_SECOND_IN_NS / config.input_rate; /**< Calculate time per packet. */
-    generate.step_size = (TIME_TYPE)(config.packet_size * temp); /**< Calculate the step size. */
+    temp = (double)ONE_SECOND_IN_NS / config.input_rate;                           /**< Calculate time per packet. */
+    generate.step_size = (TIME_TYPE)(config.packet_size * temp);                   /**< Calculate the step size. */
     generate.grids_number = (long)((double)ONE_SECOND_IN_NS / generate.step_size); /**< Calculate the number of grids. */
 
     long unit = config.unit;
-    generate.generate_probability = (double)config.mean * unit / config.input_rate; /**< Calculate the generation probability. */
+    generate.generate_probability = (double)config.mean * unit / config.input_rate;                 /**< Calculate the generation probability. */
     generate.generate_probability_naughty = (double)config.naughty_mean * unit / config.input_rate; /**< Calculate the naughty packet generation probability. */
 
-    /** 
+    /**
      * Initialize state machines based on the traffic mode.
      * States are only initialized for bursty traffic modes.
      */
-    if (config.traffic_mode == TRAFFIC_MODE_BURSTY_ALL || config.traffic_mode == TRAFFIC_MODE_BURSTY_REGULAR || config.traffic_mode == TRAFFIC_MODE_BURSTY_NAUGHTY) {
-        generate.states = initialize_state_machines(config.state_r, generate.generate_probability, generate.generate_probability_naughty, config.tenant_number, config.naughty_tenant_number);
-    } else {
+    if (config.traffic_mode == TRAFFIC_MODE_BURSTY_ALL || config.traffic_mode == TRAFFIC_MODE_BURSTY_REGULAR || config.traffic_mode == TRAFFIC_MODE_BURSTY_NAUGHTY)
+    {
+        generate.states = initialize_state_machines(generate.generate_probability, generate.generate_probability_naughty, config);
+    }
+    else
+    {
         generate.states = NULL; /**< No state machines are created for non-bursty traffic modes. */
     }
 
@@ -72,42 +75,42 @@ traffic_generator initializeTrafficGenerator(const configuration config)
 
 /**
  * @brief Calculate the total number of grids required for the simulation.
- * @details This function calculates the number of grids based on the time interval to transmit a packet 
- *          and the total simulation time. The number of grids is computed by dividing one second 
+ * @details This function calculates the number of grids based on the time interval to transmit a packet
+ *          and the total simulation time. The number of grids is computed by dividing one second
  *          by the packet transmission time, then multiplying by the simulation time.
- * 
+ *
  * @param config The configuration structure containing the packet size, input rate, and simulation time.
  * @return long The total number of grids for the simulation.
  */
 long obtain_grids_number(const configuration config)
 {
-    double time_interval = (double)config.packet_size*(double)ONE_SECOND_IN_NS/(double)config.input_rate; // Time interval that transmit a packet
-    long grids_number = (long)((double)ONE_SECOND_IN_NS/time_interval);
-    return  grids_number*config.simulation_time+1;
+    double time_interval = (double)config.packet_size * (double)ONE_SECOND_IN_NS / (double)config.input_rate; // Time interval that transmit a packet
+    long grids_number = (long)((double)ONE_SECOND_IN_NS / time_interval);
+    return grids_number * config.simulation_time + 1;
 }
 
 /**
  * @brief Displays the traffic generator parameters.
  *
- * This function prints the current parameters of the `traffic_generator` structure, 
+ * This function prints the current parameters of the `traffic_generator` structure,
  * including the step size, number of grids, and packet generation probabilities.
  *
  * @param generate The `traffic_generator` structure containing the traffic generation parameters.
  */
 void showTrafficGenerator(const traffic_generator generate)
 {
-    printf("| step_size                    : %-lF\n", generate.step_size); /**< Print step size. */
-    printf("| grids_number                 : %-ld\n", generate.grids_number); /**< Print number of grids. */
-    printf("| generate_probability         : %-f\n", generate.generate_probability); /**< Print generation probability. */
+    printf("| step_size                    : %-lF\n", generate.step_size);                   /**< Print step size. */
+    printf("| grids_number                 : %-ld\n", generate.grids_number);                /**< Print number of grids. */
+    printf("| generate_probability         : %-f\n", generate.generate_probability);         /**< Print generation probability. */
     printf("| generate_probability_naughty : %-f\n", generate.generate_probability_naughty); /**< Print naughty packet generation probability. */
 }
- 
+
 /**
  * @brief Simulates a uniform distribution for packet acceptance.
  *
- * This function generates a random number between 0 and 1 using `drand48()`, 
- * and compares it with the given `probability`. If the generated number is less 
- * than or equal to the probability, the function returns `PACKET_LABEL_ACCEPT`; 
+ * This function generates a random number between 0 and 1 using `drand48()`,
+ * and compares it with the given `probability`. If the generated number is less
+ * than or equal to the probability, the function returns `PACKET_LABEL_ACCEPT`;
  * otherwise, it returns `PACKET_LABEL_NO_PACKET`.
  *
  * @param probability The probability threshold for accepting a packet (between 0 and 1).
@@ -130,7 +133,7 @@ int uniform_distribution(double probability)
 /**
  * @brief Generates packet acceptance based on uniform distribution for traffic mode = TRAFFIC_MODE_INTERVAL.
  *
- * This function generates packets for a given number of tenants based on a uniform distribution. 
+ * This function generates packets for a given number of tenants based on a uniform distribution.
  * Each tenant's packet acceptance is determined by a random probability.
  *
  * @param probability The probability for packet acceptance.
@@ -150,7 +153,7 @@ int *packet_generation_uniform(double probability, int tenant_number)
 /**
  * @brief Generates packets with a "naughty" probability for traffic mode = TRAFFIC_MODE_NAUGHTY.
  *
- * This function generates packets for a given number of tenants based on their probability 
+ * This function generates packets for a given number of tenants based on their probability
  * of being "naughty" or regular, depending on whether the tenant index is within the "naughty" tenant range.
  *
  * @param generator The traffic generator containing the states and probabilities.
@@ -163,7 +166,7 @@ int *packet_generation_naughty(traffic_generator generator, const configuration 
     for (int index = 0; index < config.tenant_number; index++)
     {
         // Naughty tenants use a different probability for packet generation.
-        if (index >= (config.tenant_number-config.naughty_tenant_number))
+        if (is_naughty_index(index, config))
             *(packets + index) = uniform_distribution(generator.generate_probability_naughty);
         else
             *(packets + index) = uniform_distribution(generator.generate_probability);
@@ -185,7 +188,7 @@ int *packet_generation_all_naughty(double ratio_naughty, int tenant_number)
     int *packets = (int *)malloc(sizeof(int) * tenant_number); /**< Allocate memory for packet array. */
     for (int index = 0; index < tenant_number; index++)
     {
-       *(packets + index) = uniform_distribution(ratio_naughty); /**< Generate packets based on naughty probability. */
+        *(packets + index) = uniform_distribution(ratio_naughty); /**< Generate packets based on naughty probability. */
     }
     return packets; /**< Return the generated packet array. */
 }
@@ -193,7 +196,7 @@ int *packet_generation_all_naughty(double ratio_naughty, int tenant_number)
 /**
  * @brief Generates packets based on density and a normal distribution for traffic mode = TRAFFIC_MODE_DENSITY.
  *
- * This function generates packets for a given number of tenants based on the traffic density, 
+ * This function generates packets for a given number of tenants based on the traffic density,
  * considering both mean and standard deviation values for packet acceptance.
  *
  * @param config The configuration containing mean, standard deviation, and other parameters.
@@ -205,12 +208,12 @@ int *packet_generation_density(const configuration config)
 
     // Calculate the packet generation probability based on density.
     double probability = (double)(config.mean + config.standard_deviation) * config.unit / config.input_rate;
-    if(probability > 1.0)
+    if (probability > 1.0)
         probability = 1.0; /**< Ensure probability does not exceed 1.0. */
 
     for (int index = 0; index < config.tenant_number; index++)
     {
-        *(packets+index) = uniform_distribution(probability); /**< Generate packets based on calculated probability. */
+        *(packets + index) = uniform_distribution(probability); /**< Generate packets based on calculated probability. */
     }
     return packets; /**< Return the generated packet array. */
 }
@@ -218,24 +221,24 @@ int *packet_generation_density(const configuration config)
 /**
  * @brief Generates packets for all tenants based on bursty traffic for traffic mode = TRAFFIC_MODE_BURSTY_ALL.
  *
- * This function generates packets based on bursty traffic mode. The state machine is used to determine whether 
+ * This function generates packets based on bursty traffic mode. The state machine is used to determine whether
  * each tenant should create a packet or not.
  *
  * @param states The array of state machines for each tenant.
  * @param config The configuration containing the number of tenants.
  * @return A dynamically allocated array of integers representing packet acceptance for each tenant.
  */
-int *packet_generation_brusty_all(state_machine* states, const configuration config)
+int *packet_generation_brusty_all(state_machine *states, const configuration config)
 {
     int *packets = (int *)malloc(sizeof(int) * config.tenant_number); /**< Allocate memory for packet array. */
 
     change_states(states, config.tenant_number); /**< Update states for all tenants. */
     for (int index = 0; index < config.tenant_number; index++)
     {
-        if((states+index)->state == STATE_CREATE_PACKET)
-            *(packets+index) = PACKET_LABEL_ACCEPT; /**< Accept packet if state is STATE_CREATE_PACKET. */
-        else 
-            *(packets+index) = PACKET_LABEL_NO_PACKET; /**< Otherwise, reject packet. */
+        if ((states + index)->state == STATE_CREATE_PACKET)
+            *(packets + index) = PACKET_LABEL_ACCEPT; /**< Accept packet if state is STATE_CREATE_PACKET. */
+        else
+            *(packets + index) = PACKET_LABEL_NO_PACKET; /**< Otherwise, reject packet. */
     }
     return packets; /**< Return the generated packet array. */
 }
@@ -257,14 +260,14 @@ int *packet_generation_brusty_regular(traffic_generator generator, const configu
     change_states(generator.states, config.tenant_number); /**< Update states for all tenants. */
     for (int index = 0; index < config.tenant_number; index++)
     {
-        if (index >= (config.tenant_number-config.naughty_tenant_number))
+        if (is_naughty_index(index, config))
             *(packets + index) = uniform_distribution(generator.generate_probability_naughty); /**< Naughty tenants use naughty probability. */
         else
         {
-            if((generator.states+index)->state == STATE_CREATE_PACKET)
-                *(packets+index) = PACKET_LABEL_ACCEPT; /**< Regular tenants accept packets if state is STATE_CREATE_PACKET. */
-            else 
-                *(packets+index) = PACKET_LABEL_NO_PACKET; /**< Otherwise, reject packet. */
+            if ((generator.states + index)->state == STATE_CREATE_PACKET)
+                *(packets + index) = PACKET_LABEL_ACCEPT; /**< Regular tenants accept packets if state is STATE_CREATE_PACKET. */
+            else
+                *(packets + index) = PACKET_LABEL_NO_PACKET; /**< Otherwise, reject packet. */
         }
     }
     return packets; /**< Return the generated packet array. */
@@ -287,12 +290,12 @@ int *packet_generation_brusty_naughty(traffic_generator generator, const configu
     change_states(generator.states, config.tenant_number); /**< Update states for all tenants. */
     for (int index = 0; index < config.tenant_number; index++)
     {
-        if (index >= (config.tenant_number-config.naughty_tenant_number))
+        if (is_naughty_index(index, config))
         {
-            if((generator.states+index)->state == STATE_CREATE_PACKET)
-                *(packets+index) = PACKET_LABEL_ACCEPT; /**< Accept packet if state is STATE_CREATE_PACKET for naughty tenants. */
-            else 
-                *(packets+index) = PACKET_LABEL_NO_PACKET; /**< Otherwise, reject packet. */
+            if ((generator.states + index)->state == STATE_CREATE_PACKET)
+                *(packets + index) = PACKET_LABEL_ACCEPT; /**< Accept packet if state is STATE_CREATE_PACKET for naughty tenants. */
+            else
+                *(packets + index) = PACKET_LABEL_NO_PACKET; /**< Otherwise, reject packet. */
         }
         else
         {
@@ -305,62 +308,63 @@ int *packet_generation_brusty_naughty(traffic_generator generator, const configu
 /**
  * @brief Generates packets for different traffic modes based on the provided configuration.
  *
- * This function selects the appropriate packet generation method based on the traffic mode 
- * specified in the configuration. It handles several traffic modes such as uniform, 
+ * This function selects the appropriate packet generation method based on the traffic mode
+ * specified in the configuration. It handles several traffic modes such as uniform,
  * naughty, bursty, and density.
  *
  * @param generator The traffic generator containing state machines and generation probabilities.
  * @param config The configuration containing traffic mode and tenant details.
  * @return A dynamically allocated array of integers representing packet acceptance for each tenant.
  */
-int* packet_generation_configuration(traffic_generator generator, const configuration config)
+int *packet_generation_configuration(traffic_generator generator, const configuration config)
 {
-    int* packets;
-    
+    int *packets;
+
     // Select packet generation method based on the traffic mode.
-    switch(config.traffic_mode){
-        case TRAFFIC_MODE_INTERVAL:
-            packets = packet_generation_uniform(generator.generate_probability, config.tenant_number);
-            break;
+    switch (config.traffic_mode)
+    {
+    case TRAFFIC_MODE_INTERVAL:
+        packets = packet_generation_uniform(generator.generate_probability, config.tenant_number);
+        break;
 
-        case TRAFFIC_MODE_NAUGHTY:
-            packets = packet_generation_naughty(generator, config);
-            break;
+    case TRAFFIC_MODE_NAUGHTY:
+        packets = packet_generation_naughty(generator, config);
+        break;
 
-        case TRAFFIC_MODE_ALL_NAUGHTY:
-            packets = packet_generation_all_naughty(generator.generate_probability_naughty, config.tenant_number);
-            break;
+    case TRAFFIC_MODE_ALL_NAUGHTY:
+        packets = packet_generation_all_naughty(generator.generate_probability_naughty, config.tenant_number);
+        break;
 
-        case TRAFFIC_MODE_DENSITY:
-            packets = packet_generation_density(config);
-            break;
+    case TRAFFIC_MODE_DENSITY:
+        packets = packet_generation_density(config);
+        break;
 
-        case TRAFFIC_MODE_BURSTY_ALL:
-            packets = packet_generation_brusty_all(generator.states, config);
-            break;
+    case TRAFFIC_MODE_BURSTY_ALL:
+        packets = packet_generation_brusty_all(generator.states, config);
+        break;
 
-        case TRAFFIC_MODE_BURSTY_REGULAR:
-            packets = packet_generation_brusty_regular(generator, config);
-            break;
+    case TRAFFIC_MODE_BURSTY_REGULAR:
+        packets = packet_generation_brusty_regular(generator, config);
+        break;
 
-        case TRAFFIC_MODE_BURSTY_NAUGHTY:
-            packets = packet_generation_brusty_naughty(generator, config);
-            break;
+    case TRAFFIC_MODE_BURSTY_NAUGHTY:
+        packets = packet_generation_brusty_naughty(generator, config);
+        break;
 
-        default:
-            // Handle unexpected traffic modes
-            printf(RED_ELOG"TRAFFIC MODE ERROR : CODE DOES NOT EXIST!\n"RESET);
-            exit(EXIT_FAILURE);
+    default:
+        // Handle unexpected traffic modes
+        printf(RED_ELOG "TRAFFIC MODE ERROR : CODE DOES NOT EXIST!\n" RESET);
+        exit(EXIT_FAILURE);
     }
-    
+
     return packets; /**< Return the generated packet array. */
 }
 
 /**
  * @brief Prints the generated packet information for each tenant and calculates the sum of accepted packets.
  *
- * This function prints the packet acceptance information for each tenant, showing whether a 
- * packet was accepted or not. It also calculates and displays the total number of accepted packets 
+ * This function prints the packet acceptance information for each tenant, showing whether a
+ * packet was accepted or not. It also calculates and displays the total number of accepted packets
  * and the acceptance ratio.
  *
  * @param packets A pointer to the array of packet acceptance values for each tenant.
@@ -369,7 +373,7 @@ int* packet_generation_configuration(traffic_generator generator, const configur
 void print_packets(int *packets, long tenant_number)
 {
     long sum = 0; /**< Variable to store the sum of accepted packets. */
-    
+
     // Iterate over all tenants to print their packet acceptance information.
     for (long index = 0; index < tenant_number; index++)
     {
@@ -413,7 +417,7 @@ void print_packets(int *packets, long tenant_number)
 //         break;
 
 //         case TRAFFIC_MODE_BURSTY_REGULAR:
-//             packets = packet_generation_brusty_regular(generator, config);  
+//             packets = packet_generation_brusty_regular(generator, config);
 //         break;
 
 //         case TRAFFIC_MODE_BURSTY_NAUGHTY:

@@ -22,16 +22,18 @@ datas = []
 n = 800
 for key in kind_key:
     datas.append(dataframe[dataframe['state_r'] == key][['average_loss']])
+    arr = dataframe[dataframe['state_r'] == key][['average_loss']]
+    darr = arr/100
+
     if(key == 0.9775):
-        plt.plot(tau[:n],dataframe[dataframe['state_r'] == key][['average_loss']][:n], linestyle='-', label='r = '+str(key), alpha = 0.5)
+        plt.plot(tau[:n],darr[:n], linestyle='-', label='r = '+str(key), alpha = 0.5)
     else:
-        plt.plot(tau[:n],dataframe[dataframe['state_r'] == key][['average_loss']][:n], linestyle='-', label='r = '+str(key), alpha = 1)
+        plt.plot(tau[:n],darr[:n], linestyle='-', label='r = '+str(key), alpha = 1)
 
 plt.plot(tau[:n], [0.1 for i in tau][:n], linestyle='-', color = 'red', label='ε')
 
-plt.title('Average Packet Loss with different τ and r value (All Regular)')
-
-plt.xlabel('τ')
+# plt.title('Average Packet Loss with different τ and r value (All Regular)')
+plt.title('Average Packet Loss with different τ and r value (Naughty 150)')
 plt.ylabel('Loss (%)')
 plt.legend()
 plt.grid(True)

@@ -51,14 +51,14 @@ int main(int argc, char *argv[])
 
     reduction_inif_file(CONFIGURATION_PATH);
 
-    long step = 32;
+    long step = 512;
     double state_r_step = 0.01;
     switch (atoi(argv[1]))
     {
     case UNIFORM_DISTRIBUTION:
         if (atoi(argv[2]) == INTERVAL)
         {
-
+            config.traffic_mode = TRAFFIC_MODE_INTERVAL;
             for (long tau = 0; tau <= 25600; tau += step)
             {
                 config.tau = tau;
@@ -68,6 +68,19 @@ int main(int argc, char *argv[])
             }
 
             system("python3 ../python/average_loss.py");
+        }else{
+            config.traffic_mode = TRAFFIC_MODE_NAUGHTY;
+            config.naughty_mean = 150;
+
+            for (long tau = 0; tau <= 25600; tau += step)
+            {
+                config.tau = tau;
+                modify_ini_file(CONFIGURATION_PATH, &config);
+
+                system("../execution/main");
+            }
+
+            system("python3 ../python/regular_and_naughty_all.py ");
         }
         break;
     case TRAFFIC_BRUSTY_SITUATION:

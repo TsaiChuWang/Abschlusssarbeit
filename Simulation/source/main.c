@@ -331,7 +331,7 @@ int main(int argc, char *argv[])
 #ifdef PRINT_REGULAR_AND_NAUGHTY
     if (config.traffic_mode == TRAFFIC_MODE_NAUGHTY || config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL)
     {
-        print_regular_and_naughty(label, config.naughty_tenant_number);
+        print_regular_and_naughty(label, config);
     }
 #endif
 

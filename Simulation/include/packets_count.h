@@ -33,7 +33,6 @@
  */
 #define RECORD_PACKET_SITUATION_HEADER "packets,dequeue\n"
 
-
 #ifdef PACKETS_COUNT_H
 
 /**
@@ -174,7 +173,7 @@ void show_packets_label(packets_label label)
  * @param label The `packets_label` structure containing the packet label statistics for each tenant.
  * @param naughty_tenant_number The number of naughty tenants, used to separate regular and naughty tenants.
  */
-void print_regular_and_naughty(packets_label label, int naughty_tenant_number)
+void print_regular_and_naughty(packets_label label, const configuration config)
 {
   double naughty_GCRA = 0;
   double naughty_Loss = 0;
@@ -183,7 +182,8 @@ void print_regular_and_naughty(packets_label label, int naughty_tenant_number)
 
   // Loop through each tenant and accumulate statistics based on their type (regular or naughty).
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
-    if (tenant >= (label.tenant_number - naughty_tenant_number))
+
+    if (is_naughty_index(tenant, config))
     {
       naughty_GCRA += label.labels[tenant][2];                                                                         /**< Accumulate GCRA for naughty tenants. */
       naughty_Loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for naughty tenants. */
@@ -195,8 +195,8 @@ void print_regular_and_naughty(packets_label label, int naughty_tenant_number)
     }
 
   // Print the GCRA and loss statistics for regular and naughty tenants.
-  printf("regular : GCRA : %-7.12f Loss :%-7.12f% \n", regular_GCRA / (label.tenant_number - naughty_tenant_number), regular_Loss / (label.tenant_number - naughty_tenant_number));
-  printf("naughty : GCRA : %-7.12f Loss :%-7.12f% \n", naughty_GCRA / naughty_tenant_number, naughty_Loss / naughty_tenant_number);
+  printf("regular : GCRA : %-7.12f Loss :%-7.12f% \n", regular_GCRA / (label.tenant_number - config.naughty_tenant_number), regular_Loss / (label.tenant_number - config.naughty_tenant_number));
+  printf("naughty : GCRA : %-7.12f Loss :%-7.12f% \n", naughty_GCRA / config.naughty_tenant_number, naughty_Loss / config.naughty_tenant_number);
 }
 
 /**
@@ -226,13 +226,13 @@ void record_regular_and_naughty_tau(packets_label label, const configuration con
 
   // Loop through each tenant and calculate the loss percentage for regular and naughty tenants.
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
-    if (tenant >= config.naughty_tenant_number)
+    if (is_naughty_index(tenant, config))
     {
-      naughty_Loss += (double)(label.labels[tenant][3])  / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for naughty tenants. */
+      naughty_Loss += (double)(label.labels[tenant][3]) / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for naughty tenants. */
     }
     else
     {
-      regular_Loss += (double)(label.labels[tenant][3])  / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for regular tenants. */
+      regular_Loss += (double)(label.labels[tenant][3]) / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for regular tenants. */
     }
 
   // Append the results to the CSV file.
@@ -267,13 +267,13 @@ void record_regular_and_naughty_all(packets_label label, const configuration con
 
   // Loop through each tenant and calculate the loss percentage for regular and naughty tenants.
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
-    if (tenant >= (label.tenant_number - config.naughty_tenant_number))
+    if (is_naughty_index(tenant, config))
     {
-      naughty_Loss += (double)(label.labels[tenant][3])  / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for naughty tenants. */
+      naughty_Loss += (double)(label.labels[tenant][3]) / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for naughty tenants. */
     }
     else
     {
-      regular_Loss += (double)(label.labels[tenant][3])  / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for regular tenants. */
+      regular_Loss += (double)(label.labels[tenant][3]) / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for regular tenants. */
     }
 
   // Append the results to the CSV file with additional configuration details.
@@ -326,30 +326,29 @@ void record_average_loss(packets_label label, const configuration config)
  * @param dequeue_count The count of packets that were dequeued.
  * @param config A configuration structure containing the data path and tenant number.
  */
-void record_packet_situation_agrid(int* packets, const int dequeue_count, const configuration config)
+void record_packet_situation_agrid(int *packets, const int dequeue_count, const configuration config)
 {
-    char file_path[MAX_PATH_LENGTH];
-    sprintf(file_path, "%s/record_packet_situation.csv", config.data_path);
+  char file_path[MAX_PATH_LENGTH];
+  sprintf(file_path, "%s/record_packet_situation.csv", config.data_path);
 
-    FILE *file = fopen(file_path, "a");
-    if (!file)
-    {
-        perror("Error opening file"); /**< Handle file open errors. */
-        exit(EXIT_FAILURE);
-    }
+  FILE *file = fopen(file_path, "a");
+  if (!file)
+  {
+    perror("Error opening file"); /**< Handle file open errors. */
+    exit(EXIT_FAILURE);
+  }
 
-    int packet_number = 0;
-    
-    for (int index = 0; index < config.tenant_number; index++)
-    {
-        if (*(packets + index) == PACKET_LABEL_ACCEPT)
-            packet_number += 1; 
-    }
+  int packet_number = 0;
 
-    // Append the results to the CSV file.
-    fprintf(file, "%d, %d\n", packet_number, dequeue_count);
-    fclose(file); /**< Close the file after writing. */
+  for (int index = 0; index < config.tenant_number; index++)
+  {
+    if (*(packets + index) == PACKET_LABEL_ACCEPT)
+      packet_number += 1;
+  }
+
+  // Append the results to the CSV file.
+  fprintf(file, "%d, %d\n", packet_number, dequeue_count);
+  fclose(file); /**< Close the file after writing. */
 }
-
 
 #endif /* PACKETS_COUNT_H */

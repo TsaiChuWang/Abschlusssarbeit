@@ -4,9 +4,9 @@
 
 // #define CLEAN_DATA_PATH ///< Enable to clean data path before processing
 
-#define PRINT_GRID_COUNT     ///< Enable to print the count of grids during execution
-#define PRINT_EXECUTION_TIME ///< Enable to print the execution time of processes
-#define PRINT_CAPACITY       ///< Enable to print the capacity information
+#define PRINT_GRID_COUNT          ///< Enable to print the count of grids during execution
+#define PRINT_EXECUTION_TIME      ///< Enable to print the execution time of processes
+#define PRINT_CAPACITY            ///< Enable to print the capacity information
 #define PRINT_REGULAR_AND_NAUGHTY ///< Enable to print regular and naughty data
 // #define PRINT_FIRST_INIT_GCRA ///< Enable to print information on the first GCRA initialization
 // #define PRINT_GCRA_UPDATE ///< Enable to print updates related to GCRA
@@ -136,12 +136,12 @@ int main(int argc, char *argv[])
     int grid_counts = 0;
     int drop_tenant = UNFOUND;
 
-#ifdef RECORD_PACKETS_SITUATION 
+#ifdef RECORD_PACKETS_SITUATION
     /**
      * @brief Creates and opens a CSV file for recording packet situations.
      *
-     * This block of code defines the file path for the packet situation 
-     * CSV file, opens it for writing, and handles any errors that occur 
+     * This block of code defines the file path for the packet situation
+     * CSV file, opens it for writing, and handles any errors that occur
      * during file operations.
      */
     char file_path_packet_situation[MAX_PATH_LENGTH];
@@ -153,11 +153,10 @@ int main(int argc, char *argv[])
         perror("Error opening file"); /**< Handle file open errors. */
         exit(EXIT_FAILURE);
     }
-    
+
     fprintf(file, RECORD_PACKET_SITUATION_HEADER); // Placeholder for writing data to the file.
     fclose(file);
 #endif
-
 
     /**
      * @brief Main loop for simulating the traffic over time.
@@ -201,13 +200,12 @@ int main(int argc, char *argv[])
         print_packets(packets, config.tenant_number);
 #endif
 
-#ifdef RECORD_PACKETS_SITUATION 
-    /**
-     * @brief Records the packet situation if RECORD_PACKETS_SITUATION is defined.
-     */
-    record_packet_situation_agrid(packets, dequeue_count, config);
+#ifdef RECORD_PACKETS_SITUATION
+        /**
+         * @brief Records the packet situation if RECORD_PACKETS_SITUATION is defined.
+         */
+        record_packet_situation_agrid(packets, dequeue_count, config);
 #endif
-
 
         for (int tenant = 0; tenant < tenant_number; tenant++)
         {
@@ -355,8 +353,18 @@ int main(int argc, char *argv[])
     record_average_loss(label, config);
 #endif
 
-#ifdef RECORD_PACKETS_SITUATION 
-    system("python3 ../python/packet_situation.py");
+#ifdef RECORD_PACKETS_SITUATION
+    switch (config.traffic_mode)
+    {
+    case TRAFFIC_MODE_INTERVAL:
+        system("python3 ../python/packet_situation.py 0");
+        break;
+
+    default:
+        system("python3 ../python/packet_situation.py 0");
+        break;
+    }
+
 #endif
 
 #ifdef PRINT_EXECUTION_TIME

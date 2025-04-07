@@ -15,6 +15,10 @@
 #define TRAFFIC_MODE_BURSTY_REGULAR 6 /**< Some tenants violate the rules, while others comply; regular tenants' traffic bursts are determined by a state machine. */
 #define TRAFFIC_MODE_BURSTY_NAUGHTY 7 /**< Some tenants violate the rules, while others comply; naughty tenants' traffic bursts are determined by a state machine. */
 
+#define NAUGHTY_MODE_BEFORE 0
+#define NAUGHTY_MODE_AFTER 1
+#define NAUGHTY_MODE_AVERAGE 2
+
 /// @brief Define REDUCTION to recover the default configuration.
 #ifdef REDUCTION
 
@@ -40,7 +44,7 @@
 #define INITIAL_CONFIGURATION_NAUGHTY_STANDARD_DEVIATION 10 /**< Standard deviation for 'naughty' tenants. */
 #define INITIAL_CONFIGURATION_NAUGHTY_TENANT_NUMBER 50      /**< Number of 'naughty' tenants. */
 #define INITIAL_CONFIGURATION_STATE_R (float)0.9375         /**< State parameter for traffic generation. */
-
+#define INITIAL_CONFIGURATION_NAUGHTY_MODE 0
 /**
  * @brief Parameters related to thresholds.
  * These values cannot be obtained through formulaic calculations.
@@ -78,6 +82,7 @@ void reduction_inif_file(const char *filename)
     fprintf(file, "naughty_mean = %d\n", INITIAL_CONFIGURATION_NAUGHTY_MEAN);
     fprintf(file, "naughty_standard_deviation = %d\n", INITIAL_CONFIGURATION_NAUGHTY_STANDARD_DEVIATION);
     fprintf(file, "naughty_tenant_number = %d\n", INITIAL_CONFIGURATION_NAUGHTY_TENANT_NUMBER);
+    fprintf(file, "naughty_mode = %f\n", INITIAL_CONFIGURATION_NAUGHTY_MODE);
     fprintf(file, "state_r = %f\n", INITIAL_CONFIGURATION_STATE_R);
 
     // Write the [threshold] section
@@ -114,6 +119,7 @@ typedef struct
     int naughty_mean;               // Mean value for naughty traffic
     int naughty_standard_deviation; // Standard deviation for naughty traffic
     int naughty_tenant_number;      // Number of tenants generating naughty traffic
+    int naughty_mode;
 
     // Threshold and flow control settings
     double state_r; // State variable for traffic control
@@ -170,6 +176,8 @@ static int handler(void *config, const char *section, const char *name, const ch
         pconfig->naughty_standard_deviation = atoi(value);
     else if (MATCH("traffic", "naughty_tenant_number"))
         pconfig->naughty_tenant_number = atoi(value);
+    else if (MATCH("traffic", "naughty_mode"))
+        pconfig->naughty_mode = atoi(value);
     else if (MATCH("traffic", "state_r"))
         pconfig->state_r = (double)atof(value);
 
@@ -246,6 +254,7 @@ void modify_ini_file(const char *filename, configuration *config)
     fprintf(file, "naughty_mean = %d\n", config->naughty_mean);
     fprintf(file, "naughty_standard_deviation = %d\n", config->naughty_standard_deviation);
     fprintf(file, "naughty_tenant_number = %d\n", config->naughty_tenant_number);
+    fprintf(file, "naughty_mode = %d\n", config->naughty_mode);
     fprintf(file, "state_r = %f\n", config->state_r);
 
     // Write the [threshold] section
@@ -298,6 +307,7 @@ void show_configuration(const configuration config)
         printf("| naughty mean               : %-d\n", config.naughty_mean);
         printf("| naughty standard deviation : %-d\n", config.naughty_standard_deviation);
         printf("| naughty tenant number      : %-d\n", config.naughty_tenant_number);
+        printf("| naughty mode               : %-d\n", config.naughty_mode);
     }
 
     if (config.traffic_mode > TRAFFIC_MODE_DENSITY)

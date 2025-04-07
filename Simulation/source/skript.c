@@ -1,5 +1,5 @@
 
-#define UNIFORM_DISTRIBUTION 0
+#define UNIFORM_DISTRIBUTION_REGULAR 0
 #define BURSTY_ALL 1
 #define BURSTY_REGULAR 2
 #define BURSTY_NAUGHTY 3
@@ -49,39 +49,41 @@ int main(int argc, char *argv[])
     fprintf(file, RECORD_AVERAGE_LOSS_HEADER);
     fclose(file);
 
+    char file_packet_situation_path[MAX_PATH_LENGTH];
+    sprintf(file_packet_situation_path, "%s/record_packet_situation.csv", config.data_path);
+    // printf("%s(../data/main/record_packet_situation.csv)\n", file_packet_situation_path);
+
+    file = fopen(file_packet_situation_path, "w+");
+    if (!file)
+    {
+        perror("Error opening file"); /**< Handle file open errors. */
+        exit(EXIT_FAILURE);
+    }
+    fprintf(file, RECORD_PACKET_SITUATION_HEADER);
+    fclose(file);
+
     reduction_inif_file(CONFIGURATION_PATH);
 
-    long step = 512;
+    long step = 32;
     double state_r_step = 0.01;
     switch (atoi(argv[1]))
     {
-    case UNIFORM_DISTRIBUTION:
-        if (atoi(argv[2]) == INTERVAL)
+    case UNIFORM_DISTRIBUTION_REGULAR:
+        config.traffic_mode = TRAFFIC_MODE_INTERVAL;
+        for (long tau = 0; tau <= 25600; tau += step)
         {
-            config.traffic_mode = TRAFFIC_MODE_INTERVAL;
-            for (long tau = 0; tau <= 25600; tau += step)
-            {
-                config.tau = tau;
-                modify_ini_file(CONFIGURATION_PATH, &config);
+            config.tau = tau;
+            modify_ini_file(CONFIGURATION_PATH, &config);
 
-                system("../execution/main");
-            }
+            system("../execution/main");
 
-            system("python3 ../python/average_loss.py");
-        }else{
-            config.traffic_mode = TRAFFIC_MODE_NAUGHTY;
-            config.naughty_mean = 150;
-
-            for (long tau = 0; tau <= 25600; tau += step)
-            {
-                config.tau = tau;
-                modify_ini_file(CONFIGURATION_PATH, &config);
-
-                system("../execution/main");
-            }
-
-            system("python3 ../python/regular_and_naughty_all.py ");
+            system("python3 ../python/average_loss.py 0");
         }
+
+        system("rm -r ../data/unifrom_regular");
+        sprintf(command, "cp -R %s ../data/unifrom_regular", config.data_path);
+        system(command);
+
         break;
     case TRAFFIC_BRUSTY_SITUATION:
         config.traffic_mode = TRAFFIC_MODE_BURSTY_ALL;

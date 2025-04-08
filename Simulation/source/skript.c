@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 
     case UNIFORM_DISTRIBUTION_NAUGHTY:
         config.traffic_mode = TRAFFIC_MODE_NAUGHTY;
-        config.naughty_mean = 150;
+        config.naughty_mean = 155;
         config.naughty_mode = 2;
         for (long tau = 0; tau <= 25600; tau += step)
         {

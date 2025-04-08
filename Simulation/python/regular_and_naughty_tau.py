@@ -21,13 +21,13 @@ regular_loss = dataframe['regular_loss'].tolist()
 naughty_loss = dataframe['naughty_loss'].tolist()
 
 if(int(sys.argv[1])==0):
-    title = 'Packet Loss with different τ and r value (Naughty {})'.format(config['traffic']['naughty_mean'])
+    title = 'Packet Loss with different τ and r value : Naughty {}'.format(config['traffic']['naughty_mean'])
 elif(int(sys.argv[1])==1):
     average = int(config['traffic']['naughty_mean'])*int(config['traffic']['naughty_tenant_number'])+int(config['traffic']['mean'])*(int(config['simulation']['tenant_number'])-int(config['traffic']['naughty_tenant_number']))
     average = average/int(config['simulation']['tenant_number'])
-    title = 'Packet Loss with different τ and r value (Average {})'.format(average)
+    title = 'Packet Loss with different τ and r value : Average {}'.format(average)
 else:
-    title = 'Packet Loss with different τ and r value (Naughty {})'.format(config['traffic']['naughty_mean'])
+    title = 'Packet Loss with different τ and r value : Naughty {}'.format(config['traffic']['naughty_mean'])
 
 # regular
 plt.plot(tau, regular_loss ,linestyle='-', label='(regular)', alpha = 1)

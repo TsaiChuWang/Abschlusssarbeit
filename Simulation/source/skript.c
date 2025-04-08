@@ -15,7 +15,35 @@
 #include "../include/general.h"
 #include "./inih/ini.h"
 #include "../include/configuration.h"
-// #include "../include/packets_count.h"
+
+#ifndef RECORD_HEADER
+/**
+ * @brief Header for recording regular and naughty packet loss statistics.
+ * This header defines the format for recording regular and naughty packet losses.
+ */
+#define RECORD_REGULAR_AND_NAUGHTY_TAU_HEADER "tau,regular_loss,naughty_loss\n"
+
+/**
+ * @brief Header for recording regular and naughty packet statistics.
+ * This header defines the format for recording detailed regular and naughty packet statistics.
+ */
+#define RECORD_REGULAR_AND_NAUGHTY_ALL_HEADER "tau,naughty_mean,naughty_tenant_number,state_r,upper_queue_buffer,link_queue_buffer,regular_loss,naughty_loss\n"
+
+/**
+ * @brief Header for recording average packet loss statistics.
+ * This header defines the format for recording average packet loss statistics.
+ */
+#define RECORD_AVERAGE_LOSS_HEADER "tau,naughty_mean,naughty_tenant_number,state_r,upper_queue_buffer,link_queue_buffer,average_loss\n"
+
+/**
+ * @def RECORD_PACKET_SITUATION_HEADER
+ * @brief Header for the packet situation record.
+ *
+ * This macro defines the header line for the packet situation log,
+ * indicating the columns for packets and dequeue status.
+ */
+#define RECORD_PACKET_SITUATION_HEADER "packets,dequeue\n"
+#endif
 
 #define CONFIGURATION_PATH "../configuration/main.ini"
 

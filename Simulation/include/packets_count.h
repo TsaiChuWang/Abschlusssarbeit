@@ -3,9 +3,10 @@
  * @brief Header file for packet counting functions and structures.
  * This file defines the structure and functions related to packet counting for tenants.
  */
-
+#define RECORD_HEADER
 #define PACKETS_COUNT_H
 
+#ifdef RECORD_HEADER
 /**
  * @brief Header for recording regular and naughty packet loss statistics.
  * This header defines the format for recording regular and naughty packet losses.
@@ -32,7 +33,7 @@
  * indicating the columns for packets and dequeue status.
  */
 #define RECORD_PACKET_SITUATION_HEADER "packets,dequeue\n"
-
+#endif
 #ifdef PACKETS_COUNT_H
 
 /**

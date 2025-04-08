@@ -1,6 +1,7 @@
 
 #define UNIFORM_DISTRIBUTION_REGULAR 0
-#define BURSTY_ALL 1
+#define UNIFORM_DISTRIBUTION_NAUGHTY 1
+#define BURSTY_ALL 6
 #define BURSTY_REGULAR 2
 #define BURSTY_NAUGHTY 3
 
@@ -14,7 +15,7 @@
 #include "../include/general.h"
 #include "./inih/ini.h"
 #include "../include/configuration.h"
-#include "../include/packets_count.h"
+// #include "../include/packets_count.h"
 
 #define CONFIGURATION_PATH "../configuration/main.ini"
 
@@ -49,6 +50,32 @@ int main(int argc, char *argv[])
     fprintf(file, RECORD_AVERAGE_LOSS_HEADER);
     fclose(file);
 
+    char file_regular_and_naughty_tau_path[MAX_PATH_LENGTH];
+    sprintf(file_regular_and_naughty_tau_path, "%s/regular_and_naughty_tau.csv", config.data_path);
+    // printf("%s(../data/main/regular_and_naughty_tau.csv)\n", file_regular_and_naughty_tau_path);
+
+    file = fopen(file_regular_and_naughty_tau_path, "w+");
+    if (!file)
+    {
+        perror("Error opening file"); /**< Handle file open errors. */
+        exit(EXIT_FAILURE);
+    }
+    fprintf(file, RECORD_REGULAR_AND_NAUGHTY_TAU_HEADER);
+    fclose(file);
+
+    char file_regular_and_naughty_all_path[MAX_PATH_LENGTH];
+    sprintf(file_regular_and_naughty_all_path, "%s/regular_and_naughty_all.csv", config.data_path);
+    // printf("%s(../data/main/regular_and_naughty_all.csv)\n", file_regular_and_naughty_all_path);
+
+    file = fopen(file_regular_and_naughty_all_path, "w+");
+    if (!file)
+    {
+        perror("Error opening file"); /**< Handle file open errors. */
+        exit(EXIT_FAILURE);
+    }
+    fprintf(file, RECORD_REGULAR_AND_NAUGHTY_ALL_HEADER);
+    fclose(file);
+
     char file_packet_situation_path[MAX_PATH_LENGTH];
     sprintf(file_packet_situation_path, "%s/record_packet_situation.csv", config.data_path);
     // printf("%s(../data/main/record_packet_situation.csv)\n", file_packet_situation_path);
@@ -59,7 +86,7 @@ int main(int argc, char *argv[])
         perror("Error opening file"); /**< Handle file open errors. */
         exit(EXIT_FAILURE);
     }
-    fprintf(file, RECORD_PACKET_SITUATION_HEADER);
+    fprintf(file, RECORD_REGULAR_AND_NAUGHTY_TAU_HEADER);
     fclose(file);
 
     reduction_inif_file(CONFIGURATION_PATH);
@@ -82,6 +109,27 @@ int main(int argc, char *argv[])
 
         system("rm -r ../data/unifrom_regular");
         sprintf(command, "cp -R %s ../data/unifrom_regular", config.data_path);
+        system(command);
+
+        break;
+
+    case UNIFORM_DISTRIBUTION_NAUGHTY:
+        config.traffic_mode = TRAFFIC_MODE_NAUGHTY;
+        config.naughty_mean = 150;
+        config.naughty_mode = 2;
+        for (long tau = 0; tau <= 25600; tau += step)
+        {
+            config.tau = tau;
+            modify_ini_file(CONFIGURATION_PATH, &config);
+
+            system("../execution/main");
+
+            system("python3 ../python/average_loss.py 0");
+            system("python3 ../python/regular_and_naughty_tau.py 0");
+        }
+
+        system("rm -r ../data/unifrom_naughty");
+        sprintf(command, "cp -R %s ../data/unifrom_naughty", config.data_path);
         system(command);
 
         break;
@@ -118,14 +166,20 @@ int main(int argc, char *argv[])
 
         break;
     default:
-        long step = 32;
-        for (long tau = 0; tau <= 51200; tau += step)
+        config.traffic_mode = TRAFFIC_MODE_INTERVAL;
+        for (long tau = 0; tau <= 25600; tau += step)
         {
             config.tau = tau;
             modify_ini_file(CONFIGURATION_PATH, &config);
 
-            system("python3 ../python/average_loss.py");
+            system("../execution/main");
+
+            system("python3 ../python/average_loss.py 0");
         }
+
+        system("rm -r ../data/unifrom_regular");
+        sprintf(command, "cp -R %s ../data/unifrom_regular", config.data_path);
+        system(command);
         break;
     }
 

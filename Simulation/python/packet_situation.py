@@ -34,12 +34,15 @@ step = 10**9 * float(config['traffic']['packet_size']) / float(config['traffic']
 packets = dataframe['packets'].tolist()[m:n]
 dequeue = dataframe['dequeue'].tolist()[m:n]
 
+average = sum(packets)/len(packets)
+
 # Generate time values for the x-axis
 x = [i * step for i in range(len(packets))]
 
 # Plotting the data
 plt.plot(x, packets, linestyle='-', label='packets')
 plt.plot(x, dequeue, linestyle='-', label='dequeue')
+plt.plot(x, [average for i in x], linestyle='-', label='average({})'.format(average))
 
 # Set plot title and labels
 if(int(sys.argv[1]) == 0):

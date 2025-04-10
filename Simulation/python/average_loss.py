@@ -20,6 +20,8 @@ plt.plot(tau, average_loss, linestyle='-', label='average_loss')
 
 if(int(sys.argv[1])==0):
     plt.title('Average Packet Loss with different τ (All Regular)')
+elif(int(sys.argv[1])==1):
+    plt.title('Average Packet Loss with different τ (Uniform Naughty {})'.format(int(config['traffic']['naughty_mean'])))
 else:
     plt.title('Average Packet Loss with different τ (All Regular)')
 

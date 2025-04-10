@@ -26,6 +26,8 @@ elif(int(sys.argv[1])==1):
     average = int(config['traffic']['naughty_mean'])*int(config['traffic']['naughty_tenant_number'])+int(config['traffic']['mean'])*(int(config['simulation']['tenant_number'])-int(config['traffic']['naughty_tenant_number']))
     average = average/int(config['simulation']['tenant_number'])
     title = 'Packet Loss with different τ and r value : Average {}'.format(average)
+elif(int(sys.argv[1])==2):
+    title = 'Packet Loss with different τ and r value : Naughty {} [{}]'.format(config['traffic']['naughty_mean'], sys.argv[2])
 else:
     title = 'Packet Loss with different τ and r value : Naughty {}'.format(config['traffic']['naughty_mean'])
 

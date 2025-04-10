@@ -1,8 +1,10 @@
 
 #define UNIFORM_DISTRIBUTION_REGULAR 0
 #define UNIFORM_DISTRIBUTION_NAUGHTY 1
+
+#define UNIFORM_DISTRIBUTION_NAUGHTY_DIFFERENT_MODE 2
 #define BURSTY_ALL 6
-#define BURSTY_REGULAR 2
+#define BURSTY_REGULAR 7
 #define BURSTY_NAUGHTY 3
 
 #define TRAFFIC_BRUSTY_SITUATION 4
@@ -152,7 +154,7 @@ int main(int argc, char *argv[])
 
             system("../execution/main");
 
-            system("python3 ../python/average_loss.py 0");
+            system("python3 ../python/average_loss.py 1");
             system("python3 ../python/regular_and_naughty_tau.py 0");
         }
 
@@ -161,15 +163,32 @@ int main(int argc, char *argv[])
         system(command);
 
         break;
-    case TRAFFIC_BRUSTY_SITUATION:
-        config.traffic_mode = TRAFFIC_MODE_BURSTY_ALL;
-        config.naughty_mean = 140;
-        for (double state_r = 0.9675; state_r < 0.99; state_r += state_r_step)
-        {
-            config.state_r = state_r;
-            modify_ini_file(CONFIGURATION_PATH, &config);
+    case UNIFORM_DISTRIBUTION_NAUGHTY_DIFFERENT_MODE:
+        config.traffic_mode = TRAFFIC_MODE_NAUGHTY;
+        config.naughty_mean = 155;
 
-            system("../execution/main");
+        system("rm -r ../data/unifrom_naughty_naughty_mode");
+        for (int i = 0; i < 3; i++)
+        {
+            config.naughty_mode = i;
+            sprintf(command, "mkdir ../data/unifrom_naughty_naughty_mode/%d", i);
+            system(command);
+
+            for (long tau = 0; tau <= 25600; tau += step)
+            {
+                config.tau = tau;
+                modify_ini_file(CONFIGURATION_PATH, &config);
+
+                system("../execution/main");
+
+                system("python3 ../python/average_loss.py 1");
+
+                sprintf(command, "python3 ../python/regular_and_naughty_tau.py 2 naughty_mode=%d", i);
+                system(command);
+            }
+
+            sprintf(command, "cp -R %s ../data/unifrom_naughty_naughty_mode/%d", config.data_path, i);
+            system(command);
         }
 
         break;

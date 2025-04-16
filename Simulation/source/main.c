@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
         printf("Can't load configuration \"%s\"\n", CONFIGURATION_PATH);
         return EXIT_FAILURE;
     }
-    // show_configuration(config); // Uncomment if you need to debug configuration settings.
+    show_configuration(config); // Uncomment if you need to debug configuration settings.
 
 #ifdef CLEAN_DATA_PATH
     /**

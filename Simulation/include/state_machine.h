@@ -14,6 +14,17 @@
 
 #ifdef STATE_MACHINE_H /**< Include this block if STATE_MACHINE_H is defined */
 
+int gcd(int a, int b)
+{
+  while (b != 0)
+  {
+    int temp = b;
+    b = a % b;
+    a = temp;
+  }
+  return a;
+}
+
 int is_naughty_index(int index, const configuration config)
 {
   switch (config.naughty_mode)
@@ -25,13 +36,14 @@ int is_naughty_index(int index, const configuration config)
     return (index < config.naughty_tenant_number);
     break;
   case NAUGHTY_MODE_AVERAGE:
-    if (config.tenant_number % config.naughty_tenant_number != 0)
+    int gcd_ = gcd(config.tenant_number, config.naughty_tenant_number);
+    if (gcd_ == 1)
     {
-      printf(RED_ELOG "naughty_tenant_number is not dividend of tenant number!!\n" RESET);
+      printf(RED_ELOG "GCD of naughty_tenant_number and tenant number is 1!!\n" RESET);
       exit(EXIT_FAILURE);
     }
-    int divisor = (int)(config.tenant_number / config.naughty_tenant_number);
-    return (index % divisor == 0);
+    int divisor = (int)(config.tenant_number / gcd_);
+    return (index % divisor < (int)(config.naughty_tenant_number / gcd_));
     break;
   default:
 

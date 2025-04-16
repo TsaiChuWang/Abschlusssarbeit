@@ -22,6 +22,8 @@ if(int(sys.argv[1])==0):
     plt.title('Average Packet Loss with different τ (All Regular)')
 elif(int(sys.argv[1])==1):
     plt.title('Average Packet Loss with different τ (Uniform Naughty {})'.format(int(config['traffic']['naughty_mean'])))
+elif(int(sys.argv[1])==2):
+    plt.title('Average Packet Loss with different τ (All Regular : Burst)')
 else:
     plt.title('Average Packet Loss with different τ (All Regular)')
 

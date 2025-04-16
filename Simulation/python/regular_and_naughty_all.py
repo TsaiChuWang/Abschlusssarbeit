@@ -8,35 +8,84 @@ CONFIGURATION_PATH = '../configuration/main.ini'
 config = configparser.ConfigParser()
 config.read(CONFIGURATION_PATH)
 
-IMAGE_PATH = config['simulation']['data_path']+'/regular_and_naughty_all.png'
+NAUGHTY_MEAN = 1
+
+IMAGE_PATH = config['simulation']['data_path']+'/images/regular_and_naughty_all_{}.png'
 DATA_PATH = config['simulation']['data_path']+'/regular_and_naughty_all.csv'
 
 dataframe = pandas.read_csv(DATA_PATH)
 
-tau = dataframe['tau'].tolist()
-tau = list(set(tau))
-tau.sort()
+if(int(sys.argv[1]) == NAUGHTY_MEAN):
+    tenant_number = int(config['simulation']['tenant_number'])
+    naughty_mean = int(config['traffic']['naughty_mean'])
+    naughty_tenant_number = int(config['traffic']['naughty_tenant_number'])
+    mean = int(config['traffic']['mean'])
 
-kind_key = list(set(dataframe['state_r'].tolist()))
+    tau_ = dataframe['tau'].tolist()
+    tau_ = list(set(tau_))
+    tau_.sort()
+    # print(real_naughty_mean)
 
-n = 1600
-for key in kind_key:
-    nloss = dataframe[dataframe['state_r'] == key][['naughty_loss']]
-    rloss = dataframe[dataframe['state_r'] == key][['regular_loss']]
+    keys = [1,25,50,75,99]
+    for key in keys:
+        real_naughty_mean = (naughty_mean*key+ mean*(tenant_number-key))/tenant_number
+        nloss = dataframe[dataframe['naughty_tenant_number'] == key][['naughty_loss']]
+        if(len(nloss)!=0):
+            # print('regular : '+str(nloss)+" "+str(key))
+            tau = dataframe[dataframe['naughty_tenant_number'] == key]['tau'].tolist()
+            # print(len(tau))
+            # print(len(nloss))
+            plt.plot(tau, nloss, linestyle='-', label='(naughty)μ = '+str(real_naughty_mean)+' t = '+str(key), alpha = 1)
+    plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
+    plt.title('Packet Loss with different τ and μ Naughty Flow')
+    plt.ylabel('Loss (%)')
+    plt.xlabel('τ')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH.format('naughty'))
+    plt.cla()
 
-    nloss = nloss/100
-    rloss = rloss/100
-    plt.plot(tau[:n],nloss[:n], linestyle='-', label='(naghty)r = '+str(key), alpha = 1)
-    # plt.plot(tau[:n],rloss[:n], linestyle='-', label='(regular)r = '+str(key), alpha = 1)
+    for key in keys:
+        real_naughty_mean = (naughty_mean*key+ mean*(tenant_number-key))/tenant_number
+        rloss = dataframe[dataframe['naughty_tenant_number'] == key][['regular_loss']]
+        # print('regular : '+str(rloss)+" "+str(key))
+        if(len(rloss)!=0):
+            tau = dataframe[dataframe['naughty_tenant_number'] == key]['tau'].tolist()
+            tau = list(set(tau))
+            tau.sort()
+            print(len(tau))
+            print(len(rloss))
+            plt.plot(tau, rloss, linestyle='-', label='(regular)μ = '+str(real_naughty_mean)+' t = '+str(key), alpha = 1)
+    plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
+    plt.title('Packet Loss with different τ and μ Regular Flow')
+    plt.xlabel('τ')
+    plt.ylabel('Loss (%)')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH.format('regular'))
+    plt.cla()
 
-plt.plot(tau[:n], [0.1 for i in tau][:n], linestyle='-', color = 'red', label='ε')
 
-# plt.title('Average Packet Loss with different τ and r value (All Regular)')
-# plt.title('Packet Loss with different τ and r value (Naughty 150) Regular Flow')
-plt.title('Packet Loss with different τ and r value (Naughty 150) Naughty Flow')
-plt.ylabel('Loss (%)')
-plt.legend()
-plt.grid(True)
+# kind_key = list(set(dataframe['state_r'].tolist()))
 
-plt.savefig(IMAGE_PATH)
-plt.cla()
+# n = 1600
+# for key in kind_key:
+#     nloss = dataframe[dataframe['state_r'] == key][['naughty_loss']]
+#     rloss = dataframe[dataframe['state_r'] == key][['regular_loss']]
+
+#     nloss = nloss/100
+#     rloss = rloss/100
+#     plt.plot(tau[:n],nloss[:n], linestyle='-', label='(naghty)r = '+str(key), alpha = 1)
+#     # plt.plot(tau[:n],rloss[:n], linestyle='-', label='(regular)r = '+str(key), alpha = 1)
+
+# plt.plot(tau[:n], [0.1 for i in tau][:n], linestyle='-', color = 'red', label='ε')
+
+# # plt.title('Average Packet Loss with different τ and r value (All Regular)')
+# # plt.title('Packet Loss with different τ and r value (Naughty 150) Regular Flow')
+# plt.title('Packet Loss with different τ and r value (Naughty 150) Naughty Flow')
+# plt.ylabel('Loss (%)')
+# plt.legend()
+# plt.grid(True)
+
+# plt.savefig(IMAGE_PATH)
+# plt.cla()

@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 
     /** @brief Initializes the traffic generator based on the configuration. */
     traffic_generator generator = initializeTrafficGenerator(config);
-    // showTrafficGenerator(generator); ///< Uncomment to display generator details.
+    showTrafficGenerator(generator); ///< Uncomment to display generator details.
 
     /** @brief Number of tenants in the simulation.(Float) */
     int tenant_number = config.tenant_number;
@@ -115,6 +115,13 @@ int main(int argc, char *argv[])
     packets_label label;
     /** @brief Initializes packet labeling structure. */
     init_Packets_Label(&label, tenant_number, &count);
+
+    double cdequeue_timestamp = 0;
+    double cdequeue_timestamp_step = (TIME_TYPE)(config.packet_size *
+                                                 (double)ONE_SECOND_IN_NS / ((config.mean + config.standard_deviation) * config.unit));
+    // printf("dec = %f\n", cdequeue_timestamp_step);
+    circular_queue *cqueues = init_circular_queues(config);
+    // printf("a = %d\n", cqueues->size);
 
     // queue for the exceed upper bound traffic (reservation)
 
@@ -185,6 +192,12 @@ int main(int argc, char *argv[])
             dequeue_count += 1;                              ///< Increment the dequeue count
         }
 
+        while (cdequeue_timestamp <= (double)timestamp) ///< Loop until the dequeue timestamp exceeds the current timestamp
+        {
+            cdequeue_timestamp += cdequeue_timestamp_step; ///< Update the dequeue timestamp by the interval
+            for (int tenant = 0; tenant < tenant_number; tenant++)
+                cdequeue((cqueues + tenant));
+        }
 #ifdef PRINT_DEQUEUE_COUNT
         printf("dequeue_count = %d\n", dequeue_count);
 #endif
@@ -196,6 +209,7 @@ int main(int argc, char *argv[])
 
         // Packets generation
         int *packets = packet_generation_configuration(generator, config);
+
 #ifdef PRINT_EACH_GRID_PACKET
         print_packets(packets, config.tenant_number);
 #endif
@@ -209,6 +223,7 @@ int main(int argc, char *argv[])
 
         for (int tenant = 0; tenant < tenant_number; tenant++)
         {
+
             /**
              * @brief Increments the packet count for a specific tenant based on packet label.
              *
@@ -224,6 +239,17 @@ int main(int argc, char *argv[])
                 continue; ///< Skip to the next iteration if there is no relevant packet
 
             // Upper bound exceeded traffic operation(reservation)
+
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
+            {
+                if (cenqueue((cqueues + tenant)) == 1)
+                    *(packets + tenant) == PACKET_LABEL_ACCEPT;
+            }
+            else
+            {
+                label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] += 1;
+                continue; ///< Skip to the next iteration if there is no relevant packet
+            }
 
             /**
              * @brief Processes packets through the GCRA algorithm.

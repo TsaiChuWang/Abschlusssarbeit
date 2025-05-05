@@ -10,6 +10,7 @@
 #define BURSTY_NAUGHTY 3
 
 #define TRAFFIC_BRUSTY_SITUATION 4
+#define BURSTY_ALL_DIFFERENT_R_NAUGHTY 5
 
 #define INTERVAL 0
 #define NAUGHTY 1
@@ -124,7 +125,7 @@ int main(int argc, char *argv[])
     reduction_inif_file(CONFIGURATION_PATH);
 
     long step = 32;
-    double state_r_step = 0.01;
+    double state_r_step = 0.1;
     int step_naughty_tenant_number = 25;
 
     switch (atoi(argv[1]))
@@ -282,6 +283,34 @@ int main(int argc, char *argv[])
                 system("python3 ../python/average_loss_all.py 2");
             }
         }
+
+        break;
+    case BURSTY_ALL_DIFFERENT_R_NAUGHTY:
+        config.traffic_mode = TRAFFIC_MODE_BURSTY_ALL;
+        config.input_rate = 335544320;
+        config.naughty_mean = 155;
+        config.naughty_tenant_number = 50;
+        config.naughty_mode = 2;
+
+        for (long tau = 0; tau <= 51200; tau += step)
+        {
+            for (double state_r = 0.484375; state_r < 1; state_r += state_r_step)
+            {
+                config.tau = tau;
+                config.state_r = state_r;
+                modify_ini_file(CONFIGURATION_PATH, &config);
+
+                system("../execution/main");
+
+                system("python3 ../python/average_loss.py 1");
+                system("python3 ../python/regular_and_naughty_tau.py 2 burst");
+                system("python3 ../python/regular_and_naughty_all.py 2");
+            }
+        }
+
+        system("rm -r ../data/burst_different_r_naughty");
+        sprintf(command, "cp -R %s ../data/burst_different_r_naughty", config.data_path);
+        system(command);
 
         break;
     default:

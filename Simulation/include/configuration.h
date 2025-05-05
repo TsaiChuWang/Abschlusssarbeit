@@ -34,7 +34,7 @@
 /**
  * @brief Parameters related to traffic generation.
  */
-#define INITIAL_CONFIGURATION_INPUT_RATE (long)167772160 /**< Input rate for traffic generation. */
+#define INITIAL_CONFIGURATION_INPUT_RATE (long)167772160 /**< Input rate for traffic generation. 167772160*/
 #define INITIAL_CONFIGURATION_TRAFFIC_MODE 0             /**< Traffic mode setting. */
 #define INITIAL_CONFIGURATION_MEAN 120                   /**< Mean value for traffic generation. */
 #define INITIAL_CONFIGURATION_STANDARD_DEVIATION 40      /**< Standard deviation for traffic generation. */

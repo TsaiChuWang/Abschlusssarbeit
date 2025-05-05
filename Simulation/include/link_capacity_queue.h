@@ -70,6 +70,18 @@ void init_circular_queue(circular_queue *cqueue, int max_buffer_size)
     cqueue->max_buffer = max_buffer_size;
 }
 
+circular_queue *init_circular_queues(const configuration config)
+{
+    circular_queue *queues = (circular_queue *)malloc(sizeof(circular_queue) * config.tenant_number);
+    for (int i = 0; i < config.tenant_number; i++)
+    {
+        init_circular_queue((queues + i), config.upper_queue_buffer);
+        // printf("%d %d\n", i, (queues + i)->size);
+    }
+
+    return queues;
+}
+
 /**
  * @brief Initializes a priority queue.
  *
@@ -159,6 +171,32 @@ int dequeue(link_priority_queue *pqueue)
         return value;
     }
     return UNFOUND; // Queue is empty
+}
+
+void cdequeue(circular_queue *cqueue)
+{
+    // printf("c=%d\n", cqueue->size);
+    if (is_empty(cqueue))
+    {
+        return;
+    }
+    int value = cqueue->items[cqueue->front];
+    cqueue->front = (cqueue->front + 1) % cqueue->max_buffer;
+    cqueue->size--;
+}
+
+int cenqueue(circular_queue *cqueue)
+{
+    if (is_full(cqueue))
+    {
+        return -1;
+    }
+    else
+    {
+        cqueue->rear = (cqueue->rear + 1) % cqueue->max_buffer;
+        cqueue->size++;
+        return 1;
+    }
 }
 
 /**

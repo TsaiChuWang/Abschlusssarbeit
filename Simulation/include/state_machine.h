@@ -91,17 +91,18 @@ typedef struct
  */
 state_machine initialize_state_machine(double state_r, double generate_probability)
 {
-  if (state_r < generate_probability)
-  {
-    printf(RED_ELOG "state_r is INVALID!\n" RESET);
-    exit(EXIT_FAILURE);
-  }
+  // if (state_r < generate_probability)
+  // {
+  //   printf(RED_ELOG "state_r is INVALID!\n" RESET);
+  //   exit(EXIT_FAILURE);
+  // }
 
   state_machine state; /**< Allocate memory for the state machine. */
 
   state.state = STATE_NO_PACKET; /**< Initial state is STATE_NO_PACKET. */
   state.r = state_r;             /**< Assign the provided state_r value. */
   state.p = (1.0 - (2 * generate_probability - generate_probability * state_r)) / (1.0 - generate_probability);
+  // printf("p = %f\n", state.p);
 
   return state; /**< Return the initialized state machine. */
 }

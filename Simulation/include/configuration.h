@@ -893,4 +893,108 @@ void show_configuration(const configuration config)
     printf("| tau                             : %-ld\n", config.tau);
     printf("| link queue buffer               : %-d\n", config.link_queue_buffer);
 }
+
+/**
+ * @brief Calculates the Greatest Common Divisor (GCD) of two integers
+ * @details Uses the Euclidean algorithm to find the largest positive integer
+ *          that divides both input numbers without a remainder.
+ *          The algorithm works by repeatedly applying the division algorithm
+ *          until a remainder of 0 is obtained.
+ *
+ * Algorithm steps:
+ * 1. If b equals 0, return a
+ * 2. Otherwise, set b to the remainder of a divided by b
+ * 3. Set a to the previous value of b
+ * 4. Repeat steps 1-3 until b equals 0
+ *
+ * @param a First integer input
+ * @param b Second integer input
+ * @return The greatest common divisor of a and b
+ *
+ * @note The function assumes positive integer inputs
+ * @note If both inputs are 0, the function returns 0
+ */
+int gcd(int a, int b)
+{
+    while (b != 0)
+    {
+        /** @brief Temporary variable to store b during swap */
+        int temp = b;
+        /** @brief Update b with remainder of a/b */
+        b = a % b;
+        /** @brief Update a with previous value of b */
+        a = temp;
+    }
+    return a;
+}
+
+/**
+ * @brief Determines if a tenant index is noncompliant based on configured mode
+ * @details Checks whether a given tenant index should be considered noncompliant
+ *          according to different distribution modes specified in configuration.
+ *
+ * Supported modes:
+ * - NONCOMPLIANT_MODE_BEFORE: Noncompliant tenants are placed at the beginning
+ * - NONCOMPLIANT_MODE_AFTER: Noncompliant tenants are placed at the end
+ * - NONCOMPLIANT_MODE_AVERAGE: Noncompliant tenants are distributed evenly
+ * - NONCOMPLIANT_MODE_EXTREME_COMPLIANT: All tenants except middle one are noncompliant
+ * - NONCOMPLIANT_MODE_EXTREME_NONCOMPLIANT: Only middle tenant is noncompliant
+ *
+ * @param index The tenant index to check (0-based)
+ * @param config Configuration structure containing mode and tenant parameters
+ * @return 1 if tenant is noncompliant, 0 if compliant
+ *
+ * @warning For NONCOMPLIANT_MODE_AVERAGE, exits if GCD of tenant numbers is 1
+ *
+ * @note Default mode behaves same as NONCOMPLIANT_MODE_BEFORE
+ *
+ * Configuration requirements:
+ * - tenant_number > 0
+ * - noncompliant_tenant_number <= tenant_number
+ * - Valid noncompliant_mode value
+ */
+int is_noncompliant_index(int index, const configuration config)
+{
+    switch (config.noncompliant_mode)
+    {
+    case NONCOMPLIANT_MODE_BEFORE:
+        /** @brief Noncompliant if index is in the first portion */
+        return (index >= (config.tenant_number - config.noncompliant_tenant_number));
+        break;
+
+    case NONCOMPLIANT_MODE_AFTER:
+        /** @brief Noncompliant if index is in the last portion */
+        return (index < config.noncompliant_tenant_number);
+        break;
+
+    case NONCOMPLIANT_MODE_AVERAGE:
+        /**
+         * @brief Distribute noncompliant tenants evenly
+         * @details Uses GCD to ensure even distribution is possible
+         */
+        int gcd_ = gcd(config.tenant_number, config.noncompliant_tenant_number);
+        if (gcd_ == 1)
+        {
+            printf(RED_ELOG "GCD of noncompliant_tenant_number and tenant number is 1!!\n" RESET);
+            exit(EXIT_FAILURE);
+        }
+        int divisor = (int)(config.tenant_number / gcd_);
+        return (index % divisor < (int)(config.noncompliant_tenant_number / gcd_));
+        break;
+
+    case NONCOMPLIANT_MODE_EXTREME_COMPLIANT:
+        /** @brief All tenants except middle one are noncompliant */
+        return (index != (int)(config.tenant_number / 2));
+
+    case NONCOMPLIANT_MODE_EXTREME_NONCOMPLIANT:
+        /** @brief Only middle tenant is noncompliant */
+        return (index == (int)(config.tenant_number / 2));
+
+    default:
+        /** @brief Default behavior matches NONCOMPLIANT_MODE_BEFORE */
+        return (index >= (config.tenant_number - config.noncompliant_tenant_number));
+        break;
+    }
+}
+
 #endif

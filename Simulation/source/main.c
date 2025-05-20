@@ -130,8 +130,8 @@ int main(int argc, char *argv[])
     printf("capacity : %f bps\n", capacity);
 #endif
 
-    //     /** @brief Initializes the random seed for random number generation.*/
-    //     srand48(time(NULL));
+    /** @brief Initializes the random seed for random number generation.*/
+    srand48(time(NULL));
 
     //     /** @brief Initializes the traffic generator based on the configuration. */
     //     double r = atof(argv[1]);

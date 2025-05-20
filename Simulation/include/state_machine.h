@@ -1,56 +1,8 @@
 #include <math.h>
 
-/**
- * @file state_machine.h
- * @brief Header file defining the state machine for packet generation.
- *
- * This file contains the definition of the state machine, which controls the
- * state transitions for packet creation and non-creation.
- */
 #define STATE_MACHINE_H
 
-// #define STATE_CREATE_PACKET 1  /**  @brief State representing packet creation. */
-// #define STATE_NO_PACKET 0   /**  @brief State representing no packet creation. */
-
 #ifdef STATE_MACHINE_H /**< Include this block if STATE_MACHINE_H is defined */
-
-int gcd(int a, int b)
-{
-  while (b != 0)
-  {
-    int temp = b;
-    b = a % b;
-    a = temp;
-  }
-  return a;
-}
-
-int is_naughty_index(int index, const configuration config)
-{
-  switch (config.naughty_mode)
-  {
-  case NAUGHTY_MODE_BEFORE:
-    return (index >= (config.tenant_number - config.naughty_tenant_number));
-    break;
-  case NAUGHTY_MODE_AFTER:
-    return (index < config.naughty_tenant_number);
-    break;
-  case NAUGHTY_MODE_AVERAGE:
-    int gcd_ = gcd(config.tenant_number, config.naughty_tenant_number);
-    if (gcd_ == 1)
-    {
-      printf(RED_ELOG "GCD of naughty_tenant_number and tenant number is 1!!\n" RESET);
-      exit(EXIT_FAILURE);
-    }
-    int divisor = (int)(config.tenant_number / gcd_);
-    return (index % divisor < (int)(config.naughty_tenant_number / gcd_));
-    break;
-  default:
-
-    return (index >= (config.tenant_number - config.naughty_tenant_number));
-    break;
-  }
-}
 
 /**
  * @brief Defines states for packet processing.

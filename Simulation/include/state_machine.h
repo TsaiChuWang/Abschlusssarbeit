@@ -141,6 +141,25 @@ state_machine *initialize_state_machines(double generate_probability, double gen
   return states; /**< Return the array of state machines. */
 }
 
+state_machine *initialize_state_machines_different_r(double generate_probability, double generate_probability_naughty, const configuration config, double r)
+{
+  state_machine *states = (state_machine *)malloc(sizeof(state_machine) * config.tenant_number); /**< Allocate memory for state machines. */
+
+  for (int tenant = 0; tenant < config.tenant_number; tenant++)
+  { /**< Iterate over all tenants. */
+    if (is_naughty_index(tenant, config))
+    {
+      *(states + tenant) = initialize_state_machine(r, generate_probability_naughty); /**< Initialize naughty tenants with different probability. */
+    }
+    else
+    {
+      *(states + tenant) = initialize_state_machine(config.state_r, generate_probability); /**< Initialize regular tenants with default probability. */
+    }
+  }
+
+  return states; /**< Return the array of state machines. */
+}
+
 /**
  * @brief Changes the state of a given state machine based on random probability.
  *

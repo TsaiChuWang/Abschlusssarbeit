@@ -8,6 +8,7 @@
 #define BURSTY_ALL_DIFFERENT_R 4
 #define BURSTY_REGULAR 7
 #define BURSTY_NAUGHTY 3
+#define BRUSTY_DIFFERENT_R 8
 
 #define TRAFFIC_BRUSTY_SITUATION 4
 #define BURSTY_ALL_DIFFERENT_R_NAUGHTY 5
@@ -312,6 +313,43 @@ int main(int argc, char *argv[])
         sprintf(command, "cp -R %s ../data/burst_different_r_naughty", config.data_path);
         system(command);
 
+        break;
+    case BRUSTY_DIFFERENT_R:
+        config.traffic_mode = TRAFFIC_MODE_DIFFERENT_R;
+        config.input_rate = 335544320;
+        config.naughty_mean = 155;
+
+        config.naughty_mode = 2;
+
+        for (long tau = 0; tau <= 51200; tau += (step * 2))
+        {
+            for (int naughty_number = 25; naughty_number <= 75; naughty_number += 25)
+            {
+                config.naughty_tenant_number = naughty_number;
+                for (double r = 0.6; r < 0.9; r += state_r_step)
+                    for (double state_r = 0.6; state_r < 0.9; state_r += state_r_step)
+                    {
+                        if (r == state_r)
+                            continue;
+
+                        config.tau = tau;
+                        config.state_r = state_r;
+                        modify_ini_file(CONFIGURATION_PATH, &config);
+
+                        sprintf(command, "../execution/main %f", r);
+                        system(command);
+
+                        system("python3 ../python/average_loss.py 1");
+                        system("python3 ../python/regular_and_naughty_tau.py 2 burst");
+                        system("python3 ../python/regular_and_naughty_all.py 2");
+                        // system("python3 ../python/different_r.py");
+                    }
+            }
+        }
+
+        system("rm -r ../data/different_r_dn");
+        sprintf(command, "cp -R %s ../data/different_r_dn", config.data_path);
+        system(command);
         break;
     default:
         config.traffic_mode = TRAFFIC_MODE_INTERVAL;

@@ -44,7 +44,7 @@ typedef struct
  * @param config Configuration structure containing the parameters for traffic generation.
  * @return A `traffic_generator` structure initialized with the provided configuration.
  */
-traffic_generator initializeTrafficGenerator(const configuration config)
+traffic_generator initializeTrafficGenerator(const configuration config, double r)
 {
     traffic_generator generate;
 
@@ -65,6 +65,8 @@ traffic_generator initializeTrafficGenerator(const configuration config)
     {
         generate.states = initialize_state_machines(generate.generate_probability, generate.generate_probability_naughty, config);
     }
+    else if (config.traffic_mode == TRAFFIC_MODE_DIFFERENT_R)
+        generate.states = initialize_state_machines_different_r(generate.generate_probability, generate.generate_probability_naughty, config, r);
     else
     {
         generate.states = NULL; /**< No state machines are created for non-bursty traffic modes. */
@@ -350,7 +352,9 @@ int *packet_generation_configuration(traffic_generator generator, const configur
     case TRAFFIC_MODE_BURSTY_NAUGHTY:
         packets = packet_generation_brusty_naughty(generator, config);
         break;
-
+    case TRAFFIC_MODE_DIFFERENT_R:
+        packets = packet_generation_brusty_all(generator.states, config);
+        break;
     default:
         // Handle unexpected traffic modes
         printf(RED_ELOG "TRAFFIC MODE ERROR : CODE DOES NOT EXIST!\n" RESET);

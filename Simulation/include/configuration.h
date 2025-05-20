@@ -14,6 +14,7 @@
 #define TRAFFIC_MODE_BURSTY_ALL 5     /**< Some tenants violate the rules, while others comply; all traffic bursts are determined by a state machine. */
 #define TRAFFIC_MODE_BURSTY_REGULAR 6 /**< Some tenants violate the rules, while others comply; regular tenants' traffic bursts are determined by a state machine. */
 #define TRAFFIC_MODE_BURSTY_NAUGHTY 7 /**< Some tenants violate the rules, while others comply; naughty tenants' traffic bursts are determined by a state machine. */
+#define TRAFFIC_MODE_DIFFERENT_R 8
 
 #define NAUGHTY_MODE_BEFORE 0
 #define NAUGHTY_MODE_AFTER 1

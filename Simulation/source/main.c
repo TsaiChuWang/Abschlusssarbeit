@@ -95,7 +95,8 @@ int main(int argc, char *argv[])
     srand48(time(NULL));
 
     /** @brief Initializes the traffic generator based on the configuration. */
-    traffic_generator generator = initializeTrafficGenerator(config);
+    double r = atof(argv[1]);
+    traffic_generator generator = initializeTrafficGenerator(config, r);
     showTrafficGenerator(generator); ///< Uncomment to display generator details.
 
     /** @brief Number of tenants in the simulation.(Float) */

@@ -47,7 +47,9 @@
         "iterator": "c",
         "ioctl.h": "c",
         "algorithm": "c",
-        "float.h": "c"
+        "float.h": "c",
+        "errno.h": "c",
+        "compare": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "editor.formatOnSave": true

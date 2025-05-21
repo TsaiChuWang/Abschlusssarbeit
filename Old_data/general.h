@@ -3,7 +3,6 @@
 #include <time.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include <errno.h>
 
 #define SUCCESS 0
 #define FAILED -1
@@ -33,11 +32,6 @@
 #define INFORM_VETH_NAME_FORMAT "%s"
 #define INFORM_BRIDGE_NAME_FORMAT "%s"
 
-/**
- * @def ONE_SECOND_IN_NS
- * @brief Conversion constant from seconds to nanoseconds
- * @details Used to convert simulation time units
- */
 #define ONE_SECOND_IN_NS 1000000000L
 #define TIME_TYPE double
 

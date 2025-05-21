@@ -30,6 +30,28 @@
  */
 #define PRINT_CAPACITY
 
+/**
+ * @def SHOW_TRAFFICGENERATOR
+ * @brief Conditional compilation flag to enable traffic generator information display
+ */
+#define SHOW_TRAFFICGENERATOR
+
+/**
+ * @def PRINT_EACH_TIMESTAMP
+ * @brief Debug flag for timestamp printing
+ * @details When defined, enables printing of each timestamp during simulation
+ * @note This is typically used for debugging and performance analysis
+ */
+// #define PRINT_EACH_TIMESTAMP
+
+/**
+ * @def PRINT_EACH_GRID_PACKET
+ * @brief Debug flag for packet information printing
+ * @details When defined, enables detailed packet information output for each grid
+ * @note This may impact performance when processing large numbers of packets
+ */
+// #define PRINT_EACH_GRID_PACKET
+
 // #define PRINT_GRID_COUNT          ///< Enable to print the count of grids during execution
 
 // #define PRINT_REGULAR_AND_NAUGHTY ///< Enable to print regular and naughty data
@@ -54,10 +76,10 @@
  * for the traffic generation application. It sets up configurations
  * and handles the execution flow.
  */
-#include "../include/general.h"       ///< General utility functions and definitions
-#include "./inih/ini.h"               ///< INI file parsing library
-#include "../include/configuration.h" ///< Configuration handling functions
-// #include "../include/traffic_generation.h"  ///< Traffic generation functions and definitions
+#include "../include/general.h"            ///< General utility functions and definitions
+#include "./inih/ini.h"                    ///< INI file parsing library
+#include "../include/configuration.h"      ///< Configuration handling functions
+#include "../include/traffic_generation.h" ///< Traffic generation functions and definitions
 // #include "../include/packets_count.h"       ///< Packet counting functions
 // #include "../include/GCRA.h"                ///< GCRA (Generic Controlled Rate Algorithm) functions
 // #include "../include/link_capacity_queue.h" ///< Link capacity queue management functions
@@ -130,21 +152,48 @@ int main(int argc, char *argv[])
     printf("capacity : %f bps\n", capacity);
 #endif
 
-    /** @brief Initializes the random seed for random number generation.*/
+    /**
+     * @brief Initialize random number generator
+     * @details Uses current time as seed for random number generation
+     * @note This ensures different random sequences in each program run
+     */
     srand48(time(NULL));
 
-    //     /** @brief Initializes the traffic generator based on the configuration. */
-    //     double r = atof(argv[1]);
-    //     traffic_generator generator = initializeTrafficGenerator(config, r);
-    //     showTrafficGenerator(generator); ///< Uncomment to display generator details.
+    /**
+     * @brief Initialize and configure the traffic generator
+     * @param config Configuration structure containing generator parameters
+     * @return Initialized traffic_generator structure
+     * @see initializeTrafficGenerator
+     */
+    traffic_generator generator = initializeTrafficGenerator(config);
 
-    //     /** @brief Number of tenants in the simulation.(Float) */
-    //     int tenant_number = config.tenant_number;
-    //     /** @brief Total number of grid time slots in the simulation.(Float) */
-    //     long grids_number = generator.grids_number;
+#ifdef SHOW_TRAFFICGENERATOR
+    /**
+     * @brief Display traffic generator configuration details
+     * @note Only compiled when SHOW_TRAFFICGENERATOR is defined
+     * @see showTrafficGenerator
+     */
+    showTrafficGenerator(generator);
+#endif
 
-    //     /** @brief The simulation timestamp. */
-    //     TIME_TYPE timestamp = (TIME_TYPE)0;
+    /**
+     * @brief Number of tenants in the simulation
+     * @note Data type is integer, represents the count of active tenants
+     */
+    int tenant_number = config.tenant_number;
+
+    /**
+     * @brief Total number of grid time slots in the simulation
+     * @note Data type is long integer to handle large simulation periods
+     */
+    long grids_number = generator.grids_number;
+
+    /**
+     * @brief The simulation timestamp
+     * @note Using TIME_TYPE typedef for consistent time representation
+     * @see TIME_TYPE
+     */
+    TIME_TYPE timestamp = (TIME_TYPE)0;
 
     //     /** @brief Structure to store packet counts for each tenant. */
     //     packets_count count;
@@ -205,182 +254,202 @@ int main(int argc, char *argv[])
     //     fclose(file);
     // #endif
 
-    //     /**
-    //      * @brief Main loop for simulating the traffic over time.
-    //      * @details This loop runs until the timestamp exceeds the total simulation time.
-    //      *          The timestamp is incremented by the step size at each iteration.
-    //      */
-    //     while (timestamp <= (TIME_TYPE)(config.simulation_time * ONE_SECOND_IN_NS))
-    //     {
+    /**
+     * @brief Main simulation loop
+     * @details Iterates through the simulation time, processing traffic events
+     *          at each time step until reaching the configured end time.
+     *
+     * @note Simulation time is converted to nanoseconds using ONE_SECOND_IN_NS
+     * @see ONE_SECOND_IN_NS
+     * @see config.simulation_time
+     */
+    while (timestamp <= (TIME_TYPE)(config.simulation_time * ONE_SECOND_IN_NS))
+    {
 
-    //         /**
-    //          * @brief Updates the timestamp and counts the dequeue operations.
-    //          *
-    //          * This section of code updates the current timestamp based on the
-    //          * generator's step size and counts how many times items can be
-    //          * dequeued from the link priority queue based on the dequeue interval.
-    //          */
+        /**
+         * @brief Time advancement block
+         * @details Updates simulation time and processes dequeue operations
+         *
+         * @note The step size (generator.step_size) determines the granularity
+         *       of the simulation time advancement
+         * @warning Ensure step_size is appropriate for the simulation scale
+         */
+        timestamp += (TIME_TYPE)(generator.step_size);
 
-    //         timestamp += (TIME_TYPE)(generator.step_size); ///< Update the timestamp by the generator's step size
+        //         // Count the dequeue times
+        //         int dequeue_count = 0; ///< Initialize the dequeue count
 
-    //         // Count the dequeue times
-    //         int dequeue_count = 0; ///< Initialize the dequeue count
+        //         while (link.dequeue_timestamp <= (double)timestamp) ///< Loop until the dequeue timestamp exceeds the current timestamp
+        //         {
+        //             link.dequeue_timestamp += link.dequeue_interval; ///< Update the dequeue timestamp by the interval
+        //             dequeue_count += 1;                              ///< Increment the dequeue count
+        //         }
 
-    //         while (link.dequeue_timestamp <= (double)timestamp) ///< Loop until the dequeue timestamp exceeds the current timestamp
-    //         {
-    //             link.dequeue_timestamp += link.dequeue_interval; ///< Update the dequeue timestamp by the interval
-    //             dequeue_count += 1;                              ///< Increment the dequeue count
-    //         }
+        //         while (cdequeue_timestamp <= (double)timestamp) ///< Loop until the dequeue timestamp exceeds the current timestamp
+        //         {
+        //             cdequeue_timestamp += cdequeue_timestamp_step; ///< Update the dequeue timestamp by the interval
+        //             for (int tenant = 0; tenant < tenant_number; tenant++)
+        //                 cdequeue((cqueues + tenant));
+        //         }
+        // #ifdef PRINT_DEQUEUE_COUNT
+        //         printf("dequeue_count = %d\n", dequeue_count);
+        // #endif
 
-    //         while (cdequeue_timestamp <= (double)timestamp) ///< Loop until the dequeue timestamp exceeds the current timestamp
-    //         {
-    //             cdequeue_timestamp += cdequeue_timestamp_step; ///< Update the dequeue timestamp by the interval
-    //             for (int tenant = 0; tenant < tenant_number; tenant++)
-    //                 cdequeue((cqueues + tenant));
-    //         }
-    // #ifdef PRINT_DEQUEUE_COUNT
-    //         printf("dequeue_count = %d\n", dequeue_count);
-    // #endif
+#ifdef PRINT_EACH_TIMESTAMP
+        /**
+         * @brief Debug output for current timestamp
+         * @details Prints the current simulation time to standard output
+         * @note Format: timestamp value with floating-point precision
+         * @note The %-lf format specifier ensures left-aligned output
+         */
+        printf("timestamp : %-lf\n", timestamp);
+#endif
+        // grid_counts++;
 
-    // #ifdef PRINT_EACH_TIMESTAMP
-    //         printf("timestamp : %-lf\n", timestamp);
-    // #endif
-    //         grid_counts++;
+        // Packets generation
+        int *packets = packet_generation_configuration(generator, config);
 
-    //         // Packets generation
-    //         int *packets = packet_generation_configuration(generator, config);
+#ifdef PRINT_EACH_GRID_PACKET
+        /**
+         * @brief Print detailed packet information for all tenants
+         * @details Outputs the current state of packets for each tenant in the grid
+         *
+         * @param[in] packets Array of packet information for each tenant
+         * @param[in] tenant_number Total number of tenants in the simulation
+         *
+         * @see print_packets
+         * @note This debug output may be verbose for large tenant numbers
+         */
+        print_packets(packets, config.tenant_number);
+#endif
 
-    // #ifdef PRINT_EACH_GRID_PACKET
-    //         print_packets(packets, config.tenant_number);
-    // #endif
+        // #ifdef RECORD_PACKETS_SITUATION
+        //         /**
+        //          * @brief Records the packet situation if RECORD_PACKETS_SITUATION is defined.
+        //          */
+        //         record_packet_situation_agrid(packets, dequeue_count, config);
+        // #endif
 
-    // #ifdef RECORD_PACKETS_SITUATION
-    //         /**
-    //          * @brief Records the packet situation if RECORD_PACKETS_SITUATION is defined.
-    //          */
-    //         record_packet_situation_agrid(packets, dequeue_count, config);
-    // #endif
+        //         for (int tenant = 0; tenant < tenant_number; tenant++)
+        //         {
 
-    //         for (int tenant = 0; tenant < tenant_number; tenant++)
-    //         {
+        //             /**
+        //              * @brief Increments the packet count for a specific tenant based on packet label.
+        //              *
+        //              * This code checks if the packet for the specified tenant is of the
+        //              * type PACKET_LABEL_ACCEPT. If it is, the count for that tenant is
+        //              * incremented. If not, the loop continues without any further action.
+        //              */
+        //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
+        //             {
+        //                 *(count.count + tenant) += 1; ///< Increment the count for the tenant
+        //             }
+        //             else
+        //                 continue; ///< Skip to the next iteration if there is no relevant packet
 
-    //             /**
-    //              * @brief Increments the packet count for a specific tenant based on packet label.
-    //              *
-    //              * This code checks if the packet for the specified tenant is of the
-    //              * type PACKET_LABEL_ACCEPT. If it is, the count for that tenant is
-    //              * incremented. If not, the loop continues without any further action.
-    //              */
-    //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
-    //             {
-    //                 *(count.count + tenant) += 1; ///< Increment the count for the tenant
-    //             }
-    //             else
-    //                 continue; ///< Skip to the next iteration if there is no relevant packet
+        //             // Upper bound exceeded traffic operation(reservation)
 
-    //             // Upper bound exceeded traffic operation(reservation)
+        //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
+        //             {
+        //                 if (cenqueue((cqueues + tenant)) == 1)
+        //                     *(packets + tenant) == PACKET_LABEL_ACCEPT;
+        //             }
+        //             else
+        //             {
+        //                 label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] += 1;
+        //                 continue; ///< Skip to the next iteration if there is no relevant packet
+        //             }
 
-    //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
-    //             {
-    //                 if (cenqueue((cqueues + tenant)) == 1)
-    //                     *(packets + tenant) == PACKET_LABEL_ACCEPT;
-    //             }
-    //             else
-    //             {
-    //                 label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] += 1;
-    //                 continue; ///< Skip to the next iteration if there is no relevant packet
-    //             }
+        //             /**
+        //              * @brief Processes packets through the GCRA algorithm.
+        //              *
+        //              * This code checks if the packet for the specified tenant is of the
+        //              * type PACKET_LABEL_ACCEPT. If it is, the packet undergoes an update
+        //              * using the GCRA algorithm based on the current timestamp and tenant's
+        //              * GCRA instance.
+        //              */
+        //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
+        //             {
+        //                 *(packets + tenant) = gcra_update(timestamp, (gcras + tenant), config); ///< Update the packet using GCRA
+        //             }
 
-    //             /**
-    //              * @brief Processes packets through the GCRA algorithm.
-    //              *
-    //              * This code checks if the packet for the specified tenant is of the
-    //              * type PACKET_LABEL_ACCEPT. If it is, the packet undergoes an update
-    //              * using the GCRA algorithm based on the current timestamp and tenant's
-    //              * GCRA instance.
-    //              */
-    //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
-    //             {
-    //                 *(packets + tenant) = gcra_update(timestamp, (gcras + tenant), config); ///< Update the packet using GCRA
-    //             }
+        //             /**
+        //              * @brief Updates the statistics for packets labeled as GCRA.
+        //              *
+        //              * This code checks if the packet for the specified tenant is labeled
+        //              * as PACKET_LABEL_GCRA_LABELED. If it is, the corresponding statistic
+        //              * for that label is incremented in the labels structure.
+        //              */
+        //             // Statistic for the number of packets labeled as GCRA
+        //             if (*(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is labeled as GCRA
+        //             {
+        //                 label.labels[tenant][PACKET_LABEL_GCRA_LABELED] += 1; ///< Increment the GCRA labeled packet count for the tenant
+        //             }
 
-    //             /**
-    //              * @brief Updates the statistics for packets labeled as GCRA.
-    //              *
-    //              * This code checks if the packet for the specified tenant is labeled
-    //              * as PACKET_LABEL_GCRA_LABELED. If it is, the corresponding statistic
-    //              * for that label is incremented in the labels structure.
-    //              */
-    //             // Statistic for the number of packets labeled as GCRA
-    //             if (*(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is labeled as GCRA
-    //             {
-    //                 label.labels[tenant][PACKET_LABEL_GCRA_LABELED] += 1; ///< Increment the GCRA labeled packet count for the tenant
-    //             }
+        //             /**
+        //              * @brief Enqueues packets into the link queue based on their labels.
+        //              *
+        //              * This code checks if the packet for the specified tenant is either
+        //              * labeled as PACKET_LABEL_ACCEPT or PACKET_LABEL_GCRA_LABELED. If
+        //              * the packet is labeled as ACCEPT, it processes the enqueue operation
+        //              * for the link queue, handling potential drops due to capacity limits.
+        //              */
+        //             // Link queue enqueue
+        //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT || *(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is ACCEPT or GCRA labeled
+        //             {
+        //                 if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Further check if the packet is ACCEPT
+        //                 {
+        //                     if (dequeue_count > 0) ///< Check if there are packets to dequeue
+        //                     {
+        //                         int index = dequeue(&link);                        ///< Dequeue a packet from the link queue
+        //                         if (index != UNFOUND)                              ///< Check if a valid index was returned
+        //                             label.labels[index][PACKET_LABEL_ACCEPT] += 1; ///< Increment the count for ACCEPT labeled packets
+        //                         dequeue_count -= 1;                                ///< Decrease the dequeue count
+        //                     }
 
-    //             /**
-    //              * @brief Enqueues packets into the link queue based on their labels.
-    //              *
-    //              * This code checks if the packet for the specified tenant is either
-    //              * labeled as PACKET_LABEL_ACCEPT or PACKET_LABEL_GCRA_LABELED. If
-    //              * the packet is labeled as ACCEPT, it processes the enqueue operation
-    //              * for the link queue, handling potential drops due to capacity limits.
-    //              */
-    //             // Link queue enqueue
-    //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT || *(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is ACCEPT or GCRA labeled
-    //             {
-    //                 if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Further check if the packet is ACCEPT
-    //                 {
-    //                     if (dequeue_count > 0) ///< Check if there are packets to dequeue
-    //                     {
-    //                         int index = dequeue(&link);                        ///< Dequeue a packet from the link queue
-    //                         if (index != UNFOUND)                              ///< Check if a valid index was returned
-    //                             label.labels[index][PACKET_LABEL_ACCEPT] += 1; ///< Increment the count for ACCEPT labeled packets
-    //                         dequeue_count -= 1;                                ///< Decrease the dequeue count
-    //                     }
+        //                     enqueue(&link, ALPHA, tenant, &drop_tenant); ///< Enqueue the ACCEPT packet into the link queue
 
-    //                     enqueue(&link, ALPHA, tenant, &drop_tenant); ///< Enqueue the ACCEPT packet into the link queue
+        //                     if (drop_tenant != UNFOUND)                                                 ///< Check if a packet was dropped
+        //                         if (drop_tenant != tenant)                                              ///< If the dropped packet is not from the current tenant
+        //                             label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the other tenant
+        //                         else
+        //                             label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the current tenant
+        //                 }
+        //             }
 
-    //                     if (drop_tenant != UNFOUND)                                                 ///< Check if a packet was dropped
-    //                         if (drop_tenant != tenant)                                              ///< If the dropped packet is not from the current tenant
-    //                             label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the other tenant
-    //                         else
-    //                             label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the current tenant
-    //                 }
-    //             }
+        //             /**
+        //              * @brief Enqueues packets labeled as GCRA into the link queue.
+        //              *
+        //              * This code checks if the packet for the specified tenant is labeled
+        //              * as PACKET_LABEL_GCRA_LABELED. If it is, the packet is enqueued
+        //              * into the link queue, and any drops due to capacity limits are
+        //              * recorded.
+        //              */
+        //             if (*(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is labeled as GCRA
+        //             {
+        //                 enqueue(&link, BETA, tenant, &drop_tenant); ///< Enqueue the GCRA labeled packet into the link queue
 
-    //             /**
-    //              * @brief Enqueues packets labeled as GCRA into the link queue.
-    //              *
-    //              * This code checks if the packet for the specified tenant is labeled
-    //              * as PACKET_LABEL_GCRA_LABELED. If it is, the packet is enqueued
-    //              * into the link queue, and any drops due to capacity limits are
-    //              * recorded.
-    //              */
-    //             if (*(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is labeled as GCRA
-    //             {
-    //                 enqueue(&link, BETA, tenant, &drop_tenant); ///< Enqueue the GCRA labeled packet into the link queue
+        //                 if (drop_tenant != UNFOUND)                                             ///< Check if a packet was dropped
+        //                     label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the tenant whose packet was dropped
+        //             }
+        //         }
 
-    //                 if (drop_tenant != UNFOUND)                                             ///< Check if a packet was dropped
-    //                     label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the tenant whose packet was dropped
-    //             }
-    //         }
-
-    //         /**
-    //          * @brief Dequeues packets from the link queue and updates statistics.
-    //          *
-    //          * This code processes packets in the link queue while there are
-    //          * packets available to dequeue. For each dequeued packet, the
-    //          * corresponding statistic for PACKET_LABEL_ACCEPT is incremented.
-    //          */
-    //         while (dequeue_count > 0) ///< Continue processing while there are packets to dequeue
-    //         {
-    //             int index = dequeue(&link);                        ///< Dequeue a packet from the link queue
-    //             if (index != UNFOUND)                              ///< Check if a valid index was returned
-    //                 label.labels[index][PACKET_LABEL_ACCEPT] += 1; ///< Increment the count for ACCEPT labeled packets
-    //             dequeue_count -= 1;                                ///< Decrease the dequeue count
-    //         }
-    //         // show_LinkQueue(&link);
-    //     }
+        //         /**
+        //          * @brief Dequeues packets from the link queue and updates statistics.
+        //          *
+        //          * This code processes packets in the link queue while there are
+        //          * packets available to dequeue. For each dequeued packet, the
+        //          * corresponding statistic for PACKET_LABEL_ACCEPT is incremented.
+        //          */
+        //         while (dequeue_count > 0) ///< Continue processing while there are packets to dequeue
+        //         {
+        //             int index = dequeue(&link);                        ///< Dequeue a packet from the link queue
+        //             if (index != UNFOUND)                              ///< Check if a valid index was returned
+        //                 label.labels[index][PACKET_LABEL_ACCEPT] += 1; ///< Increment the count for ACCEPT labeled packets
+        //             dequeue_count -= 1;                                ///< Decrease the dequeue count
+        //         }
+        //         // show_LinkQueue(&link);
+    }
 
     // #ifdef PRINT_GRID_COUNT
     //     printf("grid numbers= %d\n", grid_counts);

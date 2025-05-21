@@ -2,6 +2,7 @@
 #include <string.h>
 #include <float.h>
 #include <limits.h>
+#include <errno.h>
 
 #define CONFIG_H
 
@@ -275,23 +276,6 @@
  * @note The function will overwrite any existing file with the same name
  *
  * @warning Ensure proper write permissions in the target directory
- *
- * Format of the generated INI file:
- * @code
- * [simulation]
- * tenant_number = <value>
- * simulation_time = <value>
- * ...
- *
- * [traffic]
- * input_rate = <value>
- * traffic_mode = <value>
- * ...
- *
- * [threshold]
- * upper_queue_buffer = <value>
- * ...
- * @endcode
  */
 void reduction_inif_file(const char *filename)
 {
@@ -477,7 +461,7 @@ static int handler(void *config, const char *section, const char *name, const ch
 #define SAFE_STRTOL(val, min, max)                                                       \
     do                                                                                   \
     {                                                                                    \
-        int errno = 0;                                                                   \
+        errno = 0; /* 直接使用系統的 errno */                                            \
         temp_long = strtol(val, &endptr, 10);                                            \
         if (errno != 0 || *endptr != '\0' || temp_long < min || temp_long > max)         \
         {                                                                                \
@@ -490,7 +474,7 @@ static int handler(void *config, const char *section, const char *name, const ch
 #define SAFE_STRTOD(val, min, max)                                                       \
     do                                                                                   \
     {                                                                                    \
-        int errno = 0;                                                                   \
+        errno = 0; /* 直接使用系統的 errno */                                            \
         temp_double = strtod(val, &endptr);                                              \
         if (errno != 0 || *endptr != '\0' || temp_double < min || temp_double > max)     \
         {                                                                                \
@@ -847,11 +831,12 @@ cleanup:
  */
 void show_configuration(const configuration config)
 {
+    print_equals_line();
     printf("- Simulation :\n");
-    printf("| tenant number              : %-d\n", config.tenant_number);
-    printf("| simulation time            : %-lf\n", config.simulation_time);
-    printf("| error                      : %-f\n", config.error);
-    printf("| data path                  : %-s\n", config.data_path);
+    printf("| tenant number                   : %-d\n", config.tenant_number);
+    printf("| simulation time                 : %-lf\n", config.simulation_time);
+    printf("| error                           : %-f\n", config.error);
+    printf("| data path                       : %-s\n", config.data_path);
 
     switch (config.unit)
     {
@@ -892,6 +877,7 @@ void show_configuration(const configuration config)
     printf("| upper queue buffer              : %-ld\n", config.upper_queue_buffer);
     printf("| tau                             : %-ld\n", config.tau);
     printf("| link queue buffer               : %-d\n", config.link_queue_buffer);
+    print_equals_line();
 }
 
 /**

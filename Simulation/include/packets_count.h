@@ -3,88 +3,253 @@
  * @brief Header file for packet counting functions and structures.
  * This file defines the structure and functions related to packet counting for tenants.
  */
+
+/**
+ * @def RECORD_HEADER
+ * @brief Enable record headers for various statistics logging
+ * @details When defined, includes all header definitions for statistical records
+ */
 #define RECORD_HEADER
-#define PACKETS_COUNT_H
 
 #ifdef RECORD_HEADER
-/**
- * @brief Header for recording regular and naughty packet loss statistics.
- * This header defines the format for recording regular and naughty packet losses.
- */
-#define RECORD_REGULAR_AND_NAUGHTY_TAU_HEADER "tau,regular_loss,naughty_loss\n"
 
 /**
- * @brief Header for recording regular and naughty packet statistics.
- * This header defines the format for recording detailed regular and naughty packet statistics.
+ * @defgroup StatisticsHeaders Statistics Recording Headers
+ * @brief Header definitions for various statistics recording formats
+ * @{
  */
-#define RECORD_REGULAR_AND_NAUGHTY_ALL_HEADER "tau,naughty_mean,naughty_tenant_number,state_r,upper_queue_buffer,link_queue_buffer,regular_loss,naughty_loss\n"
 
 /**
- * @brief Header for recording average packet loss statistics.
- * This header defines the format for recording average packet loss statistics.
+ * @def RECORD_COMPLIANT_AND_NONCOMPLIANT_TAU_HEADER
+ * @brief CSV header for basic compliance statistics
+ * @details Format specification:
+ * - tau: Time constant
+ * - compliant_loss: Packet loss rate for compliant traffic
+ * - noncompliant_loss: Packet loss rate for non-compliant traffic
  */
-#define RECORD_AVERAGE_LOSS_HEADER "tau,naughty_mean,naughty_tenant_number,state_r,upper_queue_buffer,link_queue_buffer,average_loss\n"
+#define RECORD_COMPLIANT_AND_NONCOMPLIANT_TAU_HEADER \
+  "tau,compliant_loss,noncompliant_loss\n"
+
+/**
+ * @def RECORD_COMPLIANT_AND_NONCOMPLIANT_ALL_HEADER
+ * @brief CSV header for detailed compliance statistics
+ * @details Format specification:
+ * - tau: Time constant
+ * - noncompliant_mean: Average non-compliance rate
+ * - noncompliant_tenant_number: Number of non-compliant tenants
+ * - state_r: System state parameter
+ * - noncompliant_state_r: Non-compliant state parameter
+ * - upper_queue_buffer: Upper queue buffer size
+ * - link_queue_buffer: Link queue buffer size
+ * - compliant_loss: Compliant packet loss rate
+ * - noncompliant_loss: Non-compliant packet loss rate
+ */
+#define RECORD_COMPLIANT_AND_NONCOMPLIANT_ALL_HEADER           \
+  "tau,noncompliant_mean,noncompliant_tenant_number,state_r,"  \
+  "noncompliant_state_r,upper_queue_buffer,link_queue_buffer," \
+  "compliant_loss,noncompliant_loss\n"
+
+/**
+ * @def RECORD_AVERAGE_LOSS_HEADER
+ * @brief CSV header for average loss statistics
+ * @details Format specification:
+ * - tau: Time constant
+ * - noncompliant_mean: Average non-compliance rate
+ * - noncompliant_tenant_number: Number of non-compliant tenants
+ * - state_r: System state parameter
+ * - noncompliant_state_r: Non-compliant state parameter
+ * - upper_queue_buffer: Upper queue buffer size
+ * - link_queue_buffer: Link queue buffer size
+ * - average_loss: Average packet loss rate
+ */
+#define RECORD_AVERAGE_LOSS_HEADER                             \
+  "tau,noncompliant_mean,noncompliant_tenant_number,state_r,"  \
+  "noncompliant_state_r,upper_queue_buffer,link_queue_buffer," \
+  "average_loss\n"
 
 /**
  * @def RECORD_PACKET_SITUATION_HEADER
- * @brief Header for the packet situation record.
- *
- * This macro defines the header line for the packet situation log,
- * indicating the columns for packets and dequeue status.
+ * @brief CSV header for packet processing statistics
+ * @details Format specification:
+ * - packets: Number of packets processed
+ * - dequeue: Number of dequeue operations
  */
 #define RECORD_PACKET_SITUATION_HEADER "packets,dequeue\n"
-#endif
+
+/** @} */ // end of StatisticsHeaders group
+
+/**
+ * @brief Header type enumeration
+ */
+enum HeaderType
+{
+  HEADER_TYPE_TAU = 0, ///< Basic compliance statistics
+  HEADER_TYPE_ALL,     ///< Detailed compliance statistics
+  HEADER_TYPE_AVERAGE, ///< Average loss statistics
+  HEADER_TYPE_PACKET   ///< Packet situation statistics
+};
+
+/**
+ * @brief Helper function to write headers to output files
+ * @param[in] file_ptr File pointer to write headers to
+ * @param[in] header_type Type of header to write
+ * @return int Success status (0 for success, FAILURE for failure)
+ */
+int write_statistics_header(FILE *file_ptr, int header_type)
+{
+  if (!file_ptr)
+    return FAILURE;
+
+  switch (header_type)
+  {
+  case HEADER_TYPE_TAU:
+    fprintf(file_ptr, RECORD_COMPLIANT_AND_NONCOMPLIANT_TAU_HEADER);
+    break;
+  case HEADER_TYPE_ALL:
+    fprintf(file_ptr, RECORD_COMPLIANT_AND_NONCOMPLIANT_ALL_HEADER);
+    break;
+  case HEADER_TYPE_AVERAGE:
+    fprintf(file_ptr, RECORD_AVERAGE_LOSS_HEADER);
+    break;
+  case HEADER_TYPE_PACKET:
+    fprintf(file_ptr, RECORD_PACKET_SITUATION_HEADER);
+    break;
+  default:
+    return UNFOUND;
+  }
+  return SUCCESS;
+}
+
+#endif // RECORD_HEADER
+
+#define PACKETS_COUNT_H
+
 #ifdef PACKETS_COUNT_H
 
 /**
  * @struct packets_count
- * @brief Structure to hold packet count statistics for tenants.
- * This structure contains information about the packet count for each tenant,
- * including the number of packets, the number of tenants, and the grid length.
+ * @brief Structure to hold packet count statistics for tenants
+ * @details Tracks packet statistics including counts per tenant and grid metrics
  */
 typedef struct
 {
-  long *count;       /**< Array holding the packet count for each tenant. */
-  int tenant_number; /**< The number of tenants. */
-  long grid_length;  /**< The grid length (total number of events). */
-} packets_count;
+  long *count;       /**< Array holding the packet count for each tenant */
+  int tenant_number; /**< The number of tenants in the system */
+  long grid_length;  /**< The grid length (total number of events) */
+} packets_count;     /**< Typedef for packets_count structure */
 
 /**
- * @brief Initializes the packet count structure.
+ * @brief Initializes the packet count structure
  *
- * This function initializes the `packets_count` structure, allocating memory for the `count` array and
- * setting the tenant number and grid length values.
+ * @details This function performs the following operations:
+ * - Validates input parameters
+ * - Allocates memory for packet counting
+ * - Initializes all counters to zero
+ * - Sets up tenant and grid parameters
  *
- * @param pcount A pointer to the `packets_count` structure to be initialized.
- * @param tenant_number The number of tenants.
- * @param grid_length The length of the grid (total number of events).
+ * @param[out] pcount Pointer to the packets_count structure to be initialized
+ * @param[in] tenant_number Number of tenants (must be positive)
+ * @param[in] grid_length Length of the grid (must be positive)
+ *
+ * @return int Status code (0 for success, error code otherwise)
+ *
+ * @note The caller is responsible for calling free_packets_count() when done
+ *
+ * @see free_packets_count()
  */
-void init_packets_count(packets_count *pcount, int tenant_number, long grid_length)
+int init_packets_count(packets_count *pcount, int tenant_number, long grid_length)
 {
-  pcount->count = (long *)calloc(tenant_number, sizeof(long)); /**< Allocate memory for the packet counts. */
-  pcount->tenant_number = tenant_number;                       /**< Set the tenant number. */
-  pcount->grid_length = grid_length;                           /**< Set the grid length. */
+  // Input validation
+  if (pcount == NULL)
+  {
+    printf(RED_ELOG "init_packets_count : PCOUNT NULL\n" RESET);
+    return FAILURE;
+  }
+
+  if (tenant_number <= 0)
+  {
+    printf(RED_ELOG "init_packets_count : TENANT_NUMBER IS ILEGAL\n" RESET);
+    return FAILURE;
+  }
+
+  if (grid_length <= 0)
+  {
+    printf(RED_ELOG "init_packets_count : GRID_LENGTH IS NEGATIVE\n" RESET);
+    return FAILURE;
+  }
+
+  // Initialize structure to known state
+  pcount->count = NULL;
+  pcount->tenant_number = 0;
+  pcount->grid_length = 0;
+
+  // Allocate memory for packet counts
+  pcount->count = (long *)calloc(tenant_number, sizeof(long));
+  if (pcount->count == NULL)
+  {
+    printf(RED_ELOG "init_packets_count : COUNT CALLOC FAILED\n" RESET);
+    return FAILURE;
+  }
+
+  // Set structure parameters
+  pcount->tenant_number = tenant_number;
+  pcount->grid_length = grid_length;
+
+  return SUCCESS;
 }
 
 /**
- * @brief Displays the packet count statistics.
+ * @brief Frees resources associated with a packets_count structure
  *
- * This function prints the packet count for each tenant along with the percentage of total packets
- * for each tenant. It also prints a separator line before and after the statistics.
+ * @param[in,out] pcount Pointer to the packets_count structure to free
+ */
+void free_packets_count(packets_count *pcount)
+{
+  if (pcount != NULL)
+  {
+    free(pcount->count);
+    pcount->count = NULL;
+    pcount->tenant_number = 0;
+    pcount->grid_length = 0;
+  }
+}
+
+/**
+ * @brief Displays the packet count statistics
  *
- * @param count The `packets_count` structure containing the count and tenant information.
+ * This function prints the packet count for each tenant along with the percentage
+ * of total packets for each tenant. It includes separator lines for better readability.
+ *
+ * @param[in] count The packets_count structure containing the statistics
+ * @return void
  */
 void show_packets_count(packets_count count)
 {
-  print_equals_line(); /**< Print a separator line. */
-  printf("Packet Count =\n");
+  // 輸入驗證
+  if (count.count == NULL || count.tenant_number <= 0 || count.grid_length <= 0)
+  {
+    printf("Error: Invalid packets_count structure\n");
+    return;
+  }
 
-  // Loop through each tenant and display the packet count and percentage.
+  // 上方分隔線
+  print_equals_line();
+  printf("Packet Count Statistics:\n");
+
+  // 顯示每個租戶的統計資料
   for (int tenant = 0; tenant < count.tenant_number; tenant++)
-    printf("Number of packets : %-10ld Percentage : %f %\n", *(count.count + tenant),
-           (double)(*(count.count + tenant) * 100) / count.grid_length);
+  {
+    long packet_count = count.count[tenant];
+    double percentage = (double)(packet_count * 100.0) / count.grid_length;
 
-  print_equals_line(); /**< Print a separator line. */
+    printf("Tenant %-3d | Packets: %-10ld | Percentage: %.2f%%\n",
+           tenant,
+           packet_count,
+           percentage);
+  }
+
+  // 下方分隔線
+  print_equals_line();
 }
 
 /**
@@ -103,12 +268,22 @@ typedef struct
 /**
  * @brief Initializes the packets_label structure.
  *
- * This function initializes the `packets_label` structure by allocating memory for the `count` array and the
- * `labels` array. It also copies the packet count values from the provided `packets_count` structure.
+ * @details This function performs the following initialization steps:
+ *          - Allocates and initializes memory for the count array
+ *          - Copies packet counts from the provided packets_count structure
+ *          - Allocates memory for the 2D labels array
+ *          - Initializes each tenant's label array to zero
  *
- * @param plabel A pointer to the `packets_label` structure to be initialized.
- * @param tenant_number The number of tenants.
- * @param pcount A pointer to the `packets_count` structure containing the initial packet counts.
+ * @param[out] plabel      Pointer to the packets_label structure to be initialized
+ * @param[in]  tenant_number The number of tenants
+ * @param[in]  pcount     Pointer to the packets_count structure containing initial packet counts
+ *
+ * @pre pcount must contain valid packet counts for tenant_number tenants
+ * @pre PACKET_LABEL_TYPE must be defined and greater than 0
+ *
+ * @note Memory allocated by this function must be freed using an appropriate cleanup function
+ *
+ * @warning No parameter validation is performed; ensure all parameters are valid before calling
  */
 void init_Packets_Label(packets_label *plabel, int tenant_number, packets_count *pcount)
 {
@@ -123,13 +298,59 @@ void init_Packets_Label(packets_label *plabel, int tenant_number, packets_count 
 }
 
 /**
+ * @brief Frees the memory allocated for the packet label structure
+ *
+ * @param[in,out] plabel Pointer to the packets_label structure to be freed
+ */
+void free_packets_label(packets_label *plabel)
+{
+  if (plabel != NULL)
+  {
+    if (plabel->labels != NULL)
+    {
+      // 釋放每個租戶的標籤陣列
+      for (int i = 0; i < plabel->tenant_number; i++)
+      {
+        free(plabel->labels[i]);
+      }
+      free(plabel->labels);
+      plabel->labels = NULL;
+    }
+
+    // 釋放計數陣列
+    free(plabel->count);
+    plabel->count = NULL;
+
+    // 重設租戶數量
+    plabel->tenant_number = 0;
+  }
+}
+
+/**
  * @brief Displays the packet label statistics.
  *
- * This function prints the statistics for each tenant, including the counts for each packet label
- * (ACCEPT, DROP_OVER, DROP_GCRA, CAPACITY) and the corresponding loss percentages. It also computes and
- * displays average statistics, such as the average exceed, average GCRA, and average packet loss.
+ * @details This function displays detailed statistics for each tenant including:
+ *          - ACCEPT: Number of accepted packets
+ *          - DROP_OVER: Number of packets dropped due to overflow
+ *          - DROP_LABELED: Number of packets dropped by GCRA
+ *          - CAPACITY: Capacity limit
+ *          - LOSS(PURE): Percentage of capacity-related packet loss
+ *          - LOSS(ALL): Percentage of total packet loss (including overflow)
  *
- * @param label The `packets_label` structure containing the label and count information.
+ * The function also calculates and displays the following averages across all tenants:
+ *          - Average exceed (overflow drops)
+ *          - Average GCRA drops
+ *          - Average pure loss percentage
+ *          - Average total loss percentage
+ *
+ * @param[in] label The packets_label structure containing the statistics data
+ *
+ * @note The output is formatted in a table-like structure with colored average statistics
+ * @note LOSS(PURE) = (CAPACITY / (ACCEPT + CAPACITY)) * 100%
+ * @note LOSS(ALL) = ((DROP_OVER + CAPACITY) / (ACCEPT + DROP_OVER + CAPACITY)) * 100%
+ *
+ * @pre RED_ELOG and RESET color macros must be defined
+ * @pre print_equals_line() function must be available
  */
 void show_packets_label(packets_label label)
 {
@@ -140,12 +361,12 @@ void show_packets_label(packets_label label)
 
   print_equals_line(); /**< Print a separator line. */
   printf("label =\n");
-  printf("ACCEPT    , DROP_OVER , DROP_LABELED , CAPACITY   : LOSS(PURE),  LOSS\n");
+  printf("%-10s, %-10s, %-10s, %-10s : %-12s % , %-12s %\n", "ACCEPT", "DROP_OVER", "DROP_LABELED", "CAPACITY", "LOSS(PURE)", "LOSS(ALL)");
 
   // Loop through each tenant and display the label counts and loss percentages.
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
   {
-    printf("%-10d, %-10d, %-10d, %-10d : %-f % , %-f %\n",
+    printf("%-10d, %-10d, %-10d, %-10d : %-12.7f % , %-12.7f %\n",
            label.labels[tenant][0], label.labels[tenant][1], label.labels[tenant][2], label.labels[tenant][3],
            (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]),
            (double)(label.labels[tenant][1] + label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][1] + label.labels[tenant][3]));
@@ -166,54 +387,127 @@ void show_packets_label(packets_label label)
 }
 
 /**
- * @brief Prints the regular and naughty tenant statistics.
+ * @brief Prints the compliant and noncompliant tenant statistics.
  *
- * This function calculates and prints the GCRA and packet loss percentages for regular and naughty tenants.
- * It separates the statistics based on the provided `naughty_tenant_number` and prints them individually.
+ * @details This function analyzes and displays separate statistics for compliant and noncompliant tenants:
+ *          - Average GCRA drops per tenant type
+ *          - Average packet loss percentage per tenant type
  *
- * @param label The `packets_label` structure containing the packet label statistics for each tenant.
- * @param naughty_tenant_number The number of naughty tenants, used to separate regular and naughty tenants.
+ *          The function performs the following steps:
+ *          1. Validates traffic mode compatibility
+ *          2. Checks for presence of noncompliant tenants
+ *          3. Calculates separate statistics for each tenant type
+ *          4. Displays averaged results
+ *
+ * @param[in] label  The packets_label structure containing packet statistics
+ * @param[in] config Configuration structure containing:
+ *                   - traffic_mode: Current traffic mode
+ *                   - noncompliant_tenant_number: Number of noncompliant tenants
+ *
+ * @note Loss percentage calculation: (CAPACITY / (ACCEPT + CAPACITY)) * 100%
+ *
+ * @pre RED_ELOG and RESET color macros must be defined
+ * @pre is_noncompliant_index() function must be available
+ *
+ * @return void, but will exit early with error message if:
+ *         - Traffic mode is incompatible (UNIFORM, DENSITY, or ALL_NONCOMPLIANT_UNIFORM)
+ *         - No noncompliant tenants are configured (noncompliant_tenant_number == 0)
+ *
+ * @warning Function assumes tenants are ordered with compliant tenants first,
+ *          followed by noncompliant tenants
  */
-void print_regular_and_naughty(packets_label label, const configuration config)
+void print_compliant_and_noncompliant(packets_label label, const configuration config)
 {
-  double naughty_GCRA = 0;
-  double naughty_Loss = 0;
-  double regular_GCRA = 0;
-  double regular_Loss = 0;
+  if (config.traffic_mode == TRAFFIC_MODE_UNIFORM || config.traffic_mode == TRAFFIC_MODE_DENSITY || config.traffic_mode == TRAFFIC_MODE_ALL_NONCOMPLIANT_UNIFORM)
+  {
+    printf(RED_ELOG "print_compliant_and_noncompliant : TRAFFIC MODE DOES NOT SUPPORT\n" RESET);
+    return;
+  }
 
-  // Loop through each tenant and accumulate statistics based on their type (regular or naughty).
+  if (config.noncompliant_tenant_number == 0)
+  {
+    printf(RED_ELOG "print_compliant_and_noncompliant : NONCOMPLIANT TENANT NUMBER IS ZERO\n" RESET);
+    return;
+  }
+
+  double noncompliant_GCRA = 0;
+  double noncompliant_Loss = 0;
+  double compliant_GCRA = 0;
+  double compliant_Loss = 0;
+
+  // Loop through each tenant and accumulate statistics based on their type (compliant or noncompliant).
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
 
-    if (is_naughty_index(tenant, config))
+    if (is_noncompliant_index(tenant, config))
     {
-      naughty_GCRA += label.labels[tenant][2];                                                                         /**< Accumulate GCRA for naughty tenants. */
-      naughty_Loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for naughty tenants. */
+      noncompliant_GCRA += label.labels[tenant][2];                                                                         /**< Accumulate GCRA for noncompliant tenants. */
+      noncompliant_Loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for noncompliant tenants. */
     }
     else
     {
-      regular_GCRA += label.labels[tenant][2];                                                                         /**< Accumulate GCRA for regular tenants. */
-      regular_Loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for regular tenants. */
+      compliant_GCRA += label.labels[tenant][2];                                                                         /**< Accumulate GCRA for compliant tenants. */
+      compliant_Loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for compliant tenants. */
     }
 
-  // Print the GCRA and loss statistics for regular and naughty tenants.
-  printf("regular : GCRA : %-7.12f Loss :%-7.12f% \n", regular_GCRA / (label.tenant_number - config.naughty_tenant_number), regular_Loss / (label.tenant_number - config.naughty_tenant_number));
-  printf("naughty : GCRA : %-7.12f Loss :%-7.12f% \n", naughty_GCRA / config.naughty_tenant_number, naughty_Loss / config.naughty_tenant_number);
+  // Print the GCRA and loss statistics for compliant and noncompliant tenants.
+  printf("compliant    : GCRA : %-7.12f Loss :%-7.12f% \n", compliant_GCRA / (label.tenant_number - config.noncompliant_tenant_number), compliant_Loss / (label.tenant_number - config.noncompliant_tenant_number));
+  printf("noncompliant : GCRA : %-7.12f Loss :%-7.12f% \n", noncompliant_GCRA / config.noncompliant_tenant_number, noncompliant_Loss / config.noncompliant_tenant_number);
 }
 
 /**
- * @brief Records the regular and naughty tenant loss statistics in a CSV file.
+ * @brief Records the compliant and noncompliant tenant loss statistics in a CSV file.
  *
- * This function calculates the packet loss for regular and naughty tenants, then appends the results to
- * a CSV file named "regular_and_naughty_tau.csv" in the specified `data_path`. It logs the `tau` value,
- * and the loss percentages for regular and naughty tenants.
+ * @details This function:
+ *          1. Validates traffic mode and noncompliant tenant configuration
+ *          2. Calculates average packet loss for both compliant and noncompliant tenants
+ *          3. Appends results to "compliant_and_noncompliant_tau.csv" with format:
+ *             tau, compliant_loss, noncompliant_loss
  *
- * @param label The `packets_label` structure containing the packet label statistics for each tenant.
- * @param config The configuration structure containing settings like `tau` and `naughty_tenant_number`.
+ * The loss percentage is calculated as: CAPACITY / (ACCEPT + CAPACITY)
+ *
+ * @param[in] label  The packets_label structure containing packet statistics
+ * @param[in] config Configuration structure containing:
+ *                   - traffic_mode: Current traffic mode
+ *                   - noncompliant_tenant_number: Number of noncompliant tenants
+ *                   - tau: Current tau value for logging
+ *                   - data_path: Directory path for output file
+ *
+ * @pre RED_ELOG and RESET color macros must be defined
+ * @pre MAX_PATH_LENGTH must be defined
+ * @pre is_noncompliant_index() function must be available
+ * @pre data_path directory must exist and be writable
+ *
+ * @return void, but will exit in following cases:
+ *         - Early return with error message if:
+ *           * Traffic mode is incompatible (UNIFORM, DENSITY, or ALL_NONCOMPLIANT_UNIFORM)
+ *           * No noncompliant tenants are configured
+ *         - Program termination if:
+ *           * File cannot be opened for writing
+ *
+ * @note Output CSV format:
+ *       tau_value, compliant_loss_average, noncompliant_loss_average
+ *
+ * @warning Function assumes tenants are ordered with compliant tenants first,
+ *          followed by noncompliant tenants
+ * @warning Existing file will be appended to, not overwritten
  */
-void record_regular_and_naughty_tau(packets_label label, const configuration config)
+void record_compliant_and_noncompliant_tau(packets_label label, const configuration config)
 {
+
+  if (config.traffic_mode == TRAFFIC_MODE_UNIFORM || config.traffic_mode == TRAFFIC_MODE_DENSITY || config.traffic_mode == TRAFFIC_MODE_ALL_NONCOMPLIANT_UNIFORM)
+  {
+    printf(RED_ELOG "record_compliant_and_noncompliant_tau : TRAFFIC MODE DOES NOT SUPPORT\n" RESET);
+    return;
+  }
+
+  if (config.noncompliant_tenant_number == 0)
+  {
+    printf(RED_ELOG "record_compliant_and_noncompliant_tau : NONCOMPLIANT TENANT NUMBER IS ZERO\n" RESET);
+    return;
+  }
+
   char file_path[MAX_PATH_LENGTH];
-  sprintf(file_path, "%s/regular_and_naughty_tau.csv", config.data_path);
+  sprintf(file_path, "%s/compliant_and_noncompliant_tau.csv", config.data_path);
 
   FILE *file = fopen(file_path, "a");
   if (!file)
@@ -222,39 +516,85 @@ void record_regular_and_naughty_tau(packets_label label, const configuration con
     exit(EXIT_FAILURE);
   }
 
-  double naughty_Loss = 0;
-  double regular_Loss = 0;
+  double noncompliant_Loss = 0;
+  double compliant_Loss = 0;
 
-  // Loop through each tenant and calculate the loss percentage for regular and naughty tenants.
+  // Loop through each tenant and calculate the loss percentage for compliant and noncompliant tenants.
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
-    if (is_naughty_index(tenant, config))
+    if (is_noncompliant_index(tenant, config))
     {
-      naughty_Loss += (double)(label.labels[tenant][3]) / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for naughty tenants. */
+      noncompliant_Loss += (double)(label.labels[tenant][3]) / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for noncompliant tenants. */
     }
     else
     {
-      regular_Loss += (double)(label.labels[tenant][3]) / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for regular tenants. */
+      compliant_Loss += (double)(label.labels[tenant][3]) / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for compliant tenants. */
     }
 
   // Append the results to the CSV file.
-  fprintf(file, "%ld, %f, %f\n", config.tau, regular_Loss, naughty_Loss);
+  fprintf(file, "%ld, %f, %f\n", config.tau, compliant_Loss, noncompliant_Loss);
   fclose(file); /**< Close the file after writing. */
 }
 
 /**
- * @brief Records detailed statistics for regular and naughty tenants in a CSV file.
+ * @brief Records detailed statistics for compliant and noncompliant tenants in a CSV file.
  *
- * This function logs the statistics for regular and naughty tenants into a CSV file named "regular_and_naughty_all.csv".
- * It includes the `tau` value, `naughty_mean`, `naughty_tenant_number`, and other configuration settings, along with
- * the loss percentages for both regular and naughty tenants.
+ * @details This function:
+ *          1. Validates traffic mode and noncompliant tenant configuration
+ *          2. Calculates average packet loss for both tenant types
+ *          3. Appends comprehensive statistics to "compliant_and_noncompliant_all.csv"
  *
- * @param label The `packets_label` structure containing the packet label statistics for each tenant.
- * @param config The configuration structure containing settings like `tau`, `naughty_mean`, and queue buffers.
+ * The loss percentage is calculated as: CAPACITY / (ACCEPT + CAPACITY)
+ *
+ * @param[in] label  The packets_label structure containing packet statistics
+ * @param[in] config Configuration structure containing:
+ *                   - tau: Current tau value
+ *                   - noncompliant_mean: Mean value for noncompliant tenants
+ *                   - noncompliant_tenant_number: Number of noncompliant tenants
+ *                   - state_r: State parameter for compliant tenants
+ *                   - noncompliant_state_r: State parameter for noncompliant tenants
+ *                   - upper_queue_buffer: Upper queue buffer size
+ *                   - link_queue_buffer: Link queue buffer size
+ *                   - data_path: Directory path for output file
+ *                   - traffic_mode: Current traffic mode
+ *
+ * @pre RED_ELOG and RESET color macros must be defined
+ * @pre MAX_PATH_LENGTH must be defined
+ * @pre is_noncompliant_index() function must be available
+ * @pre data_path directory must exist and be writable
+ *
+ * @return void, but will exit in following cases:
+ *         - Early return with error message if:
+ *           * Traffic mode is incompatible (UNIFORM, DENSITY, or ALL_NONCOMPLIANT_UNIFORM)
+ *           * No noncompliant tenants are configured
+ *         - Program termination if:
+ *           * File cannot be opened for writing
+ *
+ * @note Output CSV format:
+ *       tau, noncompliant_mean, noncompliant_tenant_number, state_r, noncompliant_state_r,
+ *       upper_queue_buffer, link_queue_buffer, compliant_loss, noncompliant_loss
+ *
+ * @warning Function assumes tenants are ordered with compliant tenants first,
+ *          followed by noncompliant tenants
+ * @warning Existing file will be appended to, not overwritten
+ * @warning All configuration parameters must be properly initialized before calling
  */
-void record_regular_and_naughty_all(packets_label label, const configuration config)
+void record_compliant_and_noncompliant_all(packets_label label, const configuration config)
 {
+
+  if (config.traffic_mode == TRAFFIC_MODE_UNIFORM || config.traffic_mode == TRAFFIC_MODE_DENSITY || config.traffic_mode == TRAFFIC_MODE_ALL_NONCOMPLIANT_UNIFORM)
+  {
+    printf(RED_ELOG "record_compliant_and_noncompliant_all : TRAFFIC MODE DOES NOT SUPPORT\n" RESET);
+    return;
+  }
+
+  if (config.noncompliant_tenant_number == 0)
+  {
+    printf(RED_ELOG "record_compliant_and_noncompliant_all : NONCOMPLIANT TENANT NUMBER IS ZERO\n" RESET);
+    return;
+  }
+
   char file_path[MAX_PATH_LENGTH];
-  sprintf(file_path, "%s/regular_and_naughty_all.csv", config.data_path);
+  sprintf(file_path, "%s/compliant_and_noncompliant_all.csv", config.data_path);
 
   FILE *file = fopen(file_path, "a");
   if (!file)
@@ -263,34 +603,69 @@ void record_regular_and_naughty_all(packets_label label, const configuration con
     exit(EXIT_FAILURE);
   }
 
-  double naughty_Loss = 0;
-  double regular_Loss = 0;
+  double noncompliant_Loss = 0;
+  double compliant_Loss = 0;
 
-  // Loop through each tenant and calculate the loss percentage for regular and naughty tenants.
+  // Loop through each tenant and calculate the loss percentage for compliant and noncompliant tenants.
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
-    if (is_naughty_index(tenant, config))
+    if (is_noncompliant_index(tenant, config))
     {
-      naughty_Loss += (double)(label.labels[tenant][3]) / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for naughty tenants. */
+      noncompliant_Loss += (double)(label.labels[tenant][3]) / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for noncompliant tenants. */
     }
     else
     {
-      regular_Loss += (double)(label.labels[tenant][3]) / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for regular tenants. */
+      compliant_Loss += (double)(label.labels[tenant][3]) / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for compliant tenants. */
     }
 
   // Append the results to the CSV file with additional configuration details.
-  fprintf(file, "%ld, %d, %d, %f, %d, %d, %f, %f\n", config.tau, config.naughty_mean, config.naughty_tenant_number, config.state_r, config.upper_queue_buffer, config.link_queue_buffer, regular_Loss, naughty_Loss);
+  fprintf(file, "%ld, %d, %d, %f, %f, %d, %d, %f, %f\n", config.tau, config.noncompliant_mean, config.noncompliant_tenant_number, config.state_r, config.noncompliant_state_r, config.upper_queue_buffer, config.link_queue_buffer, compliant_Loss, noncompliant_Loss);
   fclose(file); /**< Close the file after writing. */
 }
 
 /**
- * @brief Records the average loss statistics in a CSV file.
+ * @brief Records the average loss statistics across all tenants in a CSV file.
  *
- * This function calculates the average loss across all tenants and appends the results to a CSV file
- * named "record_average_loss.csv". It includes the `tau` value and other configuration settings, along with
- * the calculated average loss for all tenants.
+ * @details This function:
+ *          1. Calculates the average packet loss across all tenants
+ *          2. Appends results to "record_average_loss.csv" with configuration details
  *
- * @param label The `packets_label` structure containing the packet label statistics for each tenant.
- * @param config The configuration structure containing settings like `tau` and queue buffers.
+ * The loss percentage for each tenant is calculated as:
+ * CAPACITY / (ACCEPT + CAPACITY)
+ *
+ * The final average is the sum of individual loss percentages.
+ *
+ * @param[in] label  The packets_label structure containing:
+ *                   - tenant_number: Total number of tenants
+ *                   - labels[][]: Array of packet statistics per tenant
+ *                     [tenant][0] = accepted packets
+ *                     [tenant][3] = dropped packets
+ * @param[in] config Configuration structure containing:
+ *                   - tau: Current tau value
+ *                   - noncompliant_mean: Mean value for noncompliant tenants
+ *                   - noncompliant_tenant_number: Number of noncompliant tenants
+ *                   - state_r: State parameter for compliant tenants
+ *                   - noncompliant_state_r: State parameter for noncompliant tenants
+ *                   - upper_queue_buffer: Upper queue buffer size
+ *                   - link_queue_buffer: Link queue buffer size
+ *                   - data_path: Directory path for output file
+ *
+ * @pre MAX_PATH_LENGTH must be defined
+ * @pre data_path directory must exist and be writable
+ * @pre label.tenant_number must be > 0
+ * @pre All configuration parameters must be properly initialized
+ *
+ * @return void, but will terminate program if:
+ *         - File cannot be opened for writing
+ *
+ * @note Output CSV format:
+ *       tau, noncompliant_mean, noncompliant_tenant_number, state_r,
+ *       noncompliant_state_r, upper_queue_buffer, link_queue_buffer, average_loss
+ *
+ * @warning Existing file will be appended to, not overwritten
+ * @warning The average loss is a simple sum of loss percentages, not weighted by traffic volume
+ * @warning Function does not validate configuration parameters before use
+ *
+ * @see record_compliant_and_noncompliant_all() for related statistics by tenant type
  */
 void record_average_loss(packets_label label, const configuration config)
 {
@@ -313,19 +688,49 @@ void record_average_loss(packets_label label, const configuration config)
   }
 
   // Append the results to the CSV file.
-  fprintf(file, "%ld, %d, %d, %f, %d, %d, %f\n", config.tau, config.naughty_mean, config.naughty_tenant_number, config.state_r, config.upper_queue_buffer, config.link_queue_buffer, average_loss);
+  fprintf(file, "%ld, %d, %d, %f, %f, %d, %d, %f\n", config.tau, config.noncompliant_mean, config.noncompliant_tenant_number, config.state_r, config.noncompliant_state_r, config.upper_queue_buffer, config.link_queue_buffer, average_loss);
   fclose(file); /**< Close the file after writing. */
 }
 
 /**
- * @brief Records the packet situation in a CSV file.
+ * @brief Records packet acceptance and dequeue statistics in a CSV file.
  *
- * This function appends the number of accepted packets and the dequeue count
- * to a CSV file specified in the configuration.
+ * @details This function:
+ *          1. Counts the total number of accepted packets across all tenants
+ *          2. Appends both accepted packet count and dequeue count to "record_packet_situation.csv"
  *
- * @param packets Pointer to an array of packet labels.
- * @param dequeue_count The count of packets that were dequeued.
- * @param config A configuration structure containing the data path and tenant number.
+ * The function processes an array of packet labels, counting those marked as PACKET_LABEL_ACCEPT,
+ * and records this along with the provided dequeue count.
+ *
+ * @param[in] packets        Pointer to an array of packet labels, where:
+ *                          - Array length equals config.tenant_number
+ *                          - Each element is a packet label (PACKET_LABEL_ACCEPT or other)
+ * @param[in] dequeue_count Total number of packets that were dequeued
+ * @param[in] config        Configuration structure containing:
+ *                          - data_path: Directory path for output file
+ *                          - tenant_number: Total number of tenants (determines packets array size)
+ *
+ * @pre PACKET_LABEL_ACCEPT must be defined
+ * @pre MAX_PATH_LENGTH must be defined
+ * @pre data_path directory must exist and be writable
+ * @pre packets array must be allocated with size >= config.tenant_number
+ * @pre config.tenant_number must be > 0
+ *
+ * @return void, but will terminate program if:
+ *         - File cannot be opened for writing
+ *
+ * @note Output CSV format:
+ *       accepted_packet_count, dequeue_count
+ *       where:
+ *       - accepted_packet_count: Number of packets marked as PACKET_LABEL_ACCEPT
+ *       - dequeue_count: Provided count of dequeued packets
+ *
+ * @warning Existing file will be appended to, not overwritten
+ * @warning Function assumes packets array is properly initialized
+ * @warning No bounds checking is performed on the packets array
+ * @warning Function does not validate dequeue_count
+ *
+ * @see PACKET_LABEL_ACCEPT for the acceptance label definition
  */
 void record_packet_situation_agrid(int *packets, const int dequeue_count, const configuration config)
 {

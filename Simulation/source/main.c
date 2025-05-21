@@ -61,12 +61,39 @@
 // // #define PRINT_EACH_GRID_PACKET ///< Enable to print each grid packet processed
 // #define PRINT_PACKET_COUNTS ///< Enable to print the counts of packets processed
 // #define PRINT_PACKET_LABEL  ///< Enable to print labels for packets processed
-// // #define PRINT_DEQUEUE_COUNT ///< Enable to print the count of dequeued items
+
+/**
+ * @def PRINT_LINK_DEQUEUE_COUNT
+ * @brief Debug macro for dequeue count monitoring
+ *
+ * @details When defined, enables real-time printing of dequeue
+ *          operations count to standard output. Useful for:
+ *          - Debugging packet processing
+ *          - Performance monitoring
+ *          - System behavior verification
+ *
+ * Output Format:
+ * @code
+ * dequeue_count = XXX
+ * @endcode
+ * where XXX is right-aligned in a 3-character field
+ *
+ * @note The count is displayed with fixed-width formatting (%-3d)
+ *       ensuring consistent output alignment
+ */
+// #define PRINT_LINK_DEQUEUE_COUNT
 
 // #define RECORD_REGULAR_AND_NAUGHTY_TAU ///< Enable to record tau for regular and naughty data
 // #define RECORD_REGULAR_AND_NAUGHTY_ALL ///< Enable to record all regular and naughty data
 // #define RECORD_AVERAGE_LOSS            ///< Enable to record the average loss during processing
-// #define RECORD_PACKETS_SITUATION       ///< Macro for recording packet situations.
+/**
+ * @def RECORD_PACKETS_SITUATION
+ * @brief Enables packet situation recording functionality
+ *
+ * When defined, this macro enables the creation and initialization of a CSV file
+ * for tracking packet processing statistics throughout the program execution.
+ */
+#define RECORD_PACKETS_SITUATION
 
 /**
  * @file main.c
@@ -80,7 +107,7 @@
 #include "./inih/ini.h"                    ///< INI file parsing library
 #include "../include/configuration.h"      ///< Configuration handling functions
 #include "../include/traffic_generation.h" ///< Traffic generation functions and definitions
-// #include "../include/packets_count.h"       ///< Packet counting functions
+#include "../include/packets_count.h"      ///< Packet counting functions
 // #include "../include/GCRA.h"                ///< GCRA (Generic Controlled Rate Algorithm) functions
 // #include "../include/link_capacity_queue.h" ///< Link capacity queue management functions
 
@@ -103,6 +130,8 @@ int main(int argc, char *argv[])
     /** @brief Buffer for system commands */
     char *command = (char *)malloc(MAX_COMMAND_LENGTH * sizeof(char));
     memset(command, '\0', MAX_COMMAND_LENGTH * sizeof(char));
+
+    FILE *file;
 
 #ifdef PRINT_EXECUTION_TIME
     clock_t execute_clock = clock(); ///< Start time measurement
@@ -195,15 +224,15 @@ int main(int argc, char *argv[])
      */
     TIME_TYPE timestamp = (TIME_TYPE)0;
 
-    //     /** @brief Structure to store packet counts for each tenant. */
-    //     packets_count count;
-    //     /**  @brief Initializes packet count tracking. */
-    //     init_packets_count(&count, tenant_number, obtain_grids_number(config));
+    /** @brief Structure to store packet counts for each tenant. */
+    packets_count count;
+    /**  @brief Initializes packet count tracking. */
+    init_packets_count(&count, tenant_number, obtain_grids_number(config));
 
-    //     /** @brief Structure to label packets based on their classification. */
-    //     packets_label label;
-    //     /** @brief Initializes packet labeling structure. */
-    //     init_Packets_Label(&label, tenant_number, &count);
+    /** @brief Structure to label packets based on their classification. */
+    packets_label label;
+    /** @brief Initializes packet labeling structure. */
+    init_Packets_Label(&label, tenant_number, &count);
 
     //     double cdequeue_timestamp = 0;
     //     double cdequeue_timestamp_step = (TIME_TYPE)(config.packet_size *
@@ -232,27 +261,66 @@ int main(int argc, char *argv[])
     //     int grid_counts = 0;
     //     int drop_tenant = UNFOUND;
 
-    // #ifdef RECORD_PACKETS_SITUATION
-    //     /**
-    //      * @brief Creates and opens a CSV file for recording packet situations.
-    //      *
-    //      * This block of code defines the file path for the packet situation
-    //      * CSV file, opens it for writing, and handles any errors that occur
-    //      * during file operations.
-    //      */
-    //     char file_path_packet_situation[MAX_PATH_LENGTH];
-    //     sprintf(file_path_packet_situation, "%s/record_packet_situation.csv", config.data_path);
+#ifdef RECORD_PACKETS_SITUATION
+    /**
+     * @brief Initializes the packet situation recording system
+     *
+     * @details This code block:
+     *          1. Creates/overwrites the packet situation CSV file
+     *          2. Writes the appropriate header
+     *          3. Prepares the file for subsequent append operations
+     *
+     * The file path is constructed as: config.data_path + "/record_packet_situation.csv"
+     *
+     * File Format:
+     * @code
+     * [Header defined by HEADER_TYPE_PACKET]
+     * [Subsequent data entries added during program execution]
+     * @endcode
+     *
+     * @param[in] config.data_path Directory where the CSV file will be created
+     *
+     * @pre MAX_PATH_LENGTH must be defined
+     * @pre config.data_path must be valid and writable
+     * @pre HEADER_TYPE_PACKET must be defined
+     * @pre write_statistics_header() function must be available
+     *
+     * @note Opens file in "w+" mode, which:
+     *       - Creates a new file if it doesn't exist
+     *       - Truncates existing file if it exists
+     *       - Enables both reading and writing
+     *
+     * @warning Will terminate program if:
+     *          - File cannot be opened
+     *          - Path exceeds MAX_PATH_LENGTH
+     *
+     * @see write_statistics_header() for header writing implementation
+     * @see HEADER_TYPE_PACKET for header structure definition
+     */
+    char file_path_packet_situation[MAX_PATH_LENGTH];
+    sprintf(file_path_packet_situation, "%s/record_packet_situation.csv", config.data_path);
 
-    //     FILE *file = fopen(file_path_packet_situation, "w+");
-    //     if (!file)
-    //     {
-    //         perror("Error opening file"); /**< Handle file open errors. */
-    //         exit(EXIT_FAILURE);
-    //     }
+    file = fopen(file_path_packet_situation, "w+");
+    if (!file)
+    {
+        perror("Error opening file"); /**< Handle file open errors. */
+        exit(EXIT_FAILURE);
+    }
 
-    //     fprintf(file, RECORD_PACKET_SITUATION_HEADER); // Placeholder for writing data to the file.
-    //     fclose(file);
-    // #endif
+    /**
+     * @brief Writes the statistics header to the newly created file
+     *
+     * @return SUCCESS if header is written successfully
+     * @return FAILURE if an error occurs during writing
+     *
+     * @note Prints error message in red if header writing fails
+     */
+    if (write_statistics_header(file, HEADER_TYPE_PACKET) == FAILURE)
+    {
+        printf(RED_ELOG "write_statistics_header(main) : ERROR\n" RESET);
+    }
+    fclose(file); /**< Ensures file is properly closed after initialization */
+#endif
 
     /**
      * @brief Main simulation loop
@@ -276,8 +344,14 @@ int main(int argc, char *argv[])
          */
         timestamp += (TIME_TYPE)(generator.step_size);
 
-        //         // Count the dequeue times
-        //         int dequeue_count = 0; ///< Initialize the dequeue count
+        /**
+         * @brief Tracks the number of packet dequeue operations
+         *
+         * @details Counter variable that maintains a running total of
+         *          packet dequeue operations performed in the current
+         *          processing cycle.
+         */
+        int link_dequeue_count = 0;
 
         //         while (link.dequeue_timestamp <= (double)timestamp) ///< Loop until the dequeue timestamp exceeds the current timestamp
         //         {
@@ -291,9 +365,26 @@ int main(int argc, char *argv[])
         //             for (int tenant = 0; tenant < tenant_number; tenant++)
         //                 cdequeue((cqueues + tenant));
         //         }
-        // #ifdef PRINT_DEQUEUE_COUNT
-        //         printf("dequeue_count = %d\n", dequeue_count);
-        // #endif
+
+#ifdef PRINT_LINK_DEQUEUE_COUNT
+        /**
+         * @brief Displays current dequeue count
+         *
+         * @details Prints the current value of link_dequeue_count
+         *          to standard output with fixed-width formatting
+         *
+         * Format Specifiers:
+         * - %-3d: Left-aligned, minimum 3 characters wide
+         *
+         * Example Output:
+         * @code
+         * dequeue_count = 0
+         * dequeue_count = 12
+         * dequeue_count = 234
+         * @endcode
+         */
+        printf("dequeue_count = %-3d\n", link_dequeue_count);
+#endif
 
 #ifdef PRINT_EACH_TIMESTAMP
         /**
@@ -323,12 +414,43 @@ int main(int argc, char *argv[])
         print_packets(packets, config.tenant_number);
 #endif
 
-        // #ifdef RECORD_PACKETS_SITUATION
-        //         /**
-        //          * @brief Records the packet situation if RECORD_PACKETS_SITUATION is defined.
-        //          */
-        //         record_packet_situation_agrid(packets, dequeue_count, config);
-        // #endif
+#ifdef RECORD_PACKETS_SITUATION
+        /**
+         * @brief Records detailed packet processing statistics per grid
+         *
+         * @details Records comprehensive packet situation data including:
+         *          - Packet processing status
+         *          - Dequeue operations count
+         *          - Grid-specific metrics
+         *          - Temporal information
+         *
+         * The function writes data to the previously initialized CSV file
+         * (record_packet_situation.csv) with the following information:
+         * - Current packet states and statistics
+         * - Grid-based processing metrics
+         * - Dequeue operation counts
+         * - System configuration parameters
+         *
+         * @param[in] packets             Pointer to the packet data structure
+         * @param[in] link_dequeue_count  Number of dequeue operations performed
+         * @param[in] config              System configuration parameters
+         *
+         * @pre RECORD_PACKETS_SITUATION must be defined
+         * @pre CSV file must be properly initialized
+         * @pre packets pointer must be valid
+         * @pre config must be properly initialized
+         *
+         * @note This recording operation occurs after packet processing
+         *       and dequeue operations are completed
+         *
+         * @warning May impact performance if called frequently
+         *          Consider the I/O overhead in performance-critical scenarios
+         *
+         * @see init_packets_count() for packet structure initialization
+         * @see write_statistics_header() for CSV file header format
+         */
+        record_packet_situation_agrid(packets, link_dequeue_count, config);
+#endif
 
         //         for (int tenant = 0; tenant < tenant_number; tenant++)
         //         {
@@ -521,6 +643,8 @@ int main(int argc, char *argv[])
 #endif
 
     free(command);
+    free_packets_count(&count);
+    free_packets_label(&label);
 
     return EXIT_SUCCESS;
 }

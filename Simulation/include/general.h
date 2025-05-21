@@ -80,4 +80,42 @@ void print_equals_line()
     }
     putchar('\n'); // Add a newline at the end
 }
+
+/**
+ * @def MAX(a, b)
+ * @brief Macro that returns the larger of two values
+ *
+ * @details Compares two values using the '>' operator and returns
+ *          the larger value through a ternary conditional operator.
+ *          The macro is type-independent and can be used with any
+ *          comparable data types.
+ *
+ * @param[in] a First value to compare
+ * @param[in] b Second value to compare
+ *
+ * @return The larger value between a and b
+ *
+ * @note All parameters are parenthesized to prevent operator precedence issues
+ *
+ * Usage Examples:
+ * @code
+ * int max_int = MAX(5, 3);           // Returns 5
+ * float max_float = MAX(3.14, 2.71); // Returns 3.14
+ * double max_double = MAX(x + y, z); // Safe with expressions
+ * @endcode
+ *
+ * @warning
+ * - Arguments are evaluated twice, which may cause issues with expressions
+ *   that have side effects
+ * - Care should be taken when using with complex expressions or function calls
+ *
+ * Implementation Details:
+ * - Uses parentheses around parameters to maintain proper operator precedence
+ * - Uses ternary operator for concise comparison
+ * - Safe for use with basic arithmetic expressions
+ *
+ * @see MIN(a, b) for minimum value comparison
+ */
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
 #endif

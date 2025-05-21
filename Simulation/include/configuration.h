@@ -630,7 +630,7 @@ static int handler(void *config, const char *section, const char *name, const ch
  *          The file should contain a single positive number representing the capacity.
  *
  * @return double The system capacity value if successful
- * @return FAILED (-1.0) if an error occurs during file operations or invalid data
+ * @return FAILURE (-1.0) if an error occurs during file operations or invalid data
  *
  * @note The capacity value must be positive and within reasonable bounds
  *
@@ -651,7 +651,7 @@ double obtain_capacity(void)
     if (CAPACITY_DATA_PATH == NULL)
     {
         fprintf(stderr, "Error: CAPACITY_DATA_PATH is not defined\n");
-        return FAILED;
+        return FAILURE;
     }
 
     // Open file
@@ -660,7 +660,7 @@ double obtain_capacity(void)
     {
         fprintf(stderr, "Error: Cannot open capacity file: %s\n", CAPACITY_DATA_PATH);
         perror("File opening failed");
-        return FAILED;
+        return FAILURE;
     }
 
     // Read capacity value
@@ -669,7 +669,7 @@ double obtain_capacity(void)
         fprintf(stderr, "Error: Failed to read capacity value from %s\n", CAPACITY_DATA_PATH);
         perror("File reading failed");
         fclose(file);
-        return FAILED;
+        return FAILURE;
     }
 
     // Validate capacity value
@@ -677,7 +677,7 @@ double obtain_capacity(void)
     {
         fprintf(stderr, "Error: Invalid capacity value: %lf (must be positive)\n", capacity);
         fclose(file);
-        return FAILED;
+        return FAILURE;
     }
 
     if (capacity > MAX_CAPACITY)
@@ -685,7 +685,7 @@ double obtain_capacity(void)
         fprintf(stderr, "Error: Capacity value too large: %lf (max: %lf)\n",
                 capacity, MAX_CAPACITY);
         fclose(file);
-        return FAILED;
+        return FAILURE;
     }
 
     // Check for additional unexpected data
@@ -712,7 +712,7 @@ static int try_write(FILE *file, const char *str)
     if (fputs(str, file) == EOF)
     {
         fprintf(stderr, "Error: Writing to file failed\n");
-        return FAILED;
+        return FAILURE;
     }
     return 0;
 }
@@ -741,7 +741,7 @@ int modify_ini_file(const char *filename, const configuration *config)
     if (filename == NULL || config == NULL)
     {
         fprintf(stderr, "Error: Invalid parameters (NULL pointer)\n");
-        return FAILED;
+        return FAILURE;
     }
 
     // Open file with error handling
@@ -750,7 +750,7 @@ int modify_ini_file(const char *filename, const configuration *config)
     {
         fprintf(stderr, "Error: Unable to open file \"%s\" for writing\n", filename);
         perror("File opening failed");
-        return FAILED;
+        return FAILURE;
     }
 
 // Helper macro for writing with error checking
@@ -758,7 +758,7 @@ int modify_ini_file(const char *filename, const configuration *config)
     if (fprintf(file, fmt, __VA_ARGS__) < 0)                                     \
     {                                                                            \
         fprintf(stderr, "Error: Writing to file failed at line %d\n", __LINE__); \
-        status = FAILED;                                                         \
+        status = FAILURE;                                                        \
         goto cleanup;                                                            \
     }
 
@@ -804,7 +804,7 @@ cleanup:
         {
             fprintf(stderr, "Error: Failed to close file\n");
             perror("File closing failed");
-            status = FAILED;
+            status = FAILURE;
         }
     }
 

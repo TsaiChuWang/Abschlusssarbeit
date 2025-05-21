@@ -841,16 +841,16 @@ void show_configuration(const configuration config)
     switch (config.unit)
     {
     case GBPS:
-        printf("| unit                       : Gbps\n");
+        printf("| unit                            : Gbps\n");
         break;
     case MBPS:
-        printf("| unit                       : Mbps\n");
+        printf("| unit                            : Mbps\n");
         break;
     case KBPS:
-        printf("| unit                       : kbps\n");
+        printf("| unit                            : kbps\n");
         break;
     default:
-        printf("| unit                       : Mbps\n");
+        printf("| unit                            : Mbps\n");
     }
 
     printf("- Traffic :\n");

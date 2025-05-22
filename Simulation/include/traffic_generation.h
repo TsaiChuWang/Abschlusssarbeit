@@ -140,6 +140,27 @@ traffic_generator initializeTrafficGenerator(const configuration config)
 }
 
 /**
+ * @brief Frees the resources allocated for the traffic generator.
+ *
+ * This function checks if the traffic generator pointer is NULL. If it is not,
+ * it frees the memory allocated for the states array and sets the pointer to NULL
+ * to avoid dangling references.
+ *
+ * @param generate Pointer to the traffic_generator structure to be freed.
+ */
+void freeTrafficGenerator(traffic_generator *generate)
+{
+    if (generate == NULL) ///< Check if the traffic generator pointer is NULL.
+        return;           ///< Exit the function if there is nothing to free.
+
+    if (generate->states != NULL) ///< Check if the states array is allocated.
+    {
+        free(generate->states);  ///< Free the allocated memory for states.
+        generate->states = NULL; ///< Set the pointer to NULL to avoid dangling reference.
+    }
+}
+
+/**
  * @brief Calculates the total number of simulation time grids
  * @details This function determines the total number of discrete time steps (grids)
  *          needed for the simulation based on the following formula:

@@ -644,6 +644,7 @@ int main(int argc, char *argv[])
     // #endif
 
     free(command);
+    freeTrafficGenerator(&generator);
     //     free_packets_count(&count);
     //     free_packets_label(&label);
 

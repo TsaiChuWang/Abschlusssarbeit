@@ -23,9 +23,9 @@
  */
 typedef enum
 {
-  STATE_NO_PACKET,    /**< No packet is currently being processed */
-  STATE_CREATE_PACKET /**< System is in the process of creating a packet */
-} state_t;
+  STATE_NO_PACKET,    /**< No packet is currently being processed. */
+  STATE_CREATE_PACKET /**< System is in the process of creating a packet. */
+} state_t;            ///< Enumeration representing the possible states of packet processing.
 
 /**
  * @struct state_machine

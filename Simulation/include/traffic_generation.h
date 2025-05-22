@@ -61,60 +61,6 @@ typedef struct
 } traffic_generator;
 
 /**
- * @brief Validates traffic generator initialization results
- * @param[in] generator Initialized traffic generator to validate
- * @return bool true if valid, false otherwise
- */
-static bool validateTrafficGenerator(const traffic_generator *generator)
-{
-    if (!generator)
-    {
-        return false;
-    }
-
-    /* Validate timing parameters */
-    if (generator->step_size <= 0 || generator->grids_number <= 0)
-    {
-        return false;
-    }
-
-    /* Validate probabilities */
-    if (generator->generate_probability < 0 ||
-        generator->generate_probability > 1.0 ||
-        generator->generate_probability_noncompliant < 0 ||
-        generator->generate_probability_noncompliant > 1.0)
-    {
-        return false;
-    }
-
-    return true;
-}
-
-/**
- * @brief Helper function to calculate timing parameters
- * @param[in] input_rate Input packet rate
- * @param[in] packet_size Size of each packet
- * @return Calculated step size
- */
-static TIME_TYPE calculateStepSize(uint64_t input_rate, uint32_t packet_size)
-{
-    double time_per_packet = (double)ONE_SECOND_IN_NS / input_rate;
-    return (TIME_TYPE)(packet_size * time_per_packet);
-}
-
-/**
- * @brief Helper function to calculate generation probabilities
- * @param[in] mean Mean packet rate
- * @param[in] unit Base unit for calculations
- * @param[in] input_rate Input packet rate
- * @return Calculated generation probability
- */
-static double calculateProbability(uint64_t mean, long unit, uint64_t input_rate)
-{
-    return (double)mean * unit / input_rate;
-}
-
-/**
  * @brief Initializes a traffic generator with specified configuration
  * @details This function performs the following initialization steps:
  *          1. Calculates timing parameters (step size and grid number)
@@ -139,18 +85,6 @@ static double calculateProbability(uint64_t mean, long unit, uint64_t input_rate
  * @see configuration
  * @see traffic_generator
  * @see initialize_state_machines
- *
- * Example usage:
- * @code
- * configuration config = {
- *     .input_rate = 1000000,         // 1M packets per second
- *     .packet_size = 1500,           // 1500 bytes
- *     .mean = 800000,                // 800K compliant packets
- *     .noncompliant_mean = 200000,   // 200K non-compliant packets
- *     .traffic_mode = TRAFFIC_MODE_BURSTY_ALL,
- *     .unit = 1000000                // 1M unit
- * };
- * traffic_generator gen = initializeTrafficGenerator(config);
  * @endcode
  */
 traffic_generator initializeTrafficGenerator(const configuration config)
@@ -206,86 +140,6 @@ traffic_generator initializeTrafficGenerator(const configuration config)
 }
 
 /**
- * @brief Helper function to calculate packet transmission time interval
- * @param[in] packet_size Packet size in bytes
- * @param[in] input_rate Packets per second
- * @return Time interval in nanoseconds
- */
-static double calculate_time_interval(uint32_t packet_size, uint64_t input_rate)
-{
-    return (double)packet_size * (double)ONE_SECOND_IN_NS / (double)input_rate;
-}
-
-/**
- * @brief Helper function to calculate grids per second
- * @param[in] time_interval Time interval in nanoseconds
- * @return Number of grids per second
- */
-static double calculate_grids_per_second(double time_interval)
-{
-    return (double)ONE_SECOND_IN_NS / time_interval;
-}
-
-/**
- * @brief Validates grid calculation parameters
- * @param[in] config Configuration structure
- * @return bool true if parameters are valid, false otherwise
- */
-static bool validate_grid_parameters(const configuration *config)
-{
-    if (!config)
-    {
-        return false;
-    }
-
-    if (config->packet_size <= 0 ||
-        config->input_rate <= 0 ||
-        config->simulation_time <= 0)
-    {
-        return false;
-    }
-
-    return true;
-}
-
-/**
- * @brief Safe version of grid number calculation with error checking
- * @param[in] config Configuration structure
- * @param[out] result Calculated grid number
- * @return int 0 on success, error code on failure
- */
-int obtain_grids_number_safe(const configuration *config, long *result)
-{
-    if (!config || !result)
-    {
-        return -EINVAL;
-    }
-
-    if (!validate_grid_parameters(config))
-    {
-        return -EINVAL;
-    }
-
-    const double time_interval = calculate_time_interval((uint32_t)(config->packet_size), (uint64_t)(config->input_rate));
-
-    if (time_interval <= 0)
-    {
-        return -ERANGE;
-    }
-
-    const double grids_per_second = calculate_grids_per_second(time_interval);
-    const long total_grids = (long)(grids_per_second * config->simulation_time) + 1;
-
-    if (total_grids <= 0)
-    {
-        return -ERANGE;
-    }
-
-    *result = total_grids;
-    return 0;
-}
-
-/**
  * @brief Calculates the total number of simulation time grids
  * @details This function determines the total number of discrete time steps (grids)
  *          needed for the simulation based on the following formula:
@@ -317,16 +171,6 @@ int obtain_grids_number_safe(const configuration *config, long *result)
  *
  * @note The calculation uses double precision to maintain accuracy
  * @warning Ensure input parameters are within valid ranges to prevent overflow
- *
- * Example usage:
- * @code
- * configuration config = {
- *     .packet_size = 1500,      // 1500 bytes per packet
- *     .input_rate = 1000000,    // 1M packets per second
- *     .simulation_time = 10      // 10 seconds simulation
- * };
- * long grids = obtain_grids_number(config);
- * printf("Total simulation grids: %ld\n", grids);
  * @endcode
  */
 long obtain_grids_number(const configuration config)
@@ -351,56 +195,6 @@ long obtain_grids_number(const configuration config)
     assert(total_grids > 0);
 
     return total_grids;
-}
-
-/**
- * @brief Helper function to validate traffic generator parameters
- * @param[in] generate Pointer to traffic generator structure to validate
- * @return bool true if parameters are valid, false otherwise
- */
-static bool validateParameters(const traffic_generator *generate)
-{
-    if (!generate)
-    {
-        return false;
-    }
-
-    /* Check timing parameters */
-    if (generate->step_size <= 0 || generate->grids_number <= 0)
-    {
-        return false;
-    }
-
-    /* Check probability ranges */
-    if (generate->generate_probability < 0 || generate->generate_probability > 1.0 ||
-        generate->generate_probability_noncompliant < 0 || generate->generate_probability_noncompliant > 1.0)
-    {
-        return false;
-    }
-
-    return true;
-}
-
-/**
- * @brief Creates a string representation of traffic generator parameters
- * @param[in] generate Pointer to traffic generator structure
- * @param[out] buffer Output buffer for the string
- * @param[in] size Size of the output buffer
- * @return int Number of characters written or negative error code
- */
-int formatTrafficGenerator(const traffic_generator *generate, char *buffer, size_t size)
-{
-    if (!generate || !buffer || size == 0)
-    {
-        return -EINVAL;
-    }
-
-    return snprintf(buffer, size,
-                    "Traffic Generator: step=%e, grids=%ld, prob=%f, noncompliant_prob=%f",
-                    generate->step_size,
-                    generate->grids_number,
-                    generate->generate_probability,
-                    generate->generate_probability_noncompliant);
 }
 
 /**
@@ -445,32 +239,6 @@ void showTrafficGenerator(const traffic_generator generate)
 
     /* Ensure output is immediately visible */
     fflush(stdout);
-}
-
-/**
- * @brief Safe version of showTrafficGenerator with parameter validation
- * @param[in] generate Pointer to traffic generator structure
- * @return int 0 on success, error code on failure
- */
-int showTrafficGeneratorSafe(const traffic_generator *generate)
-{
-    /* Validate input parameters */
-    if (!generate)
-    {
-        fprintf(stderr, "Error: NULL traffic generator pointer\n");
-        return -EINVAL;
-    }
-
-    /* Validate parameter values */
-    if (!validateParameters(generate))
-    {
-        fprintf(stderr, "Error: Invalid traffic generator parameters\n");
-        return -EINVAL;
-    }
-
-    /* Display parameters if validation passed */
-    showTrafficGenerator(*generate);
-    return 0;
 }
 
 /**
@@ -1080,6 +848,50 @@ void print_packets(int *packets, long tenant_number)
     printf("Accepted Packets: %ld\n", sum);
     printf("Total Tenants   : %ld\n", tenant_number);
     printf("Accept Ratio    : %.3f \%\n", (double)sum * 100.0 / tenant_number);
+}
+
+void test_traffic_generator_h(configuration config)
+{
+    traffic_generator generator;
+    printf("===== initializeTrafficGenerator(uniform) =====\n");
+    config.traffic_mode = TRAFFIC_MODE_UNIFORM;
+    generator = initializeTrafficGenerator(config);
+    showTrafficGenerator(generator);
+    printf("===== obtain_grids_number =====\n");
+    printf("grid numbers = %ld\n", obtain_grids_number(config));
+    printf("===== initializeTrafficGenerator(burst) =====\n");
+    config.traffic_mode = TRAFFIC_MODE_DIFFERENT_R;
+    generator = initializeTrafficGenerator(config);
+    showTrafficGenerator(generator);
+    printf("===== uniform_distribution =====\n");
+    printf("uniform_distribution : %d\n", uniform_distribution(0.5));
+    printf("uniform_distribution : %d\n", uniform_distribution(0.5));
+    printf("uniform_distribution : %d\n", uniform_distribution(0.5));
+    int *packets;
+    printf("===== TRAFFIC_MODE_UNIFORM =====\n");
+    config.traffic_mode = TRAFFIC_MODE_UNIFORM;
+    packets = packet_generation_configuration(generator, config);
+    print_packets(packets, config.tenant_number);
+    printf("===== TRAFFIC_MODE_NONCOMPLIANT_UNIFORM =====\n");
+    config.traffic_mode = TRAFFIC_MODE_NONCOMPLIANT_UNIFORM;
+    packets = packet_generation_configuration(generator, config);
+    print_packets(packets, config.tenant_number);
+    printf("===== TRAFFIC_MODE_ALL_NONCOMPLIANT_UNIFORM =====\n");
+    config.traffic_mode = TRAFFIC_MODE_ALL_NONCOMPLIANT_UNIFORM;
+    packets = packet_generation_configuration(generator, config);
+    print_packets(packets, config.tenant_number);
+    printf("===== TRAFFIC_MODE_DENSITY =====\n");
+    config.traffic_mode = TRAFFIC_MODE_DENSITY;
+    packets = packet_generation_configuration(generator, config);
+    print_packets(packets, config.tenant_number);
+    printf("===== TRAFFIC_MODE_BURSTY_ALL =====\n");
+    config.traffic_mode = TRAFFIC_MODE_BURSTY_ALL;
+    packets = packet_generation_configuration(generator, config);
+    print_packets(packets, config.tenant_number);
+    printf("===== TRAFFIC_MODE_DIFFERENT_R =====\n");
+    config.traffic_mode = TRAFFIC_MODE_DIFFERENT_R;
+    packets = packet_generation_configuration(generator, config);
+    print_packets(packets, config.tenant_number);
 }
 
 #endif /* TRAFFIC_GENERATION_H */

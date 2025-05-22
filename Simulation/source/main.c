@@ -5,12 +5,6 @@
 //  */
 
 // /**
-//  * @def SHOW_TRAFFICGENERATOR
-//  * @brief Conditional compilation flag to enable traffic generator information display
-//  */
-// #define SHOW_TRAFFICGENERATOR
-
-// /**
 //  * @def PRINT_EACH_TIMESTAMP
 //  * @brief Debug flag for timestamp printing
 //  * @details When defined, enables printing of each timestamp during simulation
@@ -79,11 +73,12 @@
 //  */
 // #define RECORD_PACKETS_SITUATION
 
-#define PRINT_EXECUTION_TIME ///< Enable timing measurement for execution duration
-#define SHOW_CONFIGURATION   ///< Enable display of the current configuration settings
-#define REDUCTION            ///< Enable reduction of the INI file (if applicable)
-#define CLEAN_DATA_PATH      ///< Enable cleaning and initialization of the data directory
-#define PRINT_CAPACITY       ///< Enable display of the calculated network capacity
+#define PRINT_EXECUTION_TIME  ///< Enable timing measurement for execution duration
+#define SHOW_CONFIGURATION    ///< Enable display of the current configuration settings
+#define REDUCTION             ///< Enable reduction of the INI file (if applicable)
+#define CLEAN_DATA_PATH       ///< Enable cleaning and initialization of the data directory
+#define PRINT_CAPACITY        ///< Enable display of the calculated network capacity
+#define SHOW_TRAFFICGENERATOR ///< Enable the display of the traffic generator's state.
 
 // /**
 //  * @file main.c
@@ -97,7 +92,7 @@
 #include "../include/general.h"
 #include "./inih/ini.h"
 #include "../include/configuration.h"
-// #include "../include/traffic_generation.h"  ///< Traffic generation functions and definitions
+#include "../include/traffic_generation.h"
 // #include "../include/packets_count.h"       ///< Packet counting functions
 // #include "../include/GCRA.h"                ///< GCRA (Generic Controlled Rate Algorithm) functions
 // #include "../include/link_capacity_queue.h" ///< Link capacity queue management functions
@@ -202,48 +197,18 @@ int main(int argc, char *argv[])
     printf("capacity : %f bps\n", capacity);
 #endif
 
-    //     /**
-    //      * @brief Initialize random number generator
-    //      * @details Uses current time as seed for random number generation
-    //      * @note This ensures different random sequences in each program run
-    //      */
-    //     srand48(time(NULL));
+    srand48(time(NULL)); ///< Seed the random number generator with the current time.
 
-    //     /**
-    //      * @brief Initialize and configure the traffic generator
-    //      * @param config Configuration structure containing generator parameters
-    //      * @return Initialized traffic_generator structure
-    //      * @see initializeTrafficGenerator
-    //      */
-    //     traffic_generator generator = initializeTrafficGenerator(config);
+    traffic_generator generator = initializeTrafficGenerator(config); ///< Initialize the traffic generator with the provided configuration.
 
-    // #ifdef SHOW_TRAFFICGENERATOR
-    //     /**
-    //      * @brief Display traffic generator configuration details
-    //      * @note Only compiled when SHOW_TRAFFICGENERATOR is defined
-    //      * @see showTrafficGenerator
-    //      */
-    //     showTrafficGenerator(generator);
-    // #endif
+    int tenant_number = config.tenant_number;   ///< Retrieve the number of tenants from the configuration.
+    long grids_number = generator.grids_number; ///< Get the number of grids from the traffic generator.
 
-    //     /**
-    //      * @brief Number of tenants in the simulation
-    //      * @note Data type is integer, represents the count of active tenants
-    //      */
-    //     int tenant_number = config.tenant_number;
+    TIME_TYPE timestamp = (TIME_TYPE)0; ///< Initialize the timestamp variable to zero.
 
-    //     /**
-    //      * @brief Total number of grid time slots in the simulation
-    //      * @note Data type is long integer to handle large simulation periods
-    //      */
-    //     long grids_number = generator.grids_number;
-
-    //     /**
-    //      * @brief The simulation timestamp
-    //      * @note Using TIME_TYPE typedef for consistent time representation
-    //      * @see TIME_TYPE
-    //      */
-    //     TIME_TYPE timestamp = (TIME_TYPE)0;
+#ifdef SHOW_TRAFFICGENERATOR
+    showTrafficGenerator(generator); ///< Display the current state and configuration of the traffic generator.
+#endif
 
     //     /** @brief Structure to store packet counts for each tenant. */
     //     packets_count count;

@@ -900,19 +900,6 @@ void show_configuration(const configuration config)
  * @note The function assumes positive integer inputs
  * @note If both inputs are 0, the function returns 0
  */
-int gcd(int a, int b)
-{
-    while (b != 0)
-    {
-        /** @brief Temporary variable to store b during swap */
-        int temp = b;
-        /** @brief Update b with remainder of a/b */
-        b = a % b;
-        /** @brief Update a with previous value of b */
-        a = temp;
-    }
-    return a;
-}
 
 /**
  * @brief Determines if a tenant index is noncompliant based on configured mode

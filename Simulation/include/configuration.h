@@ -6,276 +6,118 @@
 
 #define CONFIG_H
 
-/**
- * @brief Enumeration defining the various traffic modes used for tenant network behavior.
- *
- * @details This enumeration provides different traffic distribution modes for network simulation:
- * - Uniform and Gaussian distributions for SLA-compliant traffic
- * - Non-compliant traffic patterns
- * - Density-based traffic
- * - Various bursty traffic scenarios using finite state machines
- */
-
-/**
- * @def TRAFFIC_MODE_UNIFORM
- * @brief All tenants follow SLA with uniform traffic distribution
- */
+/** @brief Traffic mode for uniform distribution. */
 #define TRAFFIC_MODE_UNIFORM 0
-
-/**
- * @def TRAFFIC_MODE_GAUSSIAN
- * @brief All tenants follow SLA with Gaussian (normal) traffic distribution
- */
+/** @brief Traffic mode for Gaussian distribution. */
 #define TRAFFIC_MODE_GAUSSIAN 1
-
-/**
- * @def TRAFFIC_MODE_ALL_NONCOMPLIANT_UNIFORM
- * @brief All tenants violate SLA with uniform traffic distribution
- */
+/** @brief Traffic mode for all non-compliant uniform distribution. */
 #define TRAFFIC_MODE_ALL_NONCOMPLIANT_UNIFORM 2
-
-/**
- * @def TRAFFIC_MODE_NONCOMPLIANT_UNIFORM
- * @brief Mixed scenario: Some tenants violate SLA while others comply, using uniform distribution
- */
+/** @brief Traffic mode for non-compliant uniform distribution. */
 #define TRAFFIC_MODE_NONCOMPLIANT_UNIFORM 3
-
-/**
- * @def TRAFFIC_MODE_DENSITY
- * @brief Generates traffic at maximum capacity (upper bound)
- */
+/** @brief Traffic mode for density distribution. */
 #define TRAFFIC_MODE_DENSITY 4
-
-/**
- * @def TRAFFIC_MODE_BURSTY_ALL
- * @brief All tenants generate bursty traffic using finite state machine model
- */
+/** @brief Traffic mode for bursty traffic of all types. */
 #define TRAFFIC_MODE_BURSTY_ALL 5
-
-/**
- * @def TRAFFIC_MODE_BURSTY_COMPLIANT
- * @brief Only SLA-compliant tenants generate bursty traffic using finite state machine
- */
+/** @brief Traffic mode for bursty compliant traffic. */
 #define TRAFFIC_MODE_BURSTY_COMPLIANT 6
-
-/**
- * @def TRAFFIC_MODE_BURSTY_NONCOMPLIANT
- * @brief Only SLA-non-compliant tenants generate bursty traffic using finite state machine
- */
+/** @brief Traffic mode for bursty non-compliant traffic. */
 #define TRAFFIC_MODE_BURSTY_NONCOMPLIANT 7
-
-/**
- * @def TRAFFIC_MODE_DIFFERENT_R
- * @brief Both compliant and non-compliant tenants generate bursty traffic with different STATE_R parameters
- */
+/** @brief Traffic mode for different rates. */
 #define TRAFFIC_MODE_DIFFERENT_R 8
 
 /**
- * @brief Enumeration defining different modes for handling compliant and non-compliant flows
- *
- * @details These modes specify various scenarios for flow distribution and timing:
- * - Temporal ordering of compliant flows
- * - Distribution patterns between compliant and non-compliant flows
- * - Extreme case scenarios with isolated flows
- */
-
-/**
  * @def NONCOMPLIANT_MODE_BEFORE
- * @brief Positions compliant flows before other flows in the sequence
- * @details Ensures that compliant traffic flows are processed first in the timeline
+ * @brief Positions compliant flows before other flows in the sequence.
+ * @details Ensures that compliant traffic flows are processed first in the timeline.
  */
 #define NONCOMPLIANT_MODE_BEFORE 0
-
 /**
  * @def NONCOMPLIANT_MODE_AFTER
- * @brief Positions compliant flows after other flows in the sequence
- * @details Ensures that compliant traffic flows are processed last in the timeline
+ * @brief Positions compliant flows after other flows in the sequence.
+ * @details Ensures that compliant traffic flows are processed last in the timeline.
  */
 #define NONCOMPLIANT_MODE_AFTER 1
-
 /**
  * @def NONCOMPLIANT_MODE_AVERAGE
- * @brief Implements an average distribution between compliant and non-compliant flows
- * @details Balances the distribution of compliant and non-compliant traffic flows evenly
+ * @brief Implements an average distribution between compliant and non-compliant flows.
+ * @details Balances the distribution of compliant and non-compliant traffic flows evenly.
  */
 #define NONCOMPLIANT_MODE_AVERAGE 2
-
 /**
  * @def NONCOMPLIANT_MODE_EXTREME_COMPLIANT
- * @brief Extreme case scenario with a single compliant flow in the middle
- * @details Creates a test case with an isolated compliant flow surrounded by non-compliant flows
+ * @brief Extreme case scenario with a single compliant flow in the middle.
+ * @details Creates a test case with an isolated compliant flow surrounded by non-compliant flows.
  */
 #define NONCOMPLIANT_MODE_EXTREME_COMPLIANT 3
-
 /**
  * @def NONCOMPLIANT_MODE_EXTREME_NONCOMPLIANT
- * @brief Extreme case scenario with a single non-compliant flow in the middle
- * @details Creates a test case with an isolated non-compliant flow surrounded by compliant flows
+ * @brief Extreme case scenario with a single non-compliant flow in the middle.
+ * @details Creates a test case with an isolated non-compliant flow surrounded by compliant flows.
  */
 #define NONCOMPLIANT_MODE_EXTREME_NONCOMPLIANT 4
 
 /// @brief Define REDUCTION to recover the default configuration.
-
 #ifdef REDUCTION
 
 /**
- * @brief Parameters related to the basic simulation configuration
+ * @brief Parameters related to the basic simulation configuration.
  *
  * @details This section defines the fundamental parameters that control the simulation environment,
  * including scale, timing, precision, and storage settings.
  */
 
-/**
- * @def INITIAL_CONFIGURATION_TENANT_NUMBER
- * @brief Total number of tenants participating in the simulation
- */
-#define INITIAL_CONFIGURATION_TENANT_NUMBER 100
+#define INITIAL_CONFIGURATION_TENANT_NUMBER 100        ///< Number of tenants in the simulation.
+#define INITIAL_CONFIGURATION_SIMULATION_TIME 5.0      ///< Total simulation time in seconds.
+#define INITIAL_CONFIGURATION_ERROR 0.001              ///< Acceptable error margin for calculations.
+#define INITIAL_CONFIGURATION_DATA_PATH "../data/main" ///< Path to the main data directory.
+#define INITIAL_CONFIGURATION_UNIT 1048576             ///< Unit size in bytes (1 MB).
 
 /**
- * @def INITIAL_CONFIGURATION_SIMULATION_TIME
- * @brief Duration of the simulation in time units
- * @details Specifies the total runtime of the simulation in seconds
- */
-#define INITIAL_CONFIGURATION_SIMULATION_TIME 5.0
-
-/**
- * @def INITIAL_CONFIGURATION_ERROR
- * @brief Acceptable error margin for simulation calculations
- */
-#define INITIAL_CONFIGURATION_ERROR 0.001
-
-/**
- * @def INITIAL_CONFIGURATION_DATA_PATH
- * @brief Base directory path for storing simulation data
- */
-#define INITIAL_CONFIGURATION_DATA_PATH "../data/main"
-
-/**
- * @def INITIAL_CONFIGURATION_UNIT
- * @brief Base unit size for data measurements (1MB = 1048576 bytes)
- */
-#define INITIAL_CONFIGURATION_UNIT 1048576
-
-/**
- * @brief Traffic generation and control parameters
+ * @brief Traffic generation and control parameters.
  *
  * @details Defines parameters that govern traffic generation patterns,
  * including rates, distributions, and packet characteristics.
  */
 
-/**
- * @def INITIAL_CONFIGURATION_INPUT_RATE
- * @brief Base input traffic rate in bytes per second
- * @note Previous value was 167772160
- */
-#define INITIAL_CONFIGURATION_INPUT_RATE (long)335544320
+#define INITIAL_CONFIGURATION_INPUT_RATE (long)335544320 ///< Input rate in bytes per second.
+#define INITIAL_CONFIGURATION_TRAFFIC_MODE 0             ///< Traffic mode identifier (e.g., uniform, Gaussian).
+#define INITIAL_CONFIGURATION_MEAN 120                   ///< Mean value for traffic generation.
+#define INITIAL_CONFIGURATION_STANDARD_DEVIATION 40      ///< Standard deviation for traffic generation.
+#define INITIAL_CONFIGURATION_PACKET_SIZE 512            ///< Size of each packet in bytes.
 
 /**
- * @def INITIAL_CONFIGURATION_TRAFFIC_MODE
- * @brief Selected traffic generation mode
- * @see Refer to TRAFFIC_MODE definitions for available modes
- */
-#define INITIAL_CONFIGURATION_TRAFFIC_MODE 0
-
-/**
- * @def INITIAL_CONFIGURATION_MEAN
- * @brief Mean traffic rate for normal distribution
- */
-#define INITIAL_CONFIGURATION_MEAN 120
-
-/**
- * @def INITIAL_CONFIGURATION_STANDARD_DEVIATION
- * @brief Standard deviation for traffic distribution
- */
-#define INITIAL_CONFIGURATION_STANDARD_DEVIATION 40
-
-/**
- * @def INITIAL_CONFIGURATION_PACKET_SIZE
- * @brief Standard packet size in bytes
- */
-#define INITIAL_CONFIGURATION_PACKET_SIZE 512
-
-/**
- * @brief Non-compliant traffic parameters
+ * @brief Non-compliant traffic parameters.
  *
- * @details Configuration parameters specific to non-compliant tenant behavior
+ * @details Configuration parameters specific to non-compliant tenant behavior.
  */
 
-/**
- * @def INITIAL_CONFIGURATION_NONCOMPLIANT_MEAN
- * @brief Mean traffic rate for non-compliant tenants
- */
-#define INITIAL_CONFIGURATION_NONCOMPLIANT_MEAN 155
+#define INITIAL_CONFIGURATION_NONCOMPLIANT_MEAN 155              ///< Mean value for non-compliant traffic generation.
+#define INITIAL_CONFIGURATION_NONCOMPLIANT_STANDARD_DEVIATION 10 ///< Standard deviation for non-compliant traffic.
+#define INITIAL_CONFIGURATION_NONCOMPLIANT_TENANT_NUMBER 50      ///< Number of non-compliant tenants.
+#define INITIAL_CONFIGURATION_STATE_R (float)0.5                 ///< State R parameter for compliant traffic.
+#define INITIAL_CONFIGURATION_NONCOMPLIANT_STATE_R (float)0.5    ///< State R parameter for non-compliant traffic.
+#define INITIAL_CONFIGURATION_NONCOMPLIANT_MODE 0                ///< Mode identifier for non-compliant traffic behavior.
 
 /**
- * @def INITIAL_CONFIGURATION_NONCOMPLIANT_STANDARD_DEVIATION
- * @brief Standard deviation for non-compliant tenant traffic
- */
-#define INITIAL_CONFIGURATION_NONCOMPLIANT_STANDARD_DEVIATION 10
-
-/**
- * @def INITIAL_CONFIGURATION_NONCOMPLIANT_TENANT_NUMBER
- * @brief Number of tenants designated as non-compliant
- */
-#define INITIAL_CONFIGURATION_NONCOMPLIANT_TENANT_NUMBER 50
-
-/**
- * @def INITIAL_CONFIGURATION_STATE_R
- * @brief State transition rate parameter for traffic generation
- */
-#define INITIAL_CONFIGURATION_STATE_R (float)0.5
-
-/**
- * @def INITIAL_CONFIGURATION_NONCOMPLIANT_STATE_R
- * @brief State transition rate parameter for non-compliant traffic
- */
-#define INITIAL_CONFIGURATION_NONCOMPLIANT_STATE_R (float)0.5
-
-/**
- * @def INITIAL_CONFIGURATION_NONCOMPLIANT_MODE
- * @brief Operating mode for non-compliant traffic handling
- * @see Refer to NONCOMPLIANT_MODE definitions
- */
-#define INITIAL_CONFIGURATION_NONCOMPLIANT_MODE 0
-
-/**
- * @brief System threshold parameters
+ * @brief System threshold parameters.
  *
  * @details Defines various buffer and queue size limits for the system.
  * These parameters are empirically determined and cannot be calculated.
  */
 
-/**
- * @def INITIAL_CONFIGURATION_UPPER_LINK_BUFFER
- * @brief Maximum buffer size for upper link connections
- */
-#define INITIAL_CONFIGURATION_UPPER_LINK_BUFFER 1
+#define INITIAL_CONFIGURATION_UPPER_LINK_BUFFER 1   ///< Upper limit for the link buffer.
+#define INITIAL_CONFIGURATION_BUCKET_DEPTH 512      ///< Depth of the bucket for buffering.
+#define INITIAL_CONFIGURATION_LINK_QUEUE_BUFFER 100 ///< Size of the link queue buffer.
 
 /**
- * @def INITIAL_CONFIGURATION_BUCKET_DEPTH
- * @brief Maximum depth of the token bucket buffer
- */
-#define INITIAL_CONFIGURATION_BUCKET_DEPTH 512
-
-/**
- * @def INITIAL_CONFIGURATION_LINK_QUEUE_BUFFER
- * @brief Maximum buffer size for link queues
- */
-#define INITIAL_CONFIGURATION_LINK_QUEUE_BUFFER 100
-
-/**
- * @brief Creates or updates a configuration file with default simulation parameters
+ * @brief Writes simulation configuration to a specified INI file.
  *
- * @details This function writes a structured INI configuration file with three main sections:
- *          - [simulation]: Basic simulation parameters
- *          - [traffic]: Traffic generation and control parameters
- *          - [threshold]: System threshold parameters
+ * @param filename The name of the file to write the configuration to.
  *
- * @param filename The path and name of the configuration file to be created/modified
- *
- * @note The function will overwrite any existing file with the same name
- *
- * @warning Ensure proper write permissions in the target directory
+ * @details This function creates or overwrites an INI file with the simulation parameters,
+ * including simulation settings, traffic generation parameters, non-compliant traffic parameters,
+ * and system threshold parameters. If any errors occur during file operations, appropriate
+ * error messages are printed to stderr.
  */
 void reduction_inif_file(const char *filename)
 {
@@ -363,65 +205,42 @@ write_error:
 #ifdef CONFIG_H
 
 /**
- * @brief Configuration structure containing all simulation parameters
+ * @brief Configuration structure for simulation parameters.
  *
- * @details This structure holds all configuration parameters needed for the simulation,
- * organized into logical groups: basic simulation settings, traffic control parameters,
- * non-compliant traffic settings, and threshold configurations.
+ * This structure holds all necessary parameters for the simulation,
+ * organized into groups: basic settings, traffic control, non-compliant traffic,
+ * and threshold configurations.
  */
 typedef struct
 {
-    /**
-     * @name Basic Simulation Parameters
-     * @{
-     */
-    int tenant_number;         /**< Total number of tenants participating in the simulation */
-    TIME_TYPE simulation_time; /**< Total duration of the simulation */
-    double error;              /**< Acceptable error margin for simulation calculations */
-    char *data_path;           /**< Path to data files and storage location */
-    long unit;                 /**< Base unit for measurements (e.g., 1048576 for 1MB) */
-    /** @} */
+    /** @name Basic Simulation Parameters */
+    int tenant_number;         /**< Number of tenants in the simulation. */
+    TIME_TYPE simulation_time; /**< Duration of the simulation. */
+    double error;              /**< Acceptable error margin. */
+    char *data_path;           /**< Path to data files. */
+    long unit;                 /**< Measurement unit (e.g., 1048576 for 1MB). */
 
-    /**
-     * @name Traffic Control Parameters
-     * @{
-     */
-    long input_rate;        /**< Base input traffic rate in bytes per second */
-    int traffic_mode;       /**< Traffic generation mode (0: constant, 1: Gaussian, etc.) */
-    int mean;               /**< Mean traffic rate for normal distribution */
-    int standard_deviation; /**< Standard deviation for traffic distribution */
-    int packet_size;        /**< Standard packet size in bytes */
-    /** @} */
+    /** @name Traffic Control Parameters */
+    long input_rate;        /**< Input traffic rate in bytes per second. */
+    int traffic_mode;       /**< Traffic generation mode (0: constant, 1: Gaussian). */
+    int mean;               /**< Mean traffic rate. */
+    int standard_deviation; /**< Standard deviation for traffic. */
+    int packet_size;        /**< Packet size in bytes. */
 
-    /**
-     * @name Non-compliant Traffic Parameters
-     * @details Parameters specific to handling traffic that deviates from standard patterns
-     * @{
-     */
-    int noncompliant_mean;               /**< Mean traffic rate for non-compliant flows */
-    int noncompliant_standard_deviation; /**< Standard deviation for non-compliant traffic */
-    int noncompliant_tenant_number;      /**< Number of tenants marked as non-compliant */
-    int noncompliant_mode;               /**< Operating mode for non-compliant traffic handling */
-    /** @} */
+    /** @name Non-compliant Traffic Parameters */
+    int noncompliant_mean;               /**< Mean for non-compliant traffic. */
+    int noncompliant_standard_deviation; /**< Std deviation for non-compliant traffic. */
+    int noncompliant_tenant_number;      /**< Non-compliant tenant count. */
+    int noncompliant_mode;               /**< Mode for non-compliant traffic. */
 
-    /**
-     * @name State Control Parameters
-     * @details Parameters for finite state machine simulation of burst traffic
-     * @{
-     */
-    double state_r;              /**< State transition rate for normal traffic */
-    double noncompliant_state_r; /**< State transition rate for non-compliant traffic */
-    /** @} */
+    /** @name State Control Parameters */
+    double state_r;              /**< Transition rate for normal traffic. */
+    double noncompliant_state_r; /**< Transition rate for non-compliant traffic. */
 
-    /**
-     * @name Buffer and Queue Parameters
-     * @details System threshold values for various buffers and queues
-     * @{
-     */
-    long upper_queue_buffer; /**< Maximum size of upper queue buffer */
-    long tau;                /**< Token bucket depth or threshold parameter */
-    int link_queue_buffer;   /**< Maximum size of link queue buffer */
-    /** @} */
+    /** @name Buffer and Queue Parameters */
+    long upper_queue_buffer; /**< Max upper queue buffer size. */
+    long tau;                /**< Token bucket depth. */
+    int link_queue_buffer;   /**< Max link queue buffer size. */
 } configuration;
 
 /**
@@ -457,33 +276,31 @@ static int handler(void *config, const char *section, const char *name, const ch
 // Helper macro for string comparison
 #define MATCH(s, n) (strcmp(section, s) == 0 && strcmp(name, n) == 0)
 
-// Helper macro for safe string to long conversion
+// Safe string to long conversion
 #define SAFE_STRTOL(val, min, max)                                                       \
     do                                                                                   \
     {                                                                                    \
-        errno = 0; /* 直接使用系統的 errno */                                            \
         temp_long = strtol(val, &endptr, 10);                                            \
-        if (errno != 0 || *endptr != '\0' || temp_long < min || temp_long > max)         \
+        if (*endptr != '\0' || temp_long < min || temp_long > max)                       \
         {                                                                                \
             fprintf(stderr, "Error: Invalid value for %s.%s: %s\n", section, name, val); \
             return FAILURE;                                                              \
         }                                                                                \
     } while (0)
 
-// Helper macro for safe string to double conversion
+// Safe string to double conversion
 #define SAFE_STRTOD(val, min, max)                                                       \
     do                                                                                   \
     {                                                                                    \
-        errno = 0; /* 直接使用系統的 errno */                                            \
         temp_double = strtod(val, &endptr);                                              \
-        if (errno != 0 || *endptr != '\0' || temp_double < min || temp_double > max)     \
+        if (*endptr != '\0' || temp_double < min || temp_double > max)                   \
         {                                                                                \
             fprintf(stderr, "Error: Invalid value for %s.%s: %s\n", section, name, val); \
             return FAILURE;                                                              \
         }                                                                                \
     } while (0)
 
-    // Handle simulation section
+    // Handle sections and parameters
     if (strcmp(section, "simulation") == 0)
     {
         if (MATCH("simulation", "tenant_number"))
@@ -499,7 +316,7 @@ static int handler(void *config, const char *section, const char *name, const ch
         else if (MATCH("simulation", "error"))
         {
             SAFE_STRTOD(value, 0.0, 1.0);
-            pconfig->error = (float)temp_double;
+            pconfig->error = temp_double;
         }
         else if (MATCH("simulation", "data_path"))
         {
@@ -514,7 +331,7 @@ static int handler(void *config, const char *section, const char *name, const ch
                 fprintf(stderr, "Error: Memory allocation failed for data_path\n");
                 return FAILURE;
             }
-            free(pconfig->data_path); // Free existing path if any
+            // free(pconfig->data_path); // Free existing path if any
             pconfig->data_path = temp_str;
         }
         else if (MATCH("simulation", "unit"))
@@ -523,10 +340,10 @@ static int handler(void *config, const char *section, const char *name, const ch
             pconfig->unit = temp_long;
         }
         else
+        {
             return UNFOUND;
+        }
     }
-
-    // Handle traffic section
     else if (strcmp(section, "traffic") == 0)
     {
         if (MATCH("traffic", "input_rate"))
@@ -554,7 +371,6 @@ static int handler(void *config, const char *section, const char *name, const ch
             SAFE_STRTOL(value, 0, INT_MAX);
             pconfig->packet_size = (int)temp_long;
         }
-        // Non-compliant traffic parameters
         else if (MATCH("traffic", "noncompliant_mean"))
         {
             SAFE_STRTOL(value, 0, INT_MAX);
@@ -586,10 +402,10 @@ static int handler(void *config, const char *section, const char *name, const ch
             pconfig->noncompliant_state_r = temp_double;
         }
         else
+        {
             return UNFOUND;
+        }
     }
-
-    // Handle threshold section
     else if (strcmp(section, "threshold") == 0)
     {
         if (MATCH("threshold", "upper_queue_buffer"))
@@ -608,7 +424,9 @@ static int handler(void *config, const char *section, const char *name, const ch
             pconfig->link_queue_buffer = (int)temp_long;
         }
         else
+        {
             return UNFOUND;
+        }
     }
     else
     {
@@ -647,19 +465,11 @@ double obtain_capacity(void)
     double capacity = 0.0;
     const double MAX_CAPACITY = 1e12; // 1 Tbps as reasonable upper limit
 
-    // Validate file path
-    if (CAPACITY_DATA_PATH == NULL)
-    {
-        fprintf(stderr, "Error: CAPACITY_DATA_PATH is not defined\n");
-        return FAILURE;
-    }
-
-    // Open file
     file = fopen(CAPACITY_DATA_PATH, "r");
     if (file == NULL)
     {
-        fprintf(stderr, "Error: Cannot open capacity file: %s\n", CAPACITY_DATA_PATH);
-        perror("File opening failed");
+        printf("Cannot read file %s\n", CAPACITY_DATA_PATH);
+        perror("Error opening file " CAPACITY_DATA_PATH);
         return FAILURE;
     }
 
@@ -688,24 +498,19 @@ double obtain_capacity(void)
         return FAILURE;
     }
 
-    // Check for additional unexpected data
-    double dummy;
-    if (fscanf(file, "%lf", &dummy) == 1)
-    {
-        fprintf(stderr, "Warning: Additional unexpected data found in %s\n",
-                CAPACITY_DATA_PATH);
-    }
-
     fclose(file);
     return capacity;
 }
 
 /**
- * @brief Helper function to write a string to file with error checking
+ * @brief Attempts to write a string to a file.
  *
- * @param file File pointer
- * @param str String to write
- * @return int Returns 0 on success, -1 on failure
+ * This function writes the provided string to the specified file.
+ * If the writing process fails, an error message is printed.
+ *
+ * @param file Pointer to the file where the string will be written.
+ * @param str The string to be written to the file.
+ * @return 0 on success, or FAILURE (-1) if an error occurs.
  */
 static int try_write(FILE *file, const char *str)
 {
@@ -753,7 +558,7 @@ int modify_ini_file(const char *filename, const configuration *config)
         return FAILURE;
     }
 
-// Helper macro for writing with error checking
+    // Helper macro for writing with error checking
 #define WRITE_CHECK(fmt, ...)                                                    \
     if (fprintf(file, fmt, __VA_ARGS__) < 0)                                     \
     {                                                                            \
@@ -782,10 +587,8 @@ int modify_ini_file(const char *filename, const configuration *config)
 
     // Write non-compliant traffic parameters
     WRITE_CHECK("noncompliant_mean = %d\n", config->noncompliant_mean);
-    WRITE_CHECK("noncompliant_standard_deviation = %d\n",
-                config->noncompliant_standard_deviation);
-    WRITE_CHECK("noncompliant_tenant_number = %d\n",
-                config->noncompliant_tenant_number);
+    WRITE_CHECK("noncompliant_standard_deviation = %d\n", config->noncompliant_standard_deviation);
+    WRITE_CHECK("noncompliant_tenant_number = %d\n", config->noncompliant_tenant_number);
     WRITE_CHECK("noncompliant_mode = %d\n", config->noncompliant_mode);
     WRITE_CHECK("state_r = %.6f\n", config->state_r);
     WRITE_CHECK("noncompliant_state_r = %.6f\n", config->noncompliant_state_r);
@@ -931,19 +734,17 @@ int is_noncompliant_index(int index, const configuration config)
     switch (config.noncompliant_mode)
     {
     case NONCOMPLIANT_MODE_BEFORE:
-        /** @brief Noncompliant if index is in the first portion */
+        /** Noncompliant if index is in the first portion */
         return (index >= (config.tenant_number - config.noncompliant_tenant_number));
-        break;
 
     case NONCOMPLIANT_MODE_AFTER:
-        /** @brief Noncompliant if index is in the last portion */
+        /** Noncompliant if index is in the last portion */
         return (index < config.noncompliant_tenant_number);
-        break;
 
     case NONCOMPLIANT_MODE_AVERAGE:
         /**
-         * @brief Distribute noncompliant tenants evenly
-         * @details Uses GCD to ensure even distribution is possible
+         * Distribute noncompliant tenants evenly.
+         * Uses GCD to ensure even distribution is possible.
          */
         int gcd_ = gcd(config.tenant_number, config.noncompliant_tenant_number);
         if (gcd_ == 1)
@@ -953,21 +754,72 @@ int is_noncompliant_index(int index, const configuration config)
         }
         int divisor = (int)(config.tenant_number / gcd_);
         return (index % divisor < (int)(config.noncompliant_tenant_number / gcd_));
-        break;
 
     case NONCOMPLIANT_MODE_EXTREME_COMPLIANT:
-        /** @brief All tenants except middle one are noncompliant */
+        /** All tenants except the middle one are noncompliant */
         return (index != (int)(config.tenant_number / 2));
 
     case NONCOMPLIANT_MODE_EXTREME_NONCOMPLIANT:
-        /** @brief Only middle tenant is noncompliant */
+        /** Only the middle tenant is noncompliant */
         return (index == (int)(config.tenant_number / 2));
 
     default:
-        /** @brief Default behavior matches NONCOMPLIANT_MODE_BEFORE */
+        /** Default behavior matches NONCOMPLIANT_MODE_BEFORE */
         return (index >= (config.tenant_number - config.noncompliant_tenant_number));
-        break;
     }
+}
+
+/**
+ * @brief Tests the configuration handling functionality.
+ *
+ * This function performs a series of operations to test loading,
+ * modifying, and displaying configuration settings from an INI file.
+ *
+ * @param filename The name of the INI file to be processed.
+ */
+void test_configuration_h(const char *filename)
+{
+    configuration config;
+
+    printf("===== handler =====\n");
+    if (ini_parse(filename, handler, &config) < 0)
+    {
+        printf(RED_ELOG "Can't load configuration \"%s\"\n", filename);
+        exit(EXIT_FAILURE);
+    }
+    show_configuration(config);
+
+    printf("===== reduction_inif_file =====\n");
+    reduction_inif_file(filename);
+    if (ini_parse(filename, handler, &config) < 0)
+    {
+        printf(RED_ELOG "Can't load configuration \"%s\"\n", filename);
+        exit(EXIT_FAILURE);
+    }
+    show_configuration(config);
+
+    printf("===== obtain_capacity =====\n");
+    char command[MAX_COMMAND_LENGTH];
+    sprintf(command, "python3 ../python/capacity.py %s 0", filename);
+    system(command);
+    printf("capacity = %f\n", obtain_capacity());
+
+    printf("===== modify_ini_file =====\n");
+    config.tau = 114514;
+    int status = modify_ini_file(filename, &config);
+    if (status == FAILURE)
+    {
+        printf(RED_ELOG "modify_ini_file failed\n" RESET);
+        exit(FAILURE);
+    }
+    if (ini_parse(filename, handler, &config) < 0)
+    {
+        printf(RED_ELOG "Can't load configuration \"%s\"\n", filename);
+        exit(EXIT_FAILURE);
+    }
+    show_configuration(config);
+
+    reduction_inif_file(filename);
 }
 
 #endif

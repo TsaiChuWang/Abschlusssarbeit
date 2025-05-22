@@ -5,32 +5,6 @@
 //  */
 
 // /**
-//  * @def PRINT_EXECUTION_TIME
-//  * @brief When defined, prints execution time measurements
-//  */
-// #define PRINT_EXECUTION_TIME
-
-// /**
-//  * @def SHOW_CONFIGURATION
-//  * @brief When defined, displays the current configuration settings
-//  * @details Enables debug output showing all loaded configuration parameters
-//  *          from the INI file. Useful for configuration verification and debugging.
-//  */
-// #define SHOW_CONFIGURATION
-
-// /**
-//  * @def CLEAN_DATA_PATH
-//  * @brief When defined, cleans the data directory before processing
-//  */
-// #define CLEAN_DATA_PATH
-
-// /**
-//  * @def PRINT_CAPACITY
-//  * @brief When defined, prints network capacity information
-//  */
-// #define PRINT_CAPACITY
-
-// /**
 //  * @def SHOW_TRAFFICGENERATOR
 //  * @brief Conditional compilation flag to enable traffic generator information display
 //  */
@@ -105,6 +79,12 @@
 //  */
 // #define RECORD_PACKETS_SITUATION
 
+#define PRINT_EXECUTION_TIME ///< Enable timing measurement for execution duration
+#define SHOW_CONFIGURATION   ///< Enable display of the current configuration settings
+#define REDUCTION            ///< Enable reduction of the INI file (if applicable)
+#define CLEAN_DATA_PATH      ///< Enable cleaning and initialization of the data directory
+#define PRINT_CAPACITY       ///< Enable display of the calculated network capacity
+
 // /**
 //  * @file main.c
 //  * @brief Main entry point for the traffic generation application.
@@ -113,15 +93,16 @@
 //  * for the traffic generation application. It sets up configurations
 //  * and handles the execution flow.
 //  */
-#include "../include/general.h" ///< General utility functions and definitions
-// #include "./inih/ini.h"                     ///< INI file parsing library
-// #include "../include/configuration.h"       ///< Configuration handling functions
+
+#include "../include/general.h"
+#include "./inih/ini.h"
+#include "../include/configuration.h"
 // #include "../include/traffic_generation.h"  ///< Traffic generation functions and definitions
 // #include "../include/packets_count.h"       ///< Packet counting functions
 // #include "../include/GCRA.h"                ///< GCRA (Generic Controlled Rate Algorithm) functions
 // #include "../include/link_capacity_queue.h" ///< Link capacity queue management functions
 
-// #define CONFIGURATION_PATH "../configuration/main.ini" ///< Path to the main configuration file
+#define CONFIGURATION_PATH "../configuration/main.ini" ///< Path to the main configuration file
 
 /** @brief Compilation command
  *  @code{.sh}
@@ -137,59 +118,89 @@
 
 int main(int argc, char *argv[])
 {
-    //     /** @brief Buffer for system commands */
-    //     char *command = (char *)malloc(MAX_COMMAND_LENGTH * sizeof(char));
-    //     memset(command, '\0', MAX_COMMAND_LENGTH * sizeof(char));
+    char configuration_path[MAX_PATH_LENGTH];
+    if (argc < 2)
+        strcpy(configuration_path, CONFIGURATION_PATH);
+    else
+        strcpy(configuration_path, argv[1]);
 
-    //     FILE *file;
+    /** @brief Buffer for system commands */
+    char *command = (char *)malloc(MAX_COMMAND_LENGTH * sizeof(char));
+    memset(command, '\0', MAX_COMMAND_LENGTH * sizeof(char));
 
-    // #ifdef PRINT_EXECUTION_TIME
-    //     clock_t execute_clock = clock(); ///< Start time measurement
-    // #endif
+    FILE *file; ///< File pointer for potential file operations
 
-    //     int error_code = SUCCESS;
-    //     configuration config; ///< Configuration structure
+#ifdef PRINT_EXECUTION_TIME
+    clock_t execute_clock = clock(); ///< Start time measurement for performance tracking
+#endif
 
-    //     /** @brief Load and parse configuration file */
-    //     if (ini_parse(CONFIGURATION_PATH, handler, &config) < 0)
-    //     {
-    //         printf(RED_ELOG "Can't load configuration \"%s\"\n", CONFIGURATION_PATH);
-    //         return EXIT_FAILURE;
-    //     }
+    configuration config; ///< Configuration structure to hold settings
 
-    // #ifdef SHOW_CONFIGURATION
-    //     /** @brief Display current configuration if enabled */
-    //     show_configuration(config);
-    // #endif
+    /** @brief Load and parse the configuration file.
+     *
+     * This function reads the specified INI file and populates the
+     * configuration structure. If the file cannot be loaded or parsed,
+     * an error message is displayed and the program exits.
+     */
+    if (ini_parse(configuration_path, handler, &config) < 0)
+    {
+        printf(RED_ELOG "Can't load configuration \"%s\"\n", configuration_path);
+        return EXIT_FAILURE;
+    }
 
-    // #ifdef CLEAN_DATA_PATH
-    //     /**
-    //      * @brief Clean and initialize data directory
-    //      * @details Removes existing directory and creates new structure:
-    //      *          - Main data directory
-    //      *          - Images subdirectory
-    //      */
-    //     sprintf(command, "rm -r %s", config.data_path);
-    //     system(command);
-    //     sprintf(command, "mkdir %s", config.data_path);
-    //     system(command);
-    //     sprintf(command, "mkdir %s/images", config.data_path);
-    //     system(command);
-    // #endif
+#ifdef SHOW_CONFIGURATION
+    /** @brief Display current configuration if enabled.
+     *
+     * This section shows the loaded configuration settings to the user,
+     * which can be useful for debugging or verification purposes.
+     */
+    show_configuration(config);
+#endif
 
-    //     /**
-    //      * @brief Calculate network capacity
-    //      * @details Executes Python script for capacity calculation
-    //      */
-    //     sprintf(command, "python3 ../python/capacity.py %s 0", CONFIGURATION_PATH);
-    //     system(command);
+#ifdef CLEAN_DATA_PATH
+    /**
+     * @brief Clean and initialize the data directory.
+     *
+     * This process involves removing the existing data directory and
+     * creating a new one, including a subdirectory for images. This
+     * ensures that old data does not interfere with new operations.
+     *
+     * @details The following operations are performed:
+     * - Remove the existing data directory specified in the configuration.
+     * - Create a new data directory.
+     * - Create an images subdirectory within the data directory.
+     */
+    sprintf(command, "rm -r %s", config.data_path);
+    system(command);
+    sprintf(command, "mkdir %s", config.data_path);
+    system(command);
+    sprintf(command, "mkdir %s/images", config.data_path);
+    system(command);
+#endif
 
-    //     double capacity = obtain_capacity();
+    /**
+     * @brief Calculate network capacity.
+     *
+     * This section executes a Python script to calculate the network
+     * capacity based on the configuration file provided. The output of
+     * the script is then processed to retrieve the calculated capacity.
+     *
+     * @details The Python script is invoked with the configuration file
+     * as an argument. The result is stored in a variable for further use.
+     */
+    sprintf(command, "python3 ../python/capacity.py %s 0", configuration_path);
+    system(command);
 
-    // #ifdef PRINT_CAPACITY
-    //     /** @brief Display calculated capacity */
-    //     printf("capacity : %f bps\n", capacity);
-    // #endif
+    double capacity = obtain_capacity(); ///< Variable to hold the calculated capacity
+
+#ifdef PRINT_CAPACITY
+    /** @brief Display the calculated capacity.
+     *
+     * This section outputs the calculated network capacity to the console.
+     * The capacity is displayed in bits per second (bps).
+     */
+    printf("capacity : %f bps\n", capacity);
+#endif
 
     //     /**
     //      * @brief Initialize random number generator
@@ -667,7 +678,7 @@ int main(int argc, char *argv[])
     //     printf("Execute time : %f s\n", time_taken);
     // #endif
 
-    //     free(command);
+    free(command);
     //     free_packets_count(&count);
     //     free_packets_label(&label);
 

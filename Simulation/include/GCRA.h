@@ -1,18 +1,17 @@
 
 #define GCRA_H
 
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-
-#ifdef GCRA_H 
+#ifdef GCRA_H
 
 /**
  * @brief Structure representing a Generic Cell Rate Algorithm (GCRA) token bucket.
  */
-typedef struct {
-    long tau;     /**< Time interval for token replenishment */
-    long l;       /**< Bucket depth or allowable burst size */
+typedef struct
+{
+    long tau;            /**< Time interval for token replenishment */
+    long l;              /**< Bucket depth or allowable burst size */
     TIME_TYPE last_time; /**< Timestamp of the last packet arrival */
-    long x;       /**< Current token count */
+    long x;              /**< Current token count */
 } GCRA;
 
 /**
@@ -22,7 +21,8 @@ typedef struct {
  * @param l The bucket depth or allowable burst size.
  * @return A GCRA struct initialized with the given parameters.
  */
-GCRA initializeGCRA(long tau, long l) {
+GCRA initializeGCRA(long tau, long l)
+{
     GCRA gcra;
 
     gcra.tau = tau;
@@ -41,14 +41,17 @@ GCRA initializeGCRA(long tau, long l) {
  * @param l The bucket depth or allowable burst size.
  * @return A pointer to an allocated array of GCRA structs.
  */
-GCRA* initializeGCRAs(int tenant_number, long tau, long l) {
-    GCRA* gcras = (GCRA*)malloc(sizeof(GCRA) * tenant_number);
-    if (!gcras) {
+GCRA *initializeGCRAs(int tenant_number, long tau, long l)
+{
+    GCRA *gcras = (GCRA *)malloc(sizeof(GCRA) * tenant_number);
+    if (!gcras)
+    {
         perror("Memory allocation failed");
         exit(EXIT_FAILURE);
     }
 
-    for (int index = 0; index < tenant_number; index++) {
+    for (int index = 0; index < tenant_number; index++)
+    {
         *(gcras + index) = initializeGCRA(tau, l);
     }
     return gcras;
@@ -59,7 +62,8 @@ GCRA* initializeGCRAs(int tenant_number, long tau, long l) {
  *
  * @param gcra The GCRA instance to display.
  */
-void show_GCRA(GCRA gcra) {
+void show_GCRA(GCRA gcra)
+{
     printf("tau       = %-ld\n", gcra.tau);
     printf("l         = %-ld\n", gcra.l);
     printf("last time = %-lf\n", gcra.last_time);
@@ -71,7 +75,8 @@ void show_GCRA(GCRA gcra) {
  *
  * @param pgcra Pointer to the GCRA instance to reset.
  */
-void refresh_gcra(GCRA* pgcra) {
+void refresh_gcra(GCRA *pgcra)
+{
     pgcra->last_time = 0;
     pgcra->x = 0;
 }
@@ -84,7 +89,8 @@ void refresh_gcra(GCRA* pgcra) {
  * @param config Configuration parameters for traffic shaping.
  * @return PACKET_LABEL_GCRA_LABELED if the packet is dropped due to exceeding the threshold, otherwise PACKET_LABEL_ACCEPT.
  */
-int gcra_update(TIME_TYPE timestamp, GCRA* pgcra, const configuration config) {
+int gcra_update(TIME_TYPE timestamp, GCRA *pgcra, const configuration config)
+{
     // Calculate the rate based on the time interval and mean traffic rate
     long rate = (long)(timestamp - pgcra->last_time) * (((double)(config.mean) * config.unit) / ONE_SECOND_IN_NS);
     long x = (long)(pgcra->x - rate);
@@ -93,19 +99,22 @@ int gcra_update(TIME_TYPE timestamp, GCRA* pgcra, const configuration config) {
     // Compute upper bound for valid timestamp intervals
     double upper = (double)(ONE_SECOND_IN_NS * config.packet_size) / (config.mean * config.unit);
     if (timestamp - pgcra->last_time > (long)(upper))
-        printf("lst = %9lf, time = %-7f, inter = %7lf, rate = %6ld x= %6ld\n", 
+        printf("lst = %9lf, time = %-7f, inter = %7lf, rate = %6ld x= %6ld\n",
                pgcra->last_time, timestamp, timestamp - pgcra->last_time, rate, x);
     else
-        printf("lst = %9lf, time = %-7f, inter = \x1B[1;31m%6lf\x1B[0m, rate = %6ld x= %6ld\n", 
+        printf("lst = %9lf, time = %-7f, inter = \x1B[1;31m%6lf\x1B[0m, rate = %6ld x= %6ld\n",
                pgcra->last_time, timestamp, timestamp - pgcra->last_time, rate, x);
-    
+
     printf("x = %ld, tau = %ld %d\n", x, pgcra->tau, x > pgcra->tau);
 #endif
 
     // Check if the packet exceeds the threshold and should be dropped
-    if (x > pgcra->tau) {
+    if (x > pgcra->tau)
+    {
         return PACKET_LABEL_GCRA_LABELED;
-    } else {
+    }
+    else
+    {
         // Update GCRA state and accept the packet
         pgcra->x = MAX((long)0, x) + pgcra->l;
         pgcra->last_time = timestamp;

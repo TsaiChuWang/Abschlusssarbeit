@@ -292,7 +292,7 @@ void init_Packets_Label(packets_label *plabel, int tenant_number, packets_count 
 
   plabel->labels = (int **)malloc(tenant_number * sizeof(int *)); /**< Allocate memory for the labels array. */
   for (int tenant = 0; tenant < tenant_number; tenant++)
-    *(plabel->labels + tenant) = (int *)calloc(PACKET_LABEL_TYPE, sizeof(int)); /**< Allocate memory for each tenant's labels. */
+    *(plabel->labels + tenant) = (int *)calloc(PACKET_LABEL_TYPE_NUMBER, sizeof(int)); /**< Allocate memory for each tenant's labels. */
 
   plabel->tenant_number = tenant_number; /**< Set the tenant number. */
 }

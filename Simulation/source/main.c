@@ -93,7 +93,7 @@
 #include "./inih/ini.h"
 #include "../include/configuration.h"
 #include "../include/traffic_generation.h"
-// #include "../include/packets_count.h"       ///< Packet counting functions
+#include "../include/packets_count.h" ///< Packet counting functions
 // #include "../include/GCRA.h"                ///< GCRA (Generic Controlled Rate Algorithm) functions
 // #include "../include/link_capacity_queue.h" ///< Link capacity queue management functions
 
@@ -210,15 +210,15 @@ int main(int argc, char *argv[])
     showTrafficGenerator(generator); ///< Display the current state and configuration of the traffic generator.
 #endif
 
-    //     /** @brief Structure to store packet counts for each tenant. */
-    //     packets_count count;
-    //     /**  @brief Initializes packet count tracking. */
-    //     init_packets_count(&count, tenant_number, obtain_grids_number(config));
+    /** @brief Structure to store packet counts for each tenant. */
+    packets_count count;
+    /**  @brief Initializes packet count tracking. */
+    init_packets_count(&count, tenant_number, obtain_grids_number(config));
 
-    //     /** @brief Structure to label packets based on their classification. */
-    //     packets_label label;
-    //     /** @brief Initializes packet labeling structure. */
-    //     init_Packets_Label(&label, tenant_number, &count);
+    /** @brief Structure to label packets based on their classification. */
+    packets_label label;
+    /** @brief Initializes packet labeling structure. */
+    init_Packets_Label(&label, tenant_number, &count);
 
     //     meter_queue *meter_queues = init_meter_queues(config);
     //     // printf("dec = %f\n", meter_queues->dequeue_interval);

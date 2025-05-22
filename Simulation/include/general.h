@@ -3,28 +3,66 @@
 #include <time.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include <errno.h>
 
+/**
+ * @brief Defines the success status code.
+ */
 #define SUCCESS 0
-#define FAILED -1
+/**
+ * @brief Defines the status code for an unfound item.
+ */
 #define UNFOUND -1
+/**
+ * @brief Defines the comparison result for true.
+ */
 #define COMPARE_TRUE 0
+/**
+ * @brief Defines the failure status code.
+ */
 #define FAILURE -1
 
+/**
+ * @brief Defines the boolean value for true.
+ */
 #define TRUE 1
+/**
+ * @brief Defines the boolean value for false.
+ */
 #define FALSE -1
 
+/**
+ * @brief Format for identifying an identifier with leading zeros.
+ */
 #define INFORM_IDENTIFIER_FORMAT "%03u"
+/**
+ * @brief Format for displaying traffic data with 7 decimal places.
+ */
 #define INFORM_TRAFFIC_FORMAT "%12.7lf"
+/**
+ * @brief Format for displaying double precision floating-point numbers with 7 decimal places.
+ */
 #define INFORM_DOUBLE_FORMAT "%12.7lf"
+/**
+ * @brief Format for displaying time as a 6-digit integer.
+ */
 #define INFORM_TIME_FORMAT "%6d"
 
+/**
+ * @brief Maximum length for command input.
+ */
 #define MAX_COMMAND_LENGTH 1024
+/**
+ * @brief Maximum length for names.
+ */
 #define MAX_NAME_LENGTH 512
-#define MAX_IP_LENGTH 16
+/**
+ * @brief Maximum length for file paths.
+ */
 #define MAX_PATH_LENGTH 2048
+/**
+ * @brief Maximum size for buffer allocations.
+ */
 #define MAX_BUFFER_SIZE 4096
-#define GENERATE_BINARY (int)(rand() % 2) /* @brief Generate a binary random value (0 or 1) */
 
 #define INFORM_IP_ADDRESS_FORMAT "%s"
 #define INFORM_PORT_FORMAT "%d"
@@ -80,6 +118,8 @@ void print_equals_line()
     }
     putchar('\n'); // Add a newline at the end
 }
+
+#define GENERATE_BINARY (int)(rand() % 2) /* @brief Generate a binary random value (0 or 1) */
 
 /**
  * @def MAX(a, b)

@@ -366,7 +366,7 @@ void show_packets_label(packets_label label)
   // Loop through each tenant and display the label counts and loss percentages.
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
   {
-    printf("%-10d, %-10d, %-10d, %-10d : %-12.7f % , %-12.7f %\n",
+    printf("%-10d, %-10d, %-12d, %-10d : %-12.7f % , %-12.7f %\n",
            label.labels[tenant][0], label.labels[tenant][1], label.labels[tenant][2], label.labels[tenant][3],
            (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]),
            (double)(label.labels[tenant][1] + label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][1] + label.labels[tenant][3]));

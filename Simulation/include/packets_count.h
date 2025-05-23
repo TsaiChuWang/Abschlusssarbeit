@@ -67,7 +67,7 @@
 #define RECORD_AVERAGE_LOSS_HEADER                             \
   "tau,noncompliant_mean,noncompliant_tenant_number,state_r,"  \
   "noncompliant_state_r,upper_queue_buffer,link_queue_buffer," \
-  "average_loss_pure, average_loss_all\n"
+  "average_loss_pure,average_loss_all\n"
 
 /**
  * @def RECORD_PACKET_SITUATION_HEADER

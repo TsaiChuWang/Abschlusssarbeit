@@ -8,19 +8,7 @@
 
 // // #define PRINT_REGULAR_AND_NAUGHTY ///< Enable to print regular and naughty data
 
-// /**
-//  * @def PRINT_FIRST_INIT_GCRA
-//  * @brief Debug macro for printing initial GCRA configuration
-//  *
-//  * @details When defined, enables the printing of the first GCRA instance's
-//  *          configuration after initialization. Useful for debugging and
-//  *          verification purposes.
-//  */
-// // #define PRINT_FIRST_INIT_GCRA
-
 // // // #define PRINT_GCRA_UPDATE ///< Enable to print updates related to GCRA
-// // #define PRINT_PACKET_COUNTS ///< Enable to print the counts of packets processed
-// // #define PRINT_PACKET_LABEL  ///< Enable to print labels for packets processed
 
 // /**
 //  * @def PRINT_LINK_DEQUEUE_COUNT
@@ -59,6 +47,7 @@
 // #define PRINT_ORDER ///< Enable printing of the tenant order.
 #define PRINT_PACKET_COUNTS ///< Enable printing of packet counts.
 #define PRINT_PACKET_LABEL  ///< Enable printing of packet labels.
+// #define PRINT_FIRST_INIT_GCRA ///< Enable printing of the first initialized GCRA.
 
 #define RECORD_PACKETS_SITUATION ///< Enable recording of packet situations.
 
@@ -75,8 +64,8 @@
 #include "./inih/ini.h"
 #include "../include/configuration.h"
 #include "../include/traffic_generation.h"
-#include "../include/packets_count.h" ///< Packet counting functions
-// #include "../include/GCRA.h"                ///< GCRA (Generic Controlled Rate Algorithm) functions
+#include "../include/packets_count.h"       ///< Packet counting functions
+#include "../include/GCRA.h"                ///< GCRA (Generic Controlled Rate Algorithm) functions
 #include "../include/link_capacity_queue.h" ///< Link capacity queue management functions
 
 #define CONFIGURATION_PATH "../configuration/main.ini" ///< Path to the main configuration file
@@ -204,30 +193,17 @@ int main(int argc, char *argv[])
     // Initialize an array of meter queues based on the provided configuration.
     meter_queue *meter_queues = init_meter_queues(config);
 
-    //     /**
-    //      * @brief Initializes an array of GCRA structures for traffic shaping
-    //      * @details Creates and initializes an array of GCRA (Generic Cell Rate Algorithm)
-    //      *          instances for multiple tenants, with each GCRA controlling the traffic
-    //      *          rate and burst characteristics for a specific tenant.
-    //      */
-    //     GCRA *gcras = initializeGCRAs(tenant_number, config.tau, config.packet_size);
+    /**
+     * @brief Initializes an array of GCRA structures for traffic shaping
+     * @details Creates and initializes an array of GCRA (Generic Cell Rate Algorithm)
+     *          instances for multiple tenants, with each GCRA controlling the traffic
+     *          rate and burst characteristics for a specific tenant.
+     */
+    GCRA *gcras = initializeGCRAs(tenant_number, config.tau, config.packet_size);
 
-    // #ifdef PRINT_FIRST_INIT_GCRA
-    //     /**
-    //      * @brief Displays the configuration of the first GCRA instance
-    //      *
-    //      * @details Prints detailed information about the first GCRA structure including:
-    //      *          - Token replenishment interval (tau)
-    //      *          - Bucket depth (l)
-    //      *          - Current token count (x)
-    //      *          - Last update timestamp
-    //      * @param[in] gcra Pointer to the first GCRA instance
-    //      *
-    //      * @note Only the first GCRA instance is displayed to avoid
-    //      *       excessive debug output
-    //      */
-    //     show_GCRA(*(gcras));
-    // #endif
+#ifdef PRINT_FIRST_INIT_GCRA
+    show_GCRA(*(gcras)); ///< Display the details of the first initialized GCRA instance.
+#endif
 
     //     //     /**
     //     //      * @brief Initializes a link priority queue.
@@ -429,31 +405,31 @@ int main(int argc, char *argv[])
                 continue; ///< Skip to the next iteration if there is no relevant packet.
             }
 
-            //             //             /**
-            //             //              * @brief Processes packets through the GCRA algorithm.
-            //             //              *
-            //             //              * This code checks if the packet for the specified tenant is of the
-            //             //              * type PACKET_LABEL_ACCEPT. If it is, the packet undergoes an update
-            //             //              * using the GCRA algorithm based on the current timestamp and tenant's
-            //             //              * GCRA instance.
-            //             //              */
-            //             //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
-            //             //             {
-            //             //                 *(packets + tenant) = gcra_update(timestamp, (gcras + tenant), config); ///< Update the packet using GCRA
-            //             //             }
+            /**
+             * @brief Processes packets through the GCRA algorithm.
+             *
+             * This code checks if the packet for the specified tenant is of the
+             * type PACKET_LABEL_ACCEPT. If it is, the packet undergoes an update
+             * using the GCRA algorithm based on the current timestamp and tenant's
+             * GCRA instance.
+             */
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
+            {
+                *(packets + tenant) = gcra_update(timestamp, (gcras + tenant), config); ///< Update the packet using GCRA
+            }
 
-            //             //             /**
-            //             //              * @brief Updates the statistics for packets labeled as GCRA.
-            //             //              *
-            //             //              * This code checks if the packet for the specified tenant is labeled
-            //             //              * as PACKET_LABEL_GCRA_LABELED. If it is, the corresponding statistic
-            //             //              * for that label is incremented in the labels structure.
-            //             //              */
-            //             //             // Statistic for the number of packets labeled as GCRA
-            //             //             if (*(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is labeled as GCRA
-            //             //             {
-            //             //                 label.labels[tenant][PACKET_LABEL_GCRA_LABELED] += 1; ///< Increment the GCRA labeled packet count for the tenant
-            //             //             }
+            /**
+             * @brief Updates the statistics for packets labeled as GCRA.
+             *
+             * This code checks if the packet for the specified tenant is labeled
+             * as PACKET_LABEL_GCRA_LABELED. If it is, the corresponding statistic
+             * for that label is incremented in the labels structure.
+             */
+            // Statistic for the number of packets labeled as GCRA
+            if (*(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is labeled as GCRA
+            {
+                label.labels[tenant][PACKET_LABEL_GCRA_LABELED] += 1; ///< Increment the GCRA labeled packet count for the tenant
+            }
 
             //             //             /**
             //             //              * @brief Enqueues packets into the link queue based on their labels.
@@ -608,8 +584,9 @@ int main(int argc, char *argv[])
     free(command);
     freeTrafficGenerator(&generator);
     free(meter_queues);
-    //     free_packets_count(&count);
-    //     free_packets_label(&label);
+    free(gcras);
+    free_packets_count(&count);
+    free_packets_label(&label);
 
     return EXIT_SUCCESS;
 }

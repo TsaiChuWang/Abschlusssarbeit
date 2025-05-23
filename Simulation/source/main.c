@@ -7,10 +7,10 @@
 //  * and handles the execution flow.
 //  */
 
-#define PRINT_EXECUTION_TIME  ///< Enable timing measurement for execution duration
-#define SHOW_CONFIGURATION    ///< Enable display of the current configuration settings
-#define REDUCTION             ///< Enable reduction of the INI file (if applicable)
-#define CLEAN_DATA_PATH       ///< Enable cleaning and initialization of the data directory
+#define PRINT_EXECUTION_TIME ///< Enable timing measurement for execution duration
+#define SHOW_CONFIGURATION   ///< Enable display of the current configuration settings
+#define REDUCTION            ///< Enable reduction of the INI file (if applicable)
+// #define CLEAN_DATA_PATH       ///< Enable cleaning and initialization of the data directory
 #define PRINT_CAPACITY        ///< Enable display of the calculated network capacity
 #define SHOW_TRAFFICGENERATOR ///< Enable the display of the traffic generator's state.
 // #define PRINT_EACH_TIMESTAMP      ///< Enable printing of each timestamp.
@@ -24,8 +24,8 @@
 // #define PRINT_GCRA_UPDATE ///< Enable to print updates related to GCRA
 // #define PRINT_GRID_COUNT ///< Enable printing of the grid count.
 #define PRINT_COMPLIANT_AND_NON_COMPLIANT ///< Enable printing of compliant and non-compliant traffic information.
-#define RECORD_AVERAGE_LOSS               ///< Enable recording of average loss.
 
+#define RECORD_AVERAGE_LOSS                   ///< Enable recording of average loss.
 #define RECORD_PACKETS_SITUATION              ///< Enable recording of packet situations.
 #define RECORD_COMPLIANT_AND_NONCOMPLIANT_TAU ///< Enable recording of compliant and non-compliant tau values.
 #define RECORD_COMPLIANT_AND_NONCOMPLIANT_ALL ///< Enable recording of all compliant and non-compliant data.

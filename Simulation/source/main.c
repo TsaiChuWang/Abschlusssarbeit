@@ -8,28 +8,7 @@
 
 // // #define PRINT_REGULAR_AND_NAUGHTY ///< Enable to print regular and naughty data
 
-// // // #define PRINT_GCRA_UPDATE ///< Enable to print updates related to GCRA
-
-// /**
-//  * @def PRINT_LINK_DEQUEUE_COUNT
-//  * @brief Debug macro for dequeue count monitoring
-//  *
-//  * @details When defined, enables real-time printing of dequeue
-//  *          operations count to standard output. Useful for:
-//  *          - Debugging packet processing
-//  *          - Performance monitoring
-//  *          - System behavior verification
-//  *
-//  * Output Format:
-//  * @code
-//  * dequeue_count = XXX
-//  * @endcode
-//  * where XXX is right-aligned in a 3-character field
-//  *
-//  * @note The count is displayed with fixed-width formatting (%-3d)
-//  *       ensuring consistent output alignment
-//  */
-// // #define PRINT_LINK_DEQUEUE_COUNT
+// // //
 
 // // #define RECORD_REGULAR_AND_NAUGHTY_TAU ///< Enable to record tau for regular and naughty data
 // // #define RECORD_REGULAR_AND_NAUGHTY_ALL ///< Enable to record all regular and naughty data
@@ -48,6 +27,8 @@
 #define PRINT_PACKET_COUNTS ///< Enable printing of packet counts.
 #define PRINT_PACKET_LABEL  ///< Enable printing of packet labels.
 // #define PRINT_FIRST_INIT_GCRA ///< Enable printing of the first initialized GCRA.
+// #define PRINT_LINK_DEQUEUE_COUNT ///< Enable printing of the link dequeue count.
+// #define PRINT_GCRA_UPDATE ///< Enable to print updates related to GCRA
 
 #define RECORD_PACKETS_SITUATION ///< Enable recording of packet situations.
 
@@ -205,16 +186,15 @@ int main(int argc, char *argv[])
     show_GCRA(*(gcras)); ///< Display the details of the first initialized GCRA instance.
 #endif
 
-    //     //     /**
-    //     //      * @brief Initializes a link priority queue.
-    //     //      */
-    //     //     link_priority_queue link; ///< Link priority queue instance
+    /**
+     * @brief Initializes a link priority queue.
+     */
+    link_priority_queue link;                                                   ///< Link priority queue instance
+    initlink_priority_queue(&link, config.link_queue_buffer, config, capacity); ///< Initialize the link priority queue
 
-    //     //     initlink_priority_queue(&link, config.link_queue_buffer, config, capacity); ///< Initialize the link priority queue
-
-    //     //     /** @brief Stores the total number of grids processed. */
-    //     //     int grid_counts = 0;
-    //     //     int drop_tenant = UNFOUND;
+    /** @brief Stores the total number of grids processed. */
+    int grid_counts = 0;
+    int drop_tenant = UNFOUND;
 
 #ifdef RECORD_PACKETS_SITUATION
     char file_path_packet_situation[MAX_PATH_LENGTH];                                        ///< Path for the packet situation file.
@@ -280,49 +260,18 @@ int main(int argc, char *argv[])
         print_equals_line(); ///< Print a line of equal signs for formatting.
 #endif
 
-        //         /**
-        //          * @brief Tracks the number of packet dequeue operations
-        //          *
-        //          * @details Counter variable that maintains a running total of
-        //          *          packet dequeue operations performed in the current
-        //          *          processing cycle.
-        //          */
-        //         int link_dequeue_count = 0;
+        int link_dequeue_count = 0; ///< Initialize the count of link dequeues to zero.
+        // Loop until the dequeue timestamp exceeds the current timestamp.
+        while (link.dequeue_timestamp <= (double)timestamp)
+        {
+            link.dequeue_timestamp += link.dequeue_interval; ///< Update the dequeue timestamp by the interval.
+            link_dequeue_count += 1;                         ///< Increment the dequeue count for each dequeue operation.
+        }
+#ifdef PRINT_LINK_DEQUEUE_COUNT
+        printf("link dequeue_count = %-3d\n", link_dequeue_count); ///< Print the total number of link dequeues.
+#endif
 
-        //         //         while (link.dequeue_timestamp <= (double)timestamp) ///< Loop until the dequeue timestamp exceeds the current timestamp
-        //         //         {
-        //         //             link.dequeue_timestamp += link.dequeue_interval; ///< Update the dequeue timestamp by the interval
-        //         //             dequeue_count += 1;                              ///< Increment the dequeue count
-        //         //         }
-
-        //         //         while (cdequeue_timestamp <= (double)timestamp) ///< Loop until the dequeue timestamp exceeds the current timestamp
-        //         //         {
-        //         //             cdequeue_timestamp += cdequeue_timestamp_step; ///< Update the dequeue timestamp by the interval
-        //         //             for (int tenant = 0; tenant < tenant_number; tenant++)
-        //         //                 cdequeue((cqueues + tenant));
-        //         //         }
-
-        // #ifdef PRINT_LINK_DEQUEUE_COUNT
-        //         /**
-        //          * @brief Displays current dequeue count
-        //          *
-        //          * @details Prints the current value of link_dequeue_count
-        //          *          to standard output with fixed-width formatting
-        //          *
-        //          * Format Specifiers:
-        //          * - %-3d: Left-aligned, minimum 3 characters wide
-        //          *
-        //          * Example Output:
-        //          * @code
-        //          * dequeue_count = 0
-        //          * dequeue_count = 12
-        //          * dequeue_count = 234
-        //          * @endcode
-        //          */
-        //         printf("dequeue_count = %-3d\n", link_dequeue_count);
-        // #endif
-
-        //         // grid_counts++;
+        grid_counts++; ///< Increment the grid counts.
 
         // Generate packets based on the configuration provided by the generator.
         int *packets = packet_generation_configuration(generator, config);
@@ -331,8 +280,7 @@ int main(int argc, char *argv[])
 #endif
 
 #ifdef RECORD_PACKETS_SITUATION
-        record_packet_situation_agrid(packets, 0, config);
-        // record_packet_situation_agrid(packets, link_dequeue_count, config);
+        record_packet_situation_agrid(packets, link_dequeue_count, config);
 #endif
 
         // Generate a shuffled array of tenant indices.
@@ -431,69 +379,53 @@ int main(int argc, char *argv[])
                 label.labels[tenant][PACKET_LABEL_GCRA_LABELED] += 1; ///< Increment the GCRA labeled packet count for the tenant
             }
 
-            //             //             /**
-            //             //              * @brief Enqueues packets into the link queue based on their labels.
-            //             //              *
-            //             //              * This code checks if the packet for the specified tenant is either
-            //             //              * labeled as PACKET_LABEL_ACCEPT or PACKET_LABEL_GCRA_LABELED. If
-            //             //              * the packet is labeled as ACCEPT, it processes the enqueue operation
-            //             //              * for the link queue, handling potential drops due to capacity limits.
-            //             //              */
-            //             //             // Link queue enqueue
-            //             //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT || *(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is ACCEPT or GCRA labeled
-            //             //             {
-            //             //                 if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Further check if the packet is ACCEPT
-            //             //                 {
-            //             //                     if (dequeue_count > 0) ///< Check if there are packets to dequeue
-            //             //                     {
-            //             //                         int index = dequeue(&link);                        ///< Dequeue a packet from the link queue
-            //             //                         if (index != UNFOUND)                              ///< Check if a valid index was returned
-            //             //                             label.labels[index][PACKET_LABEL_ACCEPT] += 1; ///< Increment the count for ACCEPT labeled packets
-            //             //                         dequeue_count -= 1;                                ///< Decrease the dequeue count
-            //             //                     }
+            /**
+             * @brief Enqueues packets into the link queue based on their labels.
+             *
+             * This code checks if the packet for the specified tenant is either
+             * labeled as PACKET_LABEL_ACCEPT or PACKET_LABEL_GCRA_LABELED. If
+             * the packet is labeled as ACCEPT, it processes the enqueue operation
+             * for the link queue, handling potential drops due to capacity limits.
+             */
+            // Link queue enqueue
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT || *(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is ACCEPT or GCRA labeled
+            {
+                if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Further check if the packet is ACCEPT
+                {
+                    if (link_dequeue_count > 0) ///< Check if there are packets to dequeue
+                    {
+                        int index = dequeue(&link);                        ///< Dequeue a packet from the link queue
+                        if (index != UNFOUND)                              ///< Check if a valid index was returned
+                            label.labels[index][PACKET_LABEL_ACCEPT] += 1; ///< Increment the count for ACCEPT labeled packets
+                        link_dequeue_count -= 1;                           ///< Decrease the dequeue count
+                    }
 
-            //             //                     enqueue(&link, ALPHA, tenant, &drop_tenant); ///< Enqueue the ACCEPT packet into the link queue
+                    enqueue(&link, ALPHA, tenant, &drop_tenant); ///< Enqueue the ACCEPT packet into the link queue
 
-            //             //                     if (drop_tenant != UNFOUND)                                                 ///< Check if a packet was dropped
-            //             //                         if (drop_tenant != tenant)                                              ///< If the dropped packet is not from the current tenant
-            //             //                             label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the other tenant
-            //             //                         else
-            //             //                             label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the current tenant
-            //             //                 }
-            //             //             }
+                    if (drop_tenant != UNFOUND)                                                 ///< Check if a packet was dropped
+                        if (drop_tenant != tenant)                                              ///< If the dropped packet is not from the current tenant
+                            label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the other tenant
+                        else
+                            label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the current tenant
+                }
 
-            //             //             /**
-            //             //              * @brief Enqueues packets labeled as GCRA into the link queue.
-            //             //              *
-            //             //              * This code checks if the packet for the specified tenant is labeled
-            //             //              * as PACKET_LABEL_GCRA_LABELED. If it is, the packet is enqueued
-            //             //              * into the link queue, and any drops due to capacity limits are
-            //             //              * recorded.
-            //             //              */
-            //             //             if (*(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is labeled as GCRA
-            //             //             {
-            //             //                 enqueue(&link, BETA, tenant, &drop_tenant); ///< Enqueue the GCRA labeled packet into the link queue
+                /**
+                 * @brief Enqueues packets labeled as GCRA into the link queue.
+                 *
+                 * This code checks if the packet for the specified tenant is labeled
+                 * as PACKET_LABEL_GCRA_LABELED. If it is, the packet is enqueued
+                 * into the link queue, and any drops due to capacity limits are
+                 * recorded.
+                 */
+                if (*(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is labeled as GCRA
+                {
+                    enqueue(&link, BETA, tenant, &drop_tenant); ///< Enqueue the GCRA labeled packet into the link queue
 
-            //             //                 if (drop_tenant != UNFOUND)                                             ///< Check if a packet was dropped
-            //             //                     label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the tenant whose packet was dropped
-            //             //             }
+                    if (drop_tenant != UNFOUND)                                             ///< Check if a packet was dropped
+                        label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the tenant whose packet was dropped
+                }
+            }
         }
-
-        //             //         /**
-        //             //          * @brief Dequeues packets from the link queue and updates statistics.
-        //             //          *
-        //             //          * This code processes packets in the link queue while there are
-        //             //          * packets available to dequeue. For each dequeued packet, the
-        //             //          * corresponding statistic for PACKET_LABEL_ACCEPT is incremented.
-        //             //          */
-        //             //         while (dequeue_count > 0) ///< Continue processing while there are packets to dequeue
-        //             //         {
-        //             //             int index = dequeue(&link);                        ///< Dequeue a packet from the link queue
-        //             //             if (index != UNFOUND)                              ///< Check if a valid index was returned
-        //             //                 label.labels[index][PACKET_LABEL_ACCEPT] += 1; ///< Increment the count for ACCEPT labeled packets
-        //             //             dequeue_count -= 1;                                ///< Decrease the dequeue count
-        //         }
-        //         //         // show_LinkQueue(&link);
 
         // Iterate over each tenant.
         for (int tenant = 0; tenant < tenant_number; tenant++)
@@ -504,6 +436,21 @@ int main(int argc, char *argv[])
                 meter_dequeue((meter_queues + tenant)); ///< Dequeue a packet from the meter queue for the tenant.
                 *(meter_dequeue_counts + tenant) -= 1;  ///< Decrement the count of dequeued packets for the tenant.
             }
+        }
+
+        /**
+         * @brief Dequeues packets from the link queue and updates statistics.
+         *
+         * This code processes packets in the link queue while there are
+         * packets available to dequeue. For each dequeued packet, the
+         * corresponding statistic for PACKET_LABEL_ACCEPT is incremented.
+         */
+        while (link_dequeue_count > 0) ///< Continue processing while there are packets to dequeue
+        {
+            int index = dequeue(&link);                        ///< Dequeue a packet from the link queue
+            if (index != UNFOUND)                              ///< Check if a valid index was returned
+                label.labels[index][PACKET_LABEL_ACCEPT] += 1; ///< Increment the count for ACCEPT labeled packets
+            link_dequeue_count -= 1;                           ///< Decrease the dequeue count
         }
 
 #ifdef PRINT_ORDER

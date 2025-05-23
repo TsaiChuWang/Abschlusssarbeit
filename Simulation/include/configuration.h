@@ -105,7 +105,7 @@
  * These parameters are empirically determined and cannot be calculated.
  */
 
-#define INITIAL_CONFIGURATION_UPPER_LINK_BUFFER 1   ///< Upper limit for the link buffer.
+#define INITIAL_CONFIGURATION_UPPER_LINK_BUFFER 10  ///< Upper limit for the link buffer.
 #define INITIAL_CONFIGURATION_BUCKET_DEPTH 512      ///< Depth of the bucket for buffering.
 #define INITIAL_CONFIGURATION_LINK_QUEUE_BUFFER 100 ///< Size of the link queue buffer.
 

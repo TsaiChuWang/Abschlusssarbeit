@@ -11,6 +11,8 @@
  */
 #define RECORD_HEADER
 
+// #define TAG_PURE_LOSS
+
 #ifdef RECORD_HEADER
 
 /**
@@ -367,14 +369,14 @@ void show_packets_label(packets_label label)
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
   {
     printf("%-10d, %-10d, %-12d, %-10d : %-12.7f % , %-12.7f %\n",
-           label.labels[tenant][0], label.labels[tenant][1], label.labels[tenant][2], label.labels[tenant][3],
-           (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]),
-           (double)(label.labels[tenant][1] + label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][1] + label.labels[tenant][3]));
+           label.labels[tenant][PACKET_LABEL_ACCEPT], label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED], label.labels[tenant][PACKET_LABEL_GCRA_LABELED], label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED],
+           (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]),
+           (double)(label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]));
 
-    average_exceed += label.labels[tenant][1];                                                                                                                             /**< Sum the exceed labels. */
-    average_gcra += label.labels[tenant][2];                                                                                                                               /**< Sum the GCRA labels. */
-    average_loss_p += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]);                                                     /**< Sum the pure loss percentages. */
-    average_loss_a += (double)(label.labels[tenant][3] + label.labels[tenant][1]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][1] + label.labels[tenant][3]); /**< Sum the all loss percentages. */
+    average_exceed += label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED];                                                                                                                                                                                                                                                    /**< Sum the exceed labels. */
+    average_gcra += label.labels[tenant][PACKET_LABEL_GCRA_LABELED];                                                                                                                                                                                                                                                                 /**< Sum the GCRA labels. */
+    average_loss_p += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]);                                                                                                                           /**< Sum the pure loss percentages. */
+    average_loss_a += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Sum the all loss percentages. */
   }
 
   // Display the average statistics.
@@ -437,16 +439,25 @@ void print_compliant_and_noncompliant(packets_label label, const configuration c
 
   // Loop through each tenant and accumulate statistics based on their type (compliant or noncompliant).
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
-
     if (is_noncompliant_index(tenant, config))
     {
-      noncompliant_GCRA += label.labels[tenant][2];                                                                         /**< Accumulate GCRA for noncompliant tenants. */
-      noncompliant_Loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for noncompliant tenants. */
+      /**< Accumulate GCRA for noncompliant tenants. */
+      noncompliant_GCRA += label.labels[tenant][PACKET_LABEL_GCRA_LABELED];
+#ifdef TAG_PURE_LOSS
+      noncompliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+#else
+      noncompliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+#endif
     }
     else
     {
-      compliant_GCRA += label.labels[tenant][2];                                                                         /**< Accumulate GCRA for compliant tenants. */
-      compliant_Loss += (double)(label.labels[tenant][3]) * 100.0 / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for compliant tenants. */
+      /**< Accumulate GCRA for compliant tenants. */
+      compliant_GCRA += label.labels[tenant][PACKET_LABEL_GCRA_LABELED];
+#ifdef TAG_PURE_LOSS
+      compliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+#else
+      compliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+#endif
     }
 
   // Print the GCRA and loss statistics for compliant and noncompliant tenants.
@@ -523,11 +534,19 @@ void record_compliant_and_noncompliant_tau(packets_label label, const configurat
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
     if (is_noncompliant_index(tenant, config))
     {
-      noncompliant_Loss += (double)(label.labels[tenant][3]) / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for noncompliant tenants. */
+#ifdef TAG_PURE_LOSS
+      noncompliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+#else
+      noncompliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+#endif
     }
     else
     {
-      compliant_Loss += (double)(label.labels[tenant][3]) / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for compliant tenants. */
+#ifdef TAG_PURE_LOSS
+      compliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+#else
+      compliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+#endif
     }
 
   // Append the results to the CSV file.
@@ -610,11 +629,19 @@ void record_compliant_and_noncompliant_all(packets_label label, const configurat
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
     if (is_noncompliant_index(tenant, config))
     {
-      noncompliant_Loss += (double)(label.labels[tenant][3]) / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for noncompliant tenants. */
+#ifdef TAG_PURE_LOSS
+      noncompliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+#else
+      noncompliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+#endif
     }
     else
     {
-      compliant_Loss += (double)(label.labels[tenant][3]) / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate loss percentage for compliant tenants. */
+#ifdef TAG_PURE_LOSS
+      compliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+#else
+      compliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+#endif
     }
 
   // Append the results to the CSV file with additional configuration details.
@@ -637,8 +664,8 @@ void record_compliant_and_noncompliant_all(packets_label label, const configurat
  * @param[in] label  The packets_label structure containing:
  *                   - tenant_number: Total number of tenants
  *                   - labels[][]: Array of packet statistics per tenant
- *                     [tenant][0] = accepted packets
- *                     [tenant][3] = dropped packets
+ *                     [tenant][PACKET_LABEL_ACCEPT] = accepted packets
+ *                     [tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] = dropped packets
  * @param[in] config Configuration structure containing:
  *                   - tau: Current tau value
  *                   - noncompliant_mean: Mean value for noncompliant tenants
@@ -684,7 +711,11 @@ void record_average_loss(packets_label label, const configuration config)
   // Loop through each tenant and calculate the average loss.
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
   {
-    average_loss += (double)(label.labels[tenant][3]) / (label.labels[tenant][0] + label.labels[tenant][3]); /**< Calculate average loss percentage. */
+#ifdef TAG_PURE_LOSS
+    average_loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+#else
+    average_loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+#endif
   }
 
   // Append the results to the CSV file.

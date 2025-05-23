@@ -13,15 +13,18 @@
 
 #ifdef LINK_CAPACITY_QUEUE_H
 
-// /**
-//  * @enum queue_code_t
-//  * @brief Represents different queue codes.
-//  */
-// typedef enum
-// {
-//     ALPHA, /**< High-priority queue */
-//     BETA   /**< Low-priority queue */
-// } queue_code_t;
+#define QUEUE_FULL_STATE -1
+#define QUEUE_READY 1
+
+/**
+ * @enum queue_code_t
+ * @brief Represents different queue codes.
+ */
+typedef enum
+{
+    ALPHA, /**< High-priority queue */
+    BETA   /**< Low-priority queue */
+} queue_code_t;
 
 /**
  * @struct circular_queue
@@ -95,20 +98,20 @@ typedef struct
     TIME_TYPE dequeue_interval;
 } meter_queue;
 
-// /**
-//  * @struct link_priority_queue
-//  * @brief Represents a link priority queue with two internal queues.
-//  * @details This structure contains two circular queues (alpha and beta) for managing prioritized traffic.
-//  */
-// typedef struct
-// {
-//     circular_queue alpha; /**< High-priority queue (Alpha) */
-//     circular_queue beta;  /**< Low-priority queue (Beta) */
-//     int max_buffer;       /**< Maximum buffer size for the queues */
+/**
+ * @struct link_priority_queue
+ * @brief Represents a link priority queue with two internal queues.
+ * @details This structure contains two circular queues (alpha and beta) for managing prioritized traffic.
+ */
+typedef struct
+{
+    circular_queue alpha; /**< High-priority queue (Alpha) */
+    circular_queue beta;  /**< Low-priority queue (Beta) */
+    int max_buffer;       /**< Maximum buffer size for the queues */
 
-//     TIME_TYPE dequeue_timestamp; /**< Timestamp of the last dequeue operation */
-//     TIME_TYPE dequeue_interval;  /**< Time interval for packet dequeueing */
-// } link_priority_queue;
+    TIME_TYPE dequeue_timestamp; /**< Timestamp of the last dequeue operation */
+    TIME_TYPE dequeue_interval;  /**< Time interval for packet dequeueing */
+} link_priority_queue;
 
 /**
  * @brief Initializes a circular queue.
@@ -128,22 +131,50 @@ void init_circular_queue(circular_queue *cqueue, int max_buffer_size)
     cqueue->max_buffer = max_buffer_size;
 }
 
+/**
+ * @brief Initializes a meter queue for a given configuration.
+ *
+ * This function creates and initializes a meter_queue structure based on the
+ * provided configuration. It sets up a circular queue for each tenant and
+ * calculates the dequeue interval based on packet size and timing parameters.
+ *
+ * @param config The configuration structure containing parameters for initialization.
+ * @return meter_queue The initialized meter_queue structure.
+ */
+meter_queue init_meter_queue(const configuration config)
+{
+    meter_queue mqueue = {0}; ///< Initialize the meter queue structure to zero.
+
+    for (int i = 0; i < config.tenant_number; i++)
+    {
+        init_circular_queue(&(mqueue.queue), config.upper_queue_buffer); ///< Initialize the circular queue.
+
+        mqueue.dequeue_timestamp = (TIME_TYPE)0; ///< Initialize the dequeue timestamp to zero.
+        mqueue.dequeue_interval = (TIME_TYPE)(config.packet_size *
+                                              (double)ONE_SECOND_IN_NS / ((config.mean + config.standard_deviation) * config.unit)); ///< Calculate the dequeue interval.
+    }
+
+    return mqueue; ///< Return the initialized meter queue.
+}
+
+/**
+ * @brief Initializes multiple meter queues for each tenant.
+ *
+ * This function allocates memory for an array of meter_queue structures,
+ * initializing each one based on the provided configuration. It sets up
+ * meter queues for all tenants specified in the configuration.
+ *
+ * @param config The configuration structure containing parameters for initialization.
+ * @return meter_queue* Pointer to the array of initialized meter_queue structures.
+ */
 meter_queue *init_meter_queues(const configuration config)
 {
-    // meter_queue *mqueues = (meter_queue *)malloc(sizeof(meter_queue) * config.tenant_number);
-    // circular_queue *queues = (circular_queue *)malloc(sizeof(circular_queue) * config.tenant_number);
-    // for (int i = 0; i < config.tenant_number; i++)
-    // {
-    //     (meter_queues + i)->queue = *(queues + i);
-    //     init_circular_queue((queues + i), config.upper_queue_buffer);
-
-    //     (meter_queues + i)->dequeue_timestamp = (TIME_TYPE)0;
-    //     (meter_queues + i)->dequeue_interval = (TIME_TYPE)(config.packet_size *
-    //                                                        (double)ONE_SECOND_IN_NS / ((config.mean + config.standard_deviation) * config.unit));
-    // }
-
-    // return mqueues;
-    return (meter_queue *)NULL;
+    meter_queue *mqueues = (meter_queue *)malloc(sizeof(meter_queue) * config.tenant_number); ///< Allocate memory for meter queues.
+    for (int i = 0; i < config.tenant_number; i++)
+    {
+        *(mqueues + i) = init_meter_queue(config); ///< Initialize each meter queue.
+    }
+    return mqueues; ///< Return the pointer to the array of meter queues.
 }
 
 // /**
@@ -169,31 +200,31 @@ meter_queue *init_meter_queues(const configuration config)
 //                                            (double)ONE_SECOND_IN_NS / (bandwidth * config.unit));
 // }
 
-// /**
-//  * @brief Checks if a circular queue is empty.
-//  *
-//  * A queue is considered empty when its size is zero.
-//  *
-//  * @param cqueue Pointer to the circular queue structure.
-//  * @return int Returns 1 if the queue is empty, otherwise 0.
-//  */
-// int is_empty(circular_queue *cqueue)
-// {
-//     return cqueue->size == 0;
-// }
+/**
+ * @brief Checks if a circular queue is empty.
+ *
+ * A queue is considered empty when its size is zero.
+ *
+ * @param cqueue Pointer to the circular queue structure.
+ * @return int Returns 1 if the queue is empty, otherwise 0.
+ */
+int is_empty(circular_queue *cqueue)
+{
+    return cqueue->size == 0;
+}
 
-// /**
-//  * @brief Checks if a circular queue is full.
-//  *
-//  * A queue is considered full when its size reaches the maximum buffer size.
-//  *
-//  * @param cqueue Pointer to the circular queue structure.
-//  * @return int Returns 1 if the queue is full, otherwise 0.
-//  */
-// int is_full(circular_queue *cqueue)
-// {
-//     return cqueue->size == cqueue->max_buffer;
-// }
+/**
+ * @brief Checks if a circular queue is full.
+ *
+ * A queue is considered full when its size reaches the maximum buffer size.
+ *
+ * @param cqueue Pointer to the circular queue structure.
+ * @return int Returns 1 if the queue is full, otherwise 0.
+ */
+int is_full(circular_queue *cqueue)
+{
+    return cqueue->size == cqueue->max_buffer;
+}
 
 // /**
 //  * @brief Gets the total size of both queues in a priority queue.
@@ -237,31 +268,41 @@ meter_queue *init_meter_queues(const configuration config)
 //     return UNFOUND; // Queue is empty
 // }
 
-// void cdequeue(circular_queue *cqueue)
-// {
-//     // printf("c=%d\n", cqueue->size);
-//     if (is_empty(cqueue))
-//     {
-//         return;
-//     }
-//     int value = cqueue->items[cqueue->front];
-//     cqueue->front = (cqueue->front + 1) % cqueue->max_buffer;
-//     cqueue->size--;
-// }
+void cdequeue(circular_queue *cqueue)
+{
+    // printf("c=%d\n", cqueue->size);
+    if (is_empty(cqueue))
+    {
+        return;
+    }
+    int value = cqueue->items[cqueue->front];
+    cqueue->front = (cqueue->front + 1) % cqueue->max_buffer;
+    cqueue->size--;
+}
 
-// int cenqueue(circular_queue *cqueue)
-// {
-//     if (is_full(cqueue))
-//     {
-//         return -1;
-//     }
-//     else
-//     {
-//         cqueue->rear = (cqueue->rear + 1) % cqueue->max_buffer;
-//         cqueue->size++;
-//         return 1;
-//     }
-// }
+void meter_dequeue(meter_queue *mqueue)
+{
+    cdequeue(&(mqueue->queue));
+}
+
+int cenqueue(circular_queue *cqueue)
+{
+    if (is_full(cqueue))
+    {
+        return QUEUE_FULL_STATE;
+    }
+    else
+    {
+        cqueue->rear = (cqueue->rear + 1) % cqueue->max_buffer;
+        cqueue->size++;
+        return QUEUE_READY;
+    }
+}
+
+int meter_enqueue(meter_queue *mqueue)
+{
+    return cenqueue(&(mqueue->queue));
+}
 
 // /**
 //  * @brief Enqueues a value into the priority queue.

@@ -4,22 +4,6 @@
 //  * @details Handles configuration loading, directory setup, and capacity calculation
 //  */
 
-// /**
-//  * @def PRINT_EACH_TIMESTAMP
-//  * @brief Debug flag for timestamp printing
-//  * @details When defined, enables printing of each timestamp during simulation
-//  * @note This is typically used for debugging and performance analysis
-//  */
-// // #define PRINT_EACH_TIMESTAMP
-
-// /**
-//  * @def PRINT_EACH_GRID_PACKET
-//  * @brief Debug flag for packet information printing
-//  * @details When defined, enables detailed packet information output for each grid
-//  * @note This may impact performance when processing large numbers of packets
-//  */
-// // #define PRINT_EACH_GRID_PACKET
-
 // // #define PRINT_GRID_COUNT          ///< Enable to print the count of grids during execution
 
 // // #define PRINT_REGULAR_AND_NAUGHTY ///< Enable to print regular and naughty data
@@ -35,8 +19,6 @@
 // // #define PRINT_FIRST_INIT_GCRA
 
 // // // #define PRINT_GCRA_UPDATE ///< Enable to print updates related to GCRA
-// // // #define PRINT_EACH_TIMESTAMP ///< Enable to print each timestamp during execution
-// // // #define PRINT_EACH_GRID_PACKET ///< Enable to print each grid packet processed
 // // #define PRINT_PACKET_COUNTS ///< Enable to print the counts of packets processed
 // // #define PRINT_PACKET_LABEL  ///< Enable to print labels for packets processed
 
@@ -64,14 +46,6 @@
 // // #define RECORD_REGULAR_AND_NAUGHTY_TAU ///< Enable to record tau for regular and naughty data
 // // #define RECORD_REGULAR_AND_NAUGHTY_ALL ///< Enable to record all regular and naughty data
 // // #define RECORD_AVERAGE_LOSS            ///< Enable to record the average loss during processing
-// /**
-//  * @def RECORD_PACKETS_SITUATION
-//  * @brief Enables packet situation recording functionality
-//  *
-//  * When defined, this macro enables the creation and initialization of a CSV file
-//  * for tracking packet processing statistics throughout the program execution.
-//  */
-// #define RECORD_PACKETS_SITUATION
 
 #define PRINT_EXECUTION_TIME  ///< Enable timing measurement for execution duration
 #define SHOW_CONFIGURATION    ///< Enable display of the current configuration settings
@@ -79,6 +53,14 @@
 #define CLEAN_DATA_PATH       ///< Enable cleaning and initialization of the data directory
 #define PRINT_CAPACITY        ///< Enable display of the calculated network capacity
 #define SHOW_TRAFFICGENERATOR ///< Enable the display of the traffic generator's state.
+// #define PRINT_EACH_TIMESTAMP      ///< Enable printing of each timestamp.
+// #define PRINT_METER_DEQUEUE_COUNT ///< Enable printing of the meter dequeue count.
+// #define PRINT_EACH_GRID_PACKET ///< Enable printing of each grid packet.
+// #define PRINT_ORDER ///< Enable printing of the tenant order.
+#define PRINT_PACKET_COUNTS ///< Enable printing of packet counts.
+#define PRINT_PACKET_LABEL  ///< Enable printing of packet labels.
+
+#define RECORD_PACKETS_SITUATION ///< Enable recording of packet situations.
 
 // /**
 //  * @file main.c
@@ -95,7 +77,7 @@
 #include "../include/traffic_generation.h"
 #include "../include/packets_count.h" ///< Packet counting functions
 // #include "../include/GCRA.h"                ///< GCRA (Generic Controlled Rate Algorithm) functions
-// #include "../include/link_capacity_queue.h" ///< Link capacity queue management functions
+#include "../include/link_capacity_queue.h" ///< Link capacity queue management functions
 
 #define CONFIGURATION_PATH "../configuration/main.ini" ///< Path to the main configuration file
 
@@ -185,7 +167,6 @@ int main(int argc, char *argv[])
      */
     sprintf(command, "python3 ../python/capacity.py %s 0", configuration_path);
     system(command);
-
     double capacity = obtain_capacity(); ///< Variable to hold the calculated capacity
 
 #ifdef PRINT_CAPACITY
@@ -220,11 +201,8 @@ int main(int argc, char *argv[])
     /** @brief Initializes packet labeling structure. */
     init_Packets_Label(&label, tenant_number, &count);
 
-    //     meter_queue *meter_queues = init_meter_queues(config);
-    //     // printf("dec = %f\n", meter_queues->dequeue_interval);
-    //     // printf("a = %d\n", meter_queues->queue.max_buffer);
-
-    //     //     // queue for the exceed upper bound traffic (reservation)
+    // Initialize an array of meter queues based on the provided configuration.
+    meter_queue *meter_queues = init_meter_queues(config);
 
     //     /**
     //      * @brief Initializes an array of GCRA structures for traffic shaping
@@ -262,329 +240,313 @@ int main(int argc, char *argv[])
     //     //     int grid_counts = 0;
     //     //     int drop_tenant = UNFOUND;
 
-    // #ifdef RECORD_PACKETS_SITUATION
-    //     /**
-    //      * @brief Initializes the packet situation recording system
-    //      *
-    //      * @details This code block:
-    //      *          1. Creates/overwrites the packet situation CSV file
-    //      *          2. Writes the appropriate header
-    //      *          3. Prepares the file for subsequent append operations
-    //      *
-    //      * The file path is constructed as: config.data_path + "/record_packet_situation.csv"
-    //      *
-    //      * File Format:
-    //      * @code
-    //      * [Header defined by HEADER_TYPE_PACKET]
-    //      * [Subsequent data entries added during program execution]
-    //      * @endcode
-    //      *
-    //      * @param[in] config.data_path Directory where the CSV file will be created
-    //      *
-    //      * @pre MAX_PATH_LENGTH must be defined
-    //      * @pre config.data_path must be valid and writable
-    //      * @pre HEADER_TYPE_PACKET must be defined
-    //      * @pre write_statistics_header() function must be available
-    //      *
-    //      * @note Opens file in "w+" mode, which:
-    //      *       - Creates a new file if it doesn't exist
-    //      *       - Truncates existing file if it exists
-    //      *       - Enables both reading and writing
-    //      *
-    //      * @warning Will terminate program if:
-    //      *          - File cannot be opened
-    //      *          - Path exceeds MAX_PATH_LENGTH
-    //      *
-    //      * @see write_statistics_header() for header writing implementation
-    //      * @see HEADER_TYPE_PACKET for header structure definition
-    //      */
-    //     char file_path_packet_situation[MAX_PATH_LENGTH];
-    //     sprintf(file_path_packet_situation, "%s/record_packet_situation.csv", config.data_path);
+#ifdef RECORD_PACKETS_SITUATION
+    char file_path_packet_situation[MAX_PATH_LENGTH];                                        ///< Path for the packet situation file.
+    sprintf(file_path_packet_situation, "%s/record_packet_situation.csv", config.data_path); ///< Format the file path.
 
-    //     file = fopen(file_path_packet_situation, "w+");
-    //     if (!file)
-    //     {
-    //         perror("Error opening file"); /**< Handle file open errors. */
-    //         exit(EXIT_FAILURE);
-    //     }
+    // Open the file for writing (create if it doesn't exist).
+    file = fopen(file_path_packet_situation, "w+");
+    if (!file) ///< Check if the file opened successfully.
+    {
+        perror("Error opening file"); /**< Handle file open errors. */
+        exit(EXIT_FAILURE);           ///< Exit if the file cannot be opened.
+    }
 
-    //     /**
-    //      * @brief Writes the statistics header to the newly created file
-    //      *
-    //      * @return SUCCESS if header is written successfully
-    //      * @return FAILURE if an error occurs during writing
-    //      *
-    //      * @note Prints error message in red if header writing fails
-    //      */
-    //     if (write_statistics_header(file, HEADER_TYPE_PACKET) == FAILURE)
-    //     {
-    //         printf(RED_ELOG "write_statistics_header(main) : ERROR\n" RESET);
-    //     }
-    //     fclose(file); /**< Ensures file is properly closed after initialization */
-    // #endif
+    // Write the header for the packet statistics.
+    if (write_statistics_header(file, HEADER_TYPE_PACKET) == FAILURE)
+    {
+        printf(RED_ELOG "write_statistics_header(main) : ERROR\n" RESET); ///< Print error message if writing the header fails.
+    }
 
-    //     /**
-    //      * @brief Main simulation loop
-    //      * @details Iterates through the simulation time, processing traffic events
-    //      *          at each time step until reaching the configured end time.
-    //      *
-    //      * @note Simulation time is converted to nanoseconds using ONE_SECOND_IN_NS
-    //      * @see ONE_SECOND_IN_NS
-    //      * @see config.simulation_time
-    //      */
-    //     while (timestamp <= (TIME_TYPE)(config.simulation_time * ONE_SECOND_IN_NS))
-    //     {
+    fclose(file); /**< Ensure the file is properly closed after initialization. */
+#endif
 
-    //         /**
-    //          * @brief Time advancement block
-    //          * @details Updates simulation time and processes dequeue operations
-    //          *
-    //          * @note The step size (generator.step_size) determines the granularity
-    //          *       of the simulation time advancement
-    //          * @warning Ensure step_size is appropriate for the simulation scale
-    //          */
-    //         timestamp += (TIME_TYPE)(generator.step_size);
+    /**
+     * @brief Main simulation loop
+     * @details Iterates through the simulation time, processing traffic events
+     *          at each time step until reaching the configured end time.
+     *
+     * @note Simulation time is converted to nanoseconds using ONE_SECOND_IN_NS
+     * @see ONE_SECOND_IN_NS
+     * @see config.simulation_time
+     */
+    while (timestamp <= (TIME_TYPE)(config.simulation_time * ONE_SECOND_IN_NS))
+    {
+        // Increment the timestamp by the step size defined in the generator.
+        timestamp += (TIME_TYPE)(generator.step_size);
+#ifdef PRINT_EACH_TIMESTAMP
+        printf("timestamp : %-lf\n", timestamp); ///< Print the current timestamp with a formatted output.
+#endif
 
-    //         /**
-    //          * @brief Tracks the number of packet dequeue operations
-    //          *
-    //          * @details Counter variable that maintains a running total of
-    //          *          packet dequeue operations performed in the current
-    //          *          processing cycle.
-    //          */
-    //         int link_dequeue_count = 0;
+        // Initialize the count of dequeued meters.
+        int meter_dequeue_count = 0;
 
-    //         //         while (link.dequeue_timestamp <= (double)timestamp) ///< Loop until the dequeue timestamp exceeds the current timestamp
-    //         //         {
-    //         //             link.dequeue_timestamp += link.dequeue_interval; ///< Update the dequeue timestamp by the interval
-    //         //             dequeue_count += 1;                              ///< Increment the dequeue count
-    //         //         }
+        // Loop until the dequeue timestamp exceeds the current timestamp.
+        while ((meter_queues)->dequeue_timestamp <= (double)timestamp)
+        {
+            (meter_queues)->dequeue_timestamp += (meter_queues)->dequeue_interval; ///< Update the dequeue timestamp by the dequeue interval.
+            meter_dequeue_count += 1;                                              ///< Increment the count of dequeued meters.
+        }
+#ifdef PRINT_METER_DEQUEUE_COUNT
+        printf("meter_dequeue_count = %d \n", meter_dequeue_count); ///< Print the total meter dequeue count.
+#endif
 
-    //         //         while (cdequeue_timestamp <= (double)timestamp) ///< Loop until the dequeue timestamp exceeds the current timestamp
-    //         //         {
-    //         //             cdequeue_timestamp += cdequeue_timestamp_step; ///< Update the dequeue timestamp by the interval
-    //         //             for (int tenant = 0; tenant < tenant_number; tenant++)
-    //         //                 cdequeue((cqueues + tenant));
-    //         //         }
+        // Allocate memory for an array to store the dequeue counts for each tenant.
+        int *meter_dequeue_counts = (int *)malloc(tenant_number * sizeof(int));
+        for (int index = 0; index < tenant_number; index++)
+        {
+            *(meter_dequeue_counts + index) = meter_dequeue_count; ///< Store the meter dequeue count for the current tenant.
+#ifdef PRINT_METER_DEQUEUE_COUNT
+            printf("%d \n", *(meter_dequeue_counts + index)); ///< Print the dequeue count for the current tenant.
+#endif
+        }
+#ifdef PRINT_METER_DEQUEUE_COUNT
+        print_equals_line(); ///< Print a line of equal signs for formatting.
+#endif
 
-    // #ifdef PRINT_LINK_DEQUEUE_COUNT
-    //         /**
-    //          * @brief Displays current dequeue count
-    //          *
-    //          * @details Prints the current value of link_dequeue_count
-    //          *          to standard output with fixed-width formatting
-    //          *
-    //          * Format Specifiers:
-    //          * - %-3d: Left-aligned, minimum 3 characters wide
-    //          *
-    //          * Example Output:
-    //          * @code
-    //          * dequeue_count = 0
-    //          * dequeue_count = 12
-    //          * dequeue_count = 234
-    //          * @endcode
-    //          */
-    //         printf("dequeue_count = %-3d\n", link_dequeue_count);
-    // #endif
+        //         /**
+        //          * @brief Tracks the number of packet dequeue operations
+        //          *
+        //          * @details Counter variable that maintains a running total of
+        //          *          packet dequeue operations performed in the current
+        //          *          processing cycle.
+        //          */
+        //         int link_dequeue_count = 0;
 
-    // #ifdef PRINT_EACH_TIMESTAMP
-    //         /**
-    //          * @brief Debug output for current timestamp
-    //          * @details Prints the current simulation time to standard output
-    //          * @note Format: timestamp value with floating-point precision
-    //          * @note The %-lf format specifier ensures left-aligned output
-    //          */
-    //         printf("timestamp : %-lf\n", timestamp);
-    // #endif
-    //         // grid_counts++;
+        //         //         while (link.dequeue_timestamp <= (double)timestamp) ///< Loop until the dequeue timestamp exceeds the current timestamp
+        //         //         {
+        //         //             link.dequeue_timestamp += link.dequeue_interval; ///< Update the dequeue timestamp by the interval
+        //         //             dequeue_count += 1;                              ///< Increment the dequeue count
+        //         //         }
 
-    //         // Packets generation
-    //         int *packets = packet_generation_configuration(generator, config);
+        //         //         while (cdequeue_timestamp <= (double)timestamp) ///< Loop until the dequeue timestamp exceeds the current timestamp
+        //         //         {
+        //         //             cdequeue_timestamp += cdequeue_timestamp_step; ///< Update the dequeue timestamp by the interval
+        //         //             for (int tenant = 0; tenant < tenant_number; tenant++)
+        //         //                 cdequeue((cqueues + tenant));
+        //         //         }
 
-    // #ifdef PRINT_EACH_GRID_PACKET
-    //         /**
-    //          * @brief Print detailed packet information for all tenants
-    //          * @details Outputs the current state of packets for each tenant in the grid
-    //          *
-    //          * @param[in] packets Array of packet information for each tenant
-    //          * @param[in] tenant_number Total number of tenants in the simulation
-    //          *
-    //          * @see print_packets
-    //          * @note This debug output may be verbose for large tenant numbers
-    //          */
-    //         print_packets(packets, config.tenant_number);
-    // #endif
+        // #ifdef PRINT_LINK_DEQUEUE_COUNT
+        //         /**
+        //          * @brief Displays current dequeue count
+        //          *
+        //          * @details Prints the current value of link_dequeue_count
+        //          *          to standard output with fixed-width formatting
+        //          *
+        //          * Format Specifiers:
+        //          * - %-3d: Left-aligned, minimum 3 characters wide
+        //          *
+        //          * Example Output:
+        //          * @code
+        //          * dequeue_count = 0
+        //          * dequeue_count = 12
+        //          * dequeue_count = 234
+        //          * @endcode
+        //          */
+        //         printf("dequeue_count = %-3d\n", link_dequeue_count);
+        // #endif
 
-    // #ifdef RECORD_PACKETS_SITUATION
-    //         /**
-    //          * @brief Records detailed packet processing statistics per grid
-    //          *
-    //          * @details Records comprehensive packet situation data including:
-    //          *          - Packet processing status
-    //          *          - Dequeue operations count
-    //          *          - Grid-specific metrics
-    //          *          - Temporal information
-    //          *
-    //          * The function writes data to the previously initialized CSV file
-    //          * (record_packet_situation.csv) with the following information:
-    //          * - Current packet states and statistics
-    //          * - Grid-based processing metrics
-    //          * - Dequeue operation counts
-    //          * - System configuration parameters
-    //          *
-    //          * @param[in] packets             Pointer to the packet data structure
-    //          * @param[in] link_dequeue_count  Number of dequeue operations performed
-    //          * @param[in] config              System configuration parameters
-    //          *
-    //          * @pre RECORD_PACKETS_SITUATION must be defined
-    //          * @pre CSV file must be properly initialized
-    //          * @pre packets pointer must be valid
-    //          * @pre config must be properly initialized
-    //          *
-    //          * @note This recording operation occurs after packet processing
-    //          *       and dequeue operations are completed
-    //          *
-    //          * @warning May impact performance if called frequently
-    //          *          Consider the I/O overhead in performance-critical scenarios
-    //          *
-    //          * @see init_packets_count() for packet structure initialization
-    //          * @see write_statistics_header() for CSV file header format
-    //          */
-    //         record_packet_situation_agrid(packets, link_dequeue_count, config);
-    // #endif
+        //         // grid_counts++;
 
-    //         for (int tenant = 0; tenant < tenant_number; tenant++)
-    //         {
+        // Generate packets based on the configuration provided by the generator.
+        int *packets = packet_generation_configuration(generator, config);
+#ifdef PRINT_EACH_GRID_PACKET
+        print_packets(packets, config.tenant_number); ///< Print the generated packets for each tenant.
+#endif
 
-    //             /**
-    //              * @brief Increments the packet count for a specific tenant based on packet label.
-    //              *
-    //              * This code checks if the packet for the specified tenant is of the
-    //              * type PACKET_LABEL_ACCEPT. If it is, the count for that tenant is
-    //              * incremented. If not, the loop continues without any further action.
-    //              */
-    //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
-    //             {
-    //                 *(count.count + tenant) += 1; ///< Increment the count for the tenant
-    //             }
-    //             else
-    //                 continue; ///< Skip to the next iteration if there is no relevant packet
+#ifdef RECORD_PACKETS_SITUATION
+        record_packet_situation_agrid(packets, 0, config);
+        // record_packet_situation_agrid(packets, link_dequeue_count, config);
+#endif
 
-    //             //             // Upper bound exceeded traffic operation(reservation)
+        // Generate a shuffled array of tenant indices.
+        int *order = generateShuffledArray(tenant_number);
 
-    //             //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
-    //             //             {
-    //             //                 if (cenqueue((cqueues + tenant)) == 1)
-    //             //                     *(packets + tenant) == PACKET_LABEL_ACCEPT;
-    //             //             }
-    //             //             else
-    //             //             {
-    //             //                 label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] += 1;
-    //             //                 continue; ///< Skip to the next iteration if there is no relevant packet
-    //             //             }
+        // Iterate over each tenant index in the shuffled array.
+        for (int index = 0; index < tenant_number; index++)
+        {
+#ifdef PRINT_ORDER
+            printf("%d ", *(order + index)); ///< Print the current tenant index.
+#endif
+            int tenant = *(order + index); ///< Retrieve the tenant index from the shuffled array.
 
-    //             //             /**
-    //             //              * @brief Processes packets through the GCRA algorithm.
-    //             //              *
-    //             //              * This code checks if the packet for the specified tenant is of the
-    //             //              * type PACKET_LABEL_ACCEPT. If it is, the packet undergoes an update
-    //             //              * using the GCRA algorithm based on the current timestamp and tenant's
-    //             //              * GCRA instance.
-    //             //              */
-    //             //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
-    //             //             {
-    //             //                 *(packets + tenant) = gcra_update(timestamp, (gcras + tenant), config); ///< Update the packet using GCRA
-    //             //             }
+            /**
+             * @brief Increments the packet count for a specific tenant based on packet label.
+             *
+             * This code checks if the packet for the specified tenant is of the
+             * type PACKET_LABEL_ACCEPT. If it is, the count for that tenant is
+             * incremented. If not, the loop continues without any further action.
+             */
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
+            {
+                *(count.count + tenant) += 1; ///< Increment the count for the tenant
+            }
+            else
+                continue; ///< Skip to the next iteration if there is no relevant packet
 
-    //             //             /**
-    //             //              * @brief Updates the statistics for packets labeled as GCRA.
-    //             //              *
-    //             //              * This code checks if the packet for the specified tenant is labeled
-    //             //              * as PACKET_LABEL_GCRA_LABELED. If it is, the corresponding statistic
-    //             //              * for that label is incremented in the labels structure.
-    //             //              */
-    //             //             // Statistic for the number of packets labeled as GCRA
-    //             //             if (*(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is labeled as GCRA
-    //             //             {
-    //             //                 label.labels[tenant][PACKET_LABEL_GCRA_LABELED] += 1; ///< Increment the GCRA labeled packet count for the tenant
-    //             //             }
+            /**
+             * @brief Check for upper bound exceeded traffic operation.
+             *
+             * This section of code verifies whether the traffic operation for a specific tenant
+             * exceeds the upper bound of accepted packets. It specifically checks if the packet
+             * label for the tenant is set to ACCEPT. If the packet label is ACCEPT, the code
+             * proceeds to manage the meter dequeue and enqueue operations accordingly.
+             *
+             * The following checks are performed:
+             * - If the packet label is ACCEPT, it checks if there are packets available to
+             *   dequeue from the meter.
+             * - If there are packets to dequeue, it performs the dequeue operation and
+             *   decrements the count of available packets for the tenant.
+             * - After dequeuing, it attempts to enqueue a packet back into the meter queue.
+             * - If the enqueue operation is successful, the packet label remains ACCEPT.
+             * - If the enqueue operation fails, it increments the drop count for packets that
+             *   exceed the upper bound and continues to the next tenant.
+             *
+             * If the packet label is not ACCEPT, the code skips to the next iteration without
+             * performing any operations.
+             */
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant.
+            {
+                if (*(meter_dequeue_counts + tenant) > 0) ///< Check if there are packets to dequeue for the tenant.
+                {
+                    meter_dequeue((meter_queues + tenant)); ///< Dequeue a packet from the meter queue for the tenant.
+                    *(meter_dequeue_counts + tenant) -= 1;  ///< Decrement the count of dequeued packets for the tenant.
+                }
 
-    //             //             /**
-    //             //              * @brief Enqueues packets into the link queue based on their labels.
-    //             //              *
-    //             //              * This code checks if the packet for the specified tenant is either
-    //             //              * labeled as PACKET_LABEL_ACCEPT or PACKET_LABEL_GCRA_LABELED. If
-    //             //              * the packet is labeled as ACCEPT, it processes the enqueue operation
-    //             //              * for the link queue, handling potential drops due to capacity limits.
-    //             //              */
-    //             //             // Link queue enqueue
-    //             //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT || *(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is ACCEPT or GCRA labeled
-    //             //             {
-    //             //                 if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Further check if the packet is ACCEPT
-    //             //                 {
-    //             //                     if (dequeue_count > 0) ///< Check if there are packets to dequeue
-    //             //                     {
-    //             //                         int index = dequeue(&link);                        ///< Dequeue a packet from the link queue
-    //             //                         if (index != UNFOUND)                              ///< Check if a valid index was returned
-    //             //                             label.labels[index][PACKET_LABEL_ACCEPT] += 1; ///< Increment the count for ACCEPT labeled packets
-    //             //                         dequeue_count -= 1;                                ///< Decrease the dequeue count
-    //             //                     }
+                // Enqueue a packet if the meter queue is ready.
+                if (meter_enqueue((meter_queues + tenant)) == QUEUE_READY)
+                {
+                    *(packets + tenant) = PACKET_LABEL_ACCEPT; ///< Set the packet label to ACCEPT for the tenant.
+                }
+                else
+                {
+                    label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] += 1; ///< Increment the drop count for exceeding upper bound.
+                    continue;                                                        ///< Skip to the next iteration if enqueueing fails.
+                }
+            }
+            else
+            {
+                continue; ///< Skip to the next iteration if there is no relevant packet.
+            }
 
-    //             //                     enqueue(&link, ALPHA, tenant, &drop_tenant); ///< Enqueue the ACCEPT packet into the link queue
+            //             //             /**
+            //             //              * @brief Processes packets through the GCRA algorithm.
+            //             //              *
+            //             //              * This code checks if the packet for the specified tenant is of the
+            //             //              * type PACKET_LABEL_ACCEPT. If it is, the packet undergoes an update
+            //             //              * using the GCRA algorithm based on the current timestamp and tenant's
+            //             //              * GCRA instance.
+            //             //              */
+            //             //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
+            //             //             {
+            //             //                 *(packets + tenant) = gcra_update(timestamp, (gcras + tenant), config); ///< Update the packet using GCRA
+            //             //             }
 
-    //             //                     if (drop_tenant != UNFOUND)                                                 ///< Check if a packet was dropped
-    //             //                         if (drop_tenant != tenant)                                              ///< If the dropped packet is not from the current tenant
-    //             //                             label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the other tenant
-    //             //                         else
-    //             //                             label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the current tenant
-    //             //                 }
-    //             //             }
+            //             //             /**
+            //             //              * @brief Updates the statistics for packets labeled as GCRA.
+            //             //              *
+            //             //              * This code checks if the packet for the specified tenant is labeled
+            //             //              * as PACKET_LABEL_GCRA_LABELED. If it is, the corresponding statistic
+            //             //              * for that label is incremented in the labels structure.
+            //             //              */
+            //             //             // Statistic for the number of packets labeled as GCRA
+            //             //             if (*(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is labeled as GCRA
+            //             //             {
+            //             //                 label.labels[tenant][PACKET_LABEL_GCRA_LABELED] += 1; ///< Increment the GCRA labeled packet count for the tenant
+            //             //             }
 
-    //             //             /**
-    //             //              * @brief Enqueues packets labeled as GCRA into the link queue.
-    //             //              *
-    //             //              * This code checks if the packet for the specified tenant is labeled
-    //             //              * as PACKET_LABEL_GCRA_LABELED. If it is, the packet is enqueued
-    //             //              * into the link queue, and any drops due to capacity limits are
-    //             //              * recorded.
-    //             //              */
-    //             //             if (*(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is labeled as GCRA
-    //             //             {
-    //             //                 enqueue(&link, BETA, tenant, &drop_tenant); ///< Enqueue the GCRA labeled packet into the link queue
+            //             //             /**
+            //             //              * @brief Enqueues packets into the link queue based on their labels.
+            //             //              *
+            //             //              * This code checks if the packet for the specified tenant is either
+            //             //              * labeled as PACKET_LABEL_ACCEPT or PACKET_LABEL_GCRA_LABELED. If
+            //             //              * the packet is labeled as ACCEPT, it processes the enqueue operation
+            //             //              * for the link queue, handling potential drops due to capacity limits.
+            //             //              */
+            //             //             // Link queue enqueue
+            //             //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT || *(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is ACCEPT or GCRA labeled
+            //             //             {
+            //             //                 if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Further check if the packet is ACCEPT
+            //             //                 {
+            //             //                     if (dequeue_count > 0) ///< Check if there are packets to dequeue
+            //             //                     {
+            //             //                         int index = dequeue(&link);                        ///< Dequeue a packet from the link queue
+            //             //                         if (index != UNFOUND)                              ///< Check if a valid index was returned
+            //             //                             label.labels[index][PACKET_LABEL_ACCEPT] += 1; ///< Increment the count for ACCEPT labeled packets
+            //             //                         dequeue_count -= 1;                                ///< Decrease the dequeue count
+            //             //                     }
 
-    //             //                 if (drop_tenant != UNFOUND)                                             ///< Check if a packet was dropped
-    //             //                     label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the tenant whose packet was dropped
-    //             //             }
-    //             //         }
+            //             //                     enqueue(&link, ALPHA, tenant, &drop_tenant); ///< Enqueue the ACCEPT packet into the link queue
 
-    //             //         /**
-    //             //          * @brief Dequeues packets from the link queue and updates statistics.
-    //             //          *
-    //             //          * This code processes packets in the link queue while there are
-    //             //          * packets available to dequeue. For each dequeued packet, the
-    //             //          * corresponding statistic for PACKET_LABEL_ACCEPT is incremented.
-    //             //          */
-    //             //         while (dequeue_count > 0) ///< Continue processing while there are packets to dequeue
-    //             //         {
-    //             //             int index = dequeue(&link);                        ///< Dequeue a packet from the link queue
-    //             //             if (index != UNFOUND)                              ///< Check if a valid index was returned
-    //             //                 label.labels[index][PACKET_LABEL_ACCEPT] += 1; ///< Increment the count for ACCEPT labeled packets
-    //             //             dequeue_count -= 1;                                ///< Decrease the dequeue count
-    //         }
-    //         //         // show_LinkQueue(&link);
-    //     }
+            //             //                     if (drop_tenant != UNFOUND)                                                 ///< Check if a packet was dropped
+            //             //                         if (drop_tenant != tenant)                                              ///< If the dropped packet is not from the current tenant
+            //             //                             label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the other tenant
+            //             //                         else
+            //             //                             label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the current tenant
+            //             //                 }
+            //             //             }
+
+            //             //             /**
+            //             //              * @brief Enqueues packets labeled as GCRA into the link queue.
+            //             //              *
+            //             //              * This code checks if the packet for the specified tenant is labeled
+            //             //              * as PACKET_LABEL_GCRA_LABELED. If it is, the packet is enqueued
+            //             //              * into the link queue, and any drops due to capacity limits are
+            //             //              * recorded.
+            //             //              */
+            //             //             if (*(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is labeled as GCRA
+            //             //             {
+            //             //                 enqueue(&link, BETA, tenant, &drop_tenant); ///< Enqueue the GCRA labeled packet into the link queue
+
+            //             //                 if (drop_tenant != UNFOUND)                                             ///< Check if a packet was dropped
+            //             //                     label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the tenant whose packet was dropped
+            //             //             }
+        }
+
+        //             //         /**
+        //             //          * @brief Dequeues packets from the link queue and updates statistics.
+        //             //          *
+        //             //          * This code processes packets in the link queue while there are
+        //             //          * packets available to dequeue. For each dequeued packet, the
+        //             //          * corresponding statistic for PACKET_LABEL_ACCEPT is incremented.
+        //             //          */
+        //             //         while (dequeue_count > 0) ///< Continue processing while there are packets to dequeue
+        //             //         {
+        //             //             int index = dequeue(&link);                        ///< Dequeue a packet from the link queue
+        //             //             if (index != UNFOUND)                              ///< Check if a valid index was returned
+        //             //                 label.labels[index][PACKET_LABEL_ACCEPT] += 1; ///< Increment the count for ACCEPT labeled packets
+        //             //             dequeue_count -= 1;                                ///< Decrease the dequeue count
+        //         }
+        //         //         // show_LinkQueue(&link);
+
+        // Iterate over each tenant.
+        for (int tenant = 0; tenant < tenant_number; tenant++)
+        {
+            // Dequeue packets from the meter queue while there are packets to dequeue for the tenant.
+            while (*(meter_dequeue_counts + tenant) > 0)
+            {
+                meter_dequeue((meter_queues + tenant)); ///< Dequeue a packet from the meter queue for the tenant.
+                *(meter_dequeue_counts + tenant) -= 1;  ///< Decrement the count of dequeued packets for the tenant.
+            }
+        }
+
+#ifdef PRINT_ORDER
+        printf("\n");        ///< Print a newline for better output formatting.
+        print_equals_line(); ///< Print a line of equal signs for visual separation in the output.
+#endif
+    }
 
     //     // #ifdef PRINT_GRID_COUNT
     //     //     printf("grid numbers= %d\n", grid_counts);
     //     // #endif
 
-    //     // #ifdef PRINT_PACKET_COUNTS
-    //     //     show_packets_count(count);
-    //     // #endif
+#ifdef PRINT_PACKET_COUNTS
+    show_packets_count(count); ///< Display the count of packets.
+#endif
 
-    //     // #ifdef PRINT_PACKET_LABEL
-    //     //     show_packets_label(label);
-    //     // #endif
+#ifdef PRINT_PACKET_LABEL
+    show_packets_label(label); ///< Display the labels of packets.
+#endif
 
     //     // #ifdef PRINT_REGULAR_AND_NAUGHTY
     //     //     if (config.traffic_mode == TRAFFIC_MODE_NAUGHTY || config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL)
@@ -645,6 +607,7 @@ int main(int argc, char *argv[])
 
     free(command);
     freeTrafficGenerator(&generator);
+    free(meter_queues);
     //     free_packets_count(&count);
     //     free_packets_label(&label);
 

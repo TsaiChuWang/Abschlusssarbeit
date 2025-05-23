@@ -14,7 +14,6 @@ dataframe = pandas.read_csv(DATA_PATH)
 
 name = sys.argv[1]
 
-print(list(dataframe))
 tau = dataframe['tau'].tolist()
 average_loss_pure = dataframe['average_loss_pure'].tolist()
 average_loss_all = dataframe['average_loss_all'].tolist()

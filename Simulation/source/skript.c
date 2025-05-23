@@ -1,8 +1,6 @@
-#define UNIFORM_ALL_COMPLIANT 0             ///< Define a constant for the uniform all-compliant case.
-#define UNIFORM_DISTRIBUTION_NONCOMPLIANT 1 ///< Defines the constant for uniform distribution non-compliant configuration.
-
-#define UNIFORM_DISTRIBUTION_NAUGHTY_DIFFERENT_MODE 2
-#define UNIFORM_DISTRIBUTION_NAUGHTY_DIFFERENT_NAUGHTY_NUMBER 3
+#define UNIFORM_ALL_COMPLIANT 0                                           ///< Define a constant for the uniform all-compliant case.
+#define UNIFORM_DISTRIBUTION_NONCOMPLIANT 1                               ///< Defines the constant for uniform distribution non-compliant configuration.
+#define UNIFORM_DISTRIBUTION_NONCOMPLIANT_DIFFERENT_NONCOMPLIANT_NUMBER 2 ///< Defines a constant for the number of non-compliant configurations in uniform distribution scenarios that are different from the standard.
 
 #define BURSTY_ALL_DIFFERENT_R 4
 #define BURSTY_REGULAR 7
@@ -11,9 +9,6 @@
 
 #define TRAFFIC_BRUSTY_SITUATION 4
 #define BURSTY_ALL_DIFFERENT_R_NAUGHTY 5
-
-#define INTERVAL 0
-#define NAUGHTY 1
 
 #define REDUCTION
 
@@ -160,172 +155,117 @@ int main(int argc, char *argv[])
         }
 
         break; ///< End of the case for UNIFORM_DISTRIBUTION_NONCOMPLIANT.
+    case UNIFORM_DISTRIBUTION_NONCOMPLIANT_DIFFERENT_NONCOMPLIANT_NUMBER:
+        strcpy(name, "uniform_different_noncompliant_number");        ///< Set the name for the configuration.
+        sprintf(configuration_path, "../configuration/%s.ini", name); ///< Construct the path to the configuration INI file.
+        reduction_inif_file(configuration_path);                      ///< Process the INI file to initialize settings.
 
+        // Parse the INI file and load the configuration.
+        if (ini_parse(configuration_path, handler, &config) < 0)
+        {
+            printf(RED_ELOG "Can't load configuration \"%s\"\n", configuration_path); ///< Error message if loading fails.
+            return EXIT_FAILURE;                                                      ///< Exit with failure status if configuration cannot be loaded.
+        }
+
+        sprintf(data_path, "../data/%s", name);       ///< Construct the path for the data directory.
+        config.data_path = data_path;                 ///< Set the data path in the configuration structure.
+        modify_ini_file(configuration_path, &config); ///< Update the INI file with the current configuration.
+
+        // Prepare the data directory by removing existing data and creating new directories.
+        sprintf(command, "rm -r %s", config.data_path);        ///< Command to remove the existing data directory.
+        system(command);                                       ///< Execute the command.
+        sprintf(command, "mkdir %s", config.data_path);        ///< Command to create the data directory.
+        system(command);                                       ///< Execute the command.
+        sprintf(command, "mkdir %s/images", config.data_path); ///< Command to create the images subdirectory.
+        system(command);                                       ///< Execute the command.
+
+        // Write headers for statistics with different types.
+        write_statistics_header_config(config, HEADER_TYPE_AVERAGE); ///< Write the header for average statistics.
+        write_statistics_header_config(config, HEADER_TYPE_ALL);     ///< Write the header for all statistics.
+        write_statistics_header_config(config, HEADER_TYPE_TAU);     ///< Write the header for tau statistics.
+
+        // Set additional configuration parameters for non-compliant mode.
+        config.traffic_mode = TRAFFIC_MODE_NONCOMPLIANT_UNIFORM; ///< Update traffic mode to non-compliant uniform.
+        config.noncompliant_mean = 155;                          ///< Set the mean for non-compliant configuration.
+
+        config.noncompliant_tenant_number = 1;                             ///< Set the initial tenant number for non-compliant mode.
+        config.noncompliant_mode = NONCOMPLIANT_MODE_EXTREME_NONCOMPLIANT; ///< Set the mode for extreme non-compliance.
+
+        // Loop through tau values and execute the main program for each.
+        for (long tau = 0; tau <= 25600; tau += step)
+        {
+            config.tau = tau;                             ///< Set the current tau value in the configuration.
+            modify_ini_file(configuration_path, &config); ///< Update the INI file with the new tau value.
+
+            sprintf(command, "../execution/main %s", configuration_path); ///< Command to execute the main program.
+            system(command);                                              ///< Execute the command.
+
+            // Run Python scripts for data analysis.
+            sprintf(command, "python3 %s %s %s", PYTHON_AVERAGE_LOSS_CHART_PATH, name, configuration_path); ///< Command for average loss chart.
+            system(command);                                                                                ///< Execute the command.
+
+            sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_TAU_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
+            system(command);                                                                                                  ///< Execute the command.
+
+            sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_ALL_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
+            system(command);                                                                                                  ///< Execute the command.
+        }
+
+        config.noncompliant_mode = NONCOMPLIANT_MODE_AVERAGE; ///< Set the mode for non-compliant configuration to average.
+
+        // Loop through tenant numbers and tau values for further analysis.
+        for (int noncompliant_number = 25; noncompliant_number <= 75; noncompliant_number += 25)
+            for (long tau = 0; tau <= 25600; tau += step)
+            {
+                config.tau = tau;                                        ///< Set the current tau value in the configuration.
+                config.noncompliant_tenant_number = noncompliant_number; ///< Update the tenant number for the current iteration.
+                modify_ini_file(configuration_path, &config);            ///< Update the INI file with the new configuration.
+
+                sprintf(command, "../execution/main %s", configuration_path); ///< Command to execute the main program.
+                system(command);                                              ///< Execute the command.
+
+                // Run Python scripts for data analysis.
+                sprintf(command, "python3 %s %s %s", PYTHON_AVERAGE_LOSS_CHART_PATH, name, configuration_path); ///< Command for average loss chart.
+                system(command);                                                                                ///< Execute the command.
+
+                sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_TAU_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
+                system(command);                                                                                                  ///< Execute the command.
+
+                sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_ALL_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
+                system(command);
+            }
+
+        config.noncompliant_tenant_number = 99;                         ///< Set the tenant number for extreme compliant mode.
+        config.noncompliant_mode = NONCOMPLIANT_MODE_EXTREME_COMPLIANT; ///< Set the mode for extreme compliance.
+
+        // Loop through tau values and execute the main program for each in extreme compliant mode.
+        for (long tau = 0; tau <= 25600; tau += step)
+        {
+            config.tau = tau;                             ///< Set the current tau value in the configuration.
+            modify_ini_file(configuration_path, &config); ///< Update the INI file with the new tau value.
+
+            sprintf(command, "../execution/main %s", configuration_path); ///< Command to execute the main program.
+            system(command);                                              ///< Execute the command.
+
+            // Run Python scripts for data analysis.
+            sprintf(command, "python3 %s %s %s", PYTHON_AVERAGE_LOSS_CHART_PATH, name, configuration_path); ///< Command for average loss chart.
+            system(command);                                                                                ///< Execute the command.
+
+            sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_TAU_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
+            system(command);
+
+            sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_ALL_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
+            system(command);                                                                                                  ///< Execute the command.
+        }
+
+        break;
     default:
         printf(RED_ELOG "CODE DOES NOT EXIST!\n" RESET); ///< Error message for unsupported configuration.
         return EXIT_FAILURE;                             ///< Exit with failure status for unknown configurations.
     }
 
-    // char file_regular_and_noncompliant_tau_path[MAX_PATH_LENGTH];
-    // sprintf(file_regular_and_noncompliant_tau_path, "%s/regular_and_noncompliant_tau.csv", config.data_path);
-    // // printf("%s(../data/main/regular_and_noncompliant_tau.csv)\n", file_regular_and_noncompliant_tau_path);
-
-    // file = fopen(file_regular_and_noncompliant_tau_path, "w+");
-    // if (!file)
-    // {
-    //     perror("Error opening file"); /**< Handle file open errors. */
-    //     exit(EXIT_FAILURE);
-    // }
-    // fprintf(file, RECORD_REGULAR_AND_NAUGHTY_TAU_HEADER);
-    // fclose(file);
-
-    // char file_regular_and_noncompliant_all_path[MAX_PATH_LENGTH];
-    // sprintf(file_regular_and_noncompliant_all_path, "%s/regular_and_noncompliant_all.csv", config.data_path);
-    // // printf("%s(../data/main/regular_and_noncompliant_all.csv)\n", file_regular_and_noncompliant_all_path);
-
-    // file = fopen(file_regular_and_noncompliant_all_path, "w+");
-    // if (!file)
-    // {
-    //     perror("Error opening file"); /**< Handle file open errors. */
-    //     exit(EXIT_FAILURE);
-    // }
-    // fprintf(file, RECORD_REGULAR_AND_NAUGHTY_ALL_HEADER);
-    // fclose(file);
-
-    // char file_packet_situation_path[MAX_PATH_LENGTH];
-    // sprintf(file_packet_situation_path, "%s/record_packet_situation.csv", config.data_path);
-    // // printf("%s(../data/main/record_packet_situation.csv)\n", file_packet_situation_path);
-
-    // file = fopen(file_packet_situation_path, "w+");
-    // if (!file)
-    // {
-    //     perror("Error opening file"); /**< Handle file open errors. */
-    //     exit(EXIT_FAILURE);
-    // }
-    // fprintf(file, RECORD_REGULAR_AND_NAUGHTY_TAU_HEADER);
-    // fclose(file);
-
-    // reduction_inif_file(configuration_path);
-
     // switch (atoi(argv[1]))
     // {
-
-    // case UNIFORM_DISTRIBUTION_NAUGHTY:
-    //     config.traffic_mode = TRAFFIC_MODE_NAUGHTY;
-    //     config.noncompliant_mean = 155;
-    //     config.noncompliant_mode = 2;
-    //     for (long tau = 0; tau <= 25600; tau += step)
-    //     {
-    //         config.tau = tau;
-    //         modify_ini_file(configuration_path, &config);
-
-    //         system("../execution/main");
-
-    //         system("python3 ../python/average_loss.py 1");
-    //         system("python3 ../python/regular_and_noncompliant_tau.py 0");
-    //     }
-
-    //     system("rm -r ../data/unifrom_noncompliant");
-    //     sprintf(command, "cp -R %s ../data/unifrom_noncompliant", config.data_path);
-    //     system(command);
-
-    //     break;
-    // case UNIFORM_DISTRIBUTION_NAUGHTY_DIFFERENT_MODE:
-    //     config.traffic_mode = TRAFFIC_MODE_NAUGHTY;
-    //     config.noncompliant_mean = 155;
-
-    //     system("rm -r ../data/unifrom_noncompliant_noncompliant_mode");
-    //     for (int i = 0; i < 3; i++)
-    //     {
-    //         config.noncompliant_mode = i;
-    //         sprintf(command, "mkdir ../data/unifrom_noncompliant_noncompliant_mode/%d", i);
-    //         system(command);
-
-    //         for (long tau = 0; tau <= 25600; tau += step)
-    //         {
-    //             config.tau = tau;
-    //             modify_ini_file(configuration_path, &config);
-
-    //             system("../execution/main");
-
-    //             system("python3 ../python/average_loss.py 1");
-
-    //             sprintf(command, "python3 ../python/regular_and_noncompliant_tau.py 2 noncompliant_mode=%d", i);
-    //             system(command);
-    //         }
-
-    //         sprintf(command, "cp -R %s ../data/unifrom_noncompliant_noncompliant_mode/%d", config.data_path, i);
-    //         system(command);
-    //     }
-
-    //     break;
-    // case UNIFORM_DISTRIBUTION_NAUGHTY_DIFFERENT_NAUGHTY_NUMBER:
-    //     config.traffic_mode = TRAFFIC_MODE_NAUGHTY;
-    //     config.noncompliant_mean = 155;
-
-    //     system("rm -r ../data/unifrom_noncompliant_different_average");
-    //     system("mkdir ../data/unifrom_noncompliant_different_average");
-
-    //     for (long tau = 0; tau <= 25600; tau += step)
-    //     {
-    //         config.noncompliant_mode = NAUGHTY_MODE_BEFORE;
-    //         config.noncompliant_tenant_number = 1;
-    //         config.tau = tau;
-    //         modify_ini_file(configuration_path, &config);
-
-    //         system("../execution/main");
-
-    //         system("python3 ../python/average_loss.py 1");
-
-    //         sprintf(command, "python3 ../python/regular_and_noncompliant_tau.py 1");
-    //         system(command);
-
-    //         sprintf(command, "python3 ../python/regular_and_noncompliant_all.py 1");
-    //         system(command);
-    //     }
-
-    //     for (int noncompliant_tenant_number = 25; noncompliant_tenant_number < config.tenant_number; noncompliant_tenant_number += step_noncompliant_tenant_number)
-    //     {
-    //         for (long tau = 0; tau <= 25600; tau += step)
-    //         {
-    //             config.noncompliant_mode = NAUGHTY_MODE_AVERAGE;
-    //             config.tau = tau;
-    //             config.noncompliant_tenant_number = noncompliant_tenant_number;
-    //             modify_ini_file(configuration_path, &config);
-
-    //             system("../execution/main");
-
-    //             system("python3 ../python/average_loss.py 1");
-
-    //             sprintf(command, "python3 ../python/regular_and_noncompliant_tau.py 1");
-    //             system(command);
-
-    //             sprintf(command, "python3 ../python/regular_and_noncompliant_all.py 1");
-    //             system(command);
-    //         }
-    //     }
-
-    //     for (long tau = 0; tau <= 25600; tau += step)
-    //     {
-    //         config.noncompliant_mode = NAUGHTY_MODE_BEFORE;
-    //         config.noncompliant_tenant_number = 99;
-    //         config.tau = tau;
-    //         modify_ini_file(configuration_path, &config);
-
-    //         system("../execution/main");
-
-    //         system("python3 ../python/average_loss.py 1");
-
-    //         sprintf(command, "python3 ../python/regular_and_noncompliant_tau.py 1");
-    //         system(command);
-
-    //         sprintf(command, "python3 ../python/regular_and_noncompliant_all.py 1");
-    //         system(command);
-    //     }
-
-    //     sprintf(command, "cp -R %s ../data/unifrom_noncompliant_different_average", config.data_path);
-    //     system(command);
-    //     break;
 
     // case BURSTY_ALL_DIFFERENT_R:
     //     config.traffic_mode = TRAFFIC_MODE_BURSTY_ALL;

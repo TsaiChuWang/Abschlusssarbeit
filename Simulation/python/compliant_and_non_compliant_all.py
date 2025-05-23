@@ -4,126 +4,149 @@ import pandas
 import numpy as np
 import sys
 
-CONFIGURATION_PATH = '../configuration/main.ini'
+CONFIGURATION_PATH = sys.argv[2]
 config = configparser.ConfigParser()
 config.read(CONFIGURATION_PATH)
 
-NAUGHTY_MEAN = 1
-R = 2
-IMAGE_PATH = config['simulation']['data_path']+'/images/regular_and_naughty_all_{}.png'
-DATA_PATH = config['simulation']['data_path']+'/regular_and_naughty_all.csv'
+name = sys.argv[1]
+
+IMAGE_PATH = config['simulation']['data_path']+'/images/compliant_and_noncompliant_all_{}_{}_{}.png'
+DATA_PATH = config['simulation']['data_path']+'/compliant_and_noncompliant_all.csv'
 
 dataframe = pandas.read_csv(DATA_PATH)
 
-if(int(sys.argv[1]) == NAUGHTY_MEAN):
+if(name == 'uniform_different_noncompliant_number'):
     tenant_number = int(config['simulation']['tenant_number'])
-    naughty_mean = int(config['traffic']['naughty_mean'])
-    naughty_tenant_number = int(config['traffic']['naughty_tenant_number'])
+    noncompliant_mean = int(config['traffic']['noncompliant_mean'])
+    noncompliant_tenant_number = int(config['traffic']['noncompliant_tenant_number'])
     mean = int(config['traffic']['mean'])
 
     tau_ = dataframe['tau'].tolist()
     tau_ = list(set(tau_))
     tau_.sort()
-    # print(real_naughty_mean)
 
-    keys = [1,20,40,60,80,99]
+    # pure
+    keys = list(set(dataframe['noncompliant_tenant_number'].tolist()))
     for key in keys:
-        real_naughty_mean = (naughty_mean*key+ mean*(tenant_number-key))/tenant_number
-        nloss = dataframe[dataframe['naughty_tenant_number'] == key][['naughty_loss']]
-        if(len(nloss)!=0):
-            # print('regular : '+str(nloss)+" "+str(key))
-            tau = dataframe[dataframe['naughty_tenant_number'] == key]['tau'].tolist()
-            # print(len(tau))
-            # print(len(nloss))
-            plt.plot(tau, nloss, linestyle='-', label='(naughty)μ = '+str(real_naughty_mean), alpha = 1)
+        real_noncompliant_mean = (noncompliant_mean*key+ mean*(tenant_number-key))/tenant_number
+        noncompliant_loss_pure = dataframe[dataframe['noncompliant_tenant_number'] == key][['noncompliant_loss_pure']]
+        if(len(noncompliant_loss_pure)!=0):
+            tau = dataframe[dataframe['noncompliant_tenant_number'] == key]['tau'].tolist()
+            plt.plot(tau, noncompliant_loss_pure, linestyle='-', label='(pure)μ = {}, n = {:2d}'.format(real_noncompliant_mean, key), alpha = 1)
     plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
-    plt.title('Packet Loss with different τ and μ Naughty Flow')
+    plt.title('Packet Loss with different τ and μ ({}) Non-compliant'.format(name), fontsize=7.5)
     plt.ylabel('Loss (%)')
     plt.xlabel('τ')
     plt.legend()
     plt.grid(True)
-    plt.savefig(IMAGE_PATH.format('naughty'))
+    plt.savefig(IMAGE_PATH.format(name,'pure', 'noncompliant'))
     plt.cla()
 
     for key in keys:
-        real_naughty_mean = (naughty_mean*key+ mean*(tenant_number-key))/tenant_number
-        rloss = dataframe[dataframe['naughty_tenant_number'] == key][['regular_loss']]
-        # print('regular : '+str(rloss)+" "+str(key))
-        if(len(rloss)!=0):
-            tau = dataframe[dataframe['naughty_tenant_number'] == key]['tau'].tolist()
-            tau = list(set(tau))
-            tau.sort()
-            print(len(tau))
-            print(len(rloss))
-            plt.plot(tau, rloss, linestyle='-', label='(regular)μ = '+str(real_naughty_mean), alpha = 1)
+        real_noncompliant_mean = (noncompliant_mean*key+ mean*(tenant_number-key))/tenant_number
+        compliant_loss_pure = dataframe[dataframe['noncompliant_tenant_number'] == key][['compliant_loss_pure']]
+        if(len(compliant_loss_pure)!=0):
+            tau = dataframe[dataframe['noncompliant_tenant_number'] == key]['tau'].tolist()
+            plt.plot(tau, compliant_loss_pure, linestyle='-', label='(pure)μ = {}, n = {:2d}'.format(real_noncompliant_mean, key), alpha = 1)
     plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
-    plt.title('Packet Loss with different τ and μ Regular Flow')
-    plt.xlabel('τ')
-    plt.ylabel('Loss (%)')
-    plt.legend()
-    plt.grid(True)
-    plt.savefig(IMAGE_PATH.format('regular'))
-    plt.cla()
-
-if(int(sys.argv[1]) == R):
-
-    tau_ = dataframe['tau'].tolist()
-    tau_ = list(set(tau_))
-    tau_.sort()
-
-    keys = list(set(dataframe['state_r'].tolist()))
-    keys.sort()
-
-    for key in keys:
-        nloss = dataframe[dataframe['state_r'] == key][['naughty_loss']]
-        if(len(nloss)!=0):
-            tau = dataframe[dataframe['state_r'] == key]['tau'].tolist()
-            plt.plot(tau, nloss, linestyle='-', label='(naughty)r = '+str(key), alpha = 1)
-    plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
-    plt.title('Packet Loss with different τ and r Naughty Flow')
+    plt.title('Packet Loss with different τ and μ ({}) Compliant'.format(name), fontsize=7.5)
     plt.ylabel('Loss (%)')
     plt.xlabel('τ')
     plt.legend()
     plt.grid(True)
-    plt.savefig(IMAGE_PATH.format('naughty'))
+    plt.savefig(IMAGE_PATH.format(name,'pure', 'compliant'))
+    plt.cla()
+
+    # all
+    for key in keys:
+        real_noncompliant_mean = (noncompliant_mean*key+ mean*(tenant_number-key))/tenant_number
+        noncompliant_loss_all = dataframe[dataframe['noncompliant_tenant_number'] == key][['noncompliant_loss_all']]
+        if(len(noncompliant_loss_all)!=0):
+            tau = dataframe[dataframe['noncompliant_tenant_number'] == key]['tau'].tolist()
+            plt.plot(tau, noncompliant_loss_all, linestyle='-', label='(all)μ = {}, n = {:2d}'.format(real_noncompliant_mean, key), alpha = 1)
+    plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
+    plt.title('Packet Loss with different τ and μ ({}) Non-compliant'.format(name), fontsize=7.5)
+    plt.ylabel('Loss (%)')
+    plt.xlabel('τ')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH.format(name,'all', 'noncompliant'))
     plt.cla()
 
     for key in keys:
-        rloss = dataframe[dataframe['state_r'] == key][['regular_loss']]
-        if(len(rloss)!=0):
-            tau = dataframe[dataframe['state_r'] == key]['tau'].tolist()
-            tau = list(set(tau))
-            tau.sort()
-            plt.plot(tau, rloss, linestyle='-', label='(regular)r = '+str(key), alpha = 1)
+        real_noncompliant_mean = (noncompliant_mean*key+ mean*(tenant_number-key))/tenant_number
+        compliant_loss_all = dataframe[dataframe['noncompliant_tenant_number'] == key][['compliant_loss_all']]
+        if(len(compliant_loss_all)!=0):
+            tau = dataframe[dataframe['noncompliant_tenant_number'] == key]['tau'].tolist()
+            plt.plot(tau, compliant_loss_all, linestyle='-', label='(all)μ = {}, n = {:2d}'.format(real_noncompliant_mean, key), alpha = 1)
     plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
-    plt.title('Packet Loss with different τ and r Regular Flow')
-    plt.xlabel('τ')
+    plt.title('Packet Loss with different τ and μ ({}) Compliant'.format(name), fontsize=7.5)
     plt.ylabel('Loss (%)')
+    plt.xlabel('τ')
     plt.legend()
     plt.grid(True)
-    plt.savefig(IMAGE_PATH.format('regular'))
+    plt.savefig(IMAGE_PATH.format(name,'all', 'compliant'))
     plt.cla()
 
-# kind_key = list(set(dataframe['state_r'].tolist()))
+# if(int(sys.argv[1]) == R):
 
-# n = 1600
-# for key in kind_key:
-#     nloss = dataframe[dataframe['state_r'] == key][['naughty_loss']]
-#     rloss = dataframe[dataframe['state_r'] == key][['regular_loss']]
+#     tau_ = dataframe['tau'].tolist()
+#     tau_ = list(set(tau_))
+#     tau_.sort()
 
-#     nloss = nloss/100
-#     rloss = rloss/100
-#     plt.plot(tau[:n],nloss[:n], linestyle='-', label='(naghty)r = '+str(key), alpha = 1)
-#     # plt.plot(tau[:n],rloss[:n], linestyle='-', label='(regular)r = '+str(key), alpha = 1)
+#     keys = list(set(dataframe['state_r'].tolist()))
+#     keys.sort()
 
-# plt.plot(tau[:n], [0.1 for i in tau][:n], linestyle='-', color = 'red', label='ε')
+#     for key in keys:
+#         nloss = dataframe[dataframe['state_r'] == key][['noncompliant_loss']]
+#         if(len(nloss)!=0):
+#             tau = dataframe[dataframe['state_r'] == key]['tau'].tolist()
+#             plt.plot(tau, nloss, linestyle='-', label='(noncompliant)r = '+str(key), alpha = 1)
+#     plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
+#     plt.title('Packet Loss with different τ and r Naughty Flow')
+#     plt.ylabel('Loss (%)')
+#     plt.xlabel('τ')
+#     plt.legend()
+#     plt.grid(True)
+#     plt.savefig(IMAGE_PATH.format('noncompliant'))
+#     plt.cla()
 
-# # plt.title('Average Packet Loss with different τ and r value (All Regular)')
-# # plt.title('Packet Loss with different τ and r value (Naughty 150) Regular Flow')
-# plt.title('Packet Loss with different τ and r value (Naughty 150) Naughty Flow')
-# plt.ylabel('Loss (%)')
-# plt.legend()
-# plt.grid(True)
+#     for key in keys:
+#         rloss = dataframe[dataframe['state_r'] == key][['compliant_loss']]
+#         if(len(rloss)!=0):
+#             tau = dataframe[dataframe['state_r'] == key]['tau'].tolist()
+#             tau = list(set(tau))
+#             tau.sort()
+#             plt.plot(tau, rloss, linestyle='-', label='(compliant)r = '+str(key), alpha = 1)
+#     plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
+#     plt.title('Packet Loss with different τ and r Regular Flow')
+#     plt.xlabel('τ')
+#     plt.ylabel('Loss (%)')
+#     plt.legend()
+#     plt.grid(True)
+#     plt.savefig(IMAGE_PATH.format('compliant'))
+#     plt.cla()
 
-# plt.savefig(IMAGE_PATH)
-# plt.cla()
+# # kind_key = list(set(dataframe['state_r'].tolist()))
+
+# # n = 1600
+# # for key in kind_key:
+# #     nloss = dataframe[dataframe['state_r'] == key][['noncompliant_loss']]
+# #     rloss = dataframe[dataframe['state_r'] == key][['compliant_loss']]
+
+# #     nloss = nloss/100
+# #     rloss = rloss/100
+# #     plt.plot(tau[:n],nloss[:n], linestyle='-', label='(naghty)r = '+str(key), alpha = 1)
+# #     # plt.plot(tau[:n],rloss[:n], linestyle='-', label='(compliant)r = '+str(key), alpha = 1)
+
+# # plt.plot(tau[:n], [0.1 for i in tau][:n], linestyle='-', color = 'red', label='ε')
+
+# # # plt.title('Average Packet Loss with different τ and r value (All Regular)')
+# # # plt.title('Packet Loss with different τ and r value (Naughty 150) Regular Flow')
+# # plt.title('Packet Loss with different τ and r value (Naughty 150) Naughty Flow')
+# # plt.ylabel('Loss (%)')
+# # plt.legend()
+# # plt.grid(True)
+
+# # plt.savefig(IMAGE_PATH)
+# # plt.cla()

@@ -4,30 +4,36 @@ import pandas
 import sys
 
 # Path to the configuration file
-CONFIGURATION_PATH = '../configuration/main.ini'
-
+if(len(sys.argv)<3):
+    CONFIGURATION_PATH = '../configuration/main.ini'
+else:
+    CONFIGURATION_PATH = sys.argv[2]
 # Initialize the config parser
 config = configparser.ConfigParser()
 config.read(CONFIGURATION_PATH)
 
-# Read parameters from the configuration file
-state_r = float(config['traffic']['state_r'])
-
-if(int(sys.argv[1]) == 0):
-    IMAGE_PATH = config['simulation']['data_path'] + '/images/record_packet_situation_uniform_regular.png'
-elif(int(sys.argv[1]) == 5):
-    IMAGE_PATH = config['simulation']['data_path'] + '/images/record_packet_situation_{}.png'.format(state_r)
-else:
-    IMAGE_PATH = config['simulation']['data_path'] + '/images/record_packet_situation_uniform_regular.png'
-# IMAGE_PATH = config['simulation']['data_path'] + '/record_packet_situation.png'
 DATA_PATH = config['simulation']['data_path'] + '/record_packet_situation.csv'
+if(len(sys.argv)<2):
+    IMAGE_PATH = config['simulation']['data_path'] + '/images/record_packet_situation.png'
+else:
+    IMAGE_PATH = config['simulation']['data_path'] + '/images/record_packet_situation_{}.png'.format(sys.argv[1])
 
 # Load data from the CSV file into a DataFrame
 dataframe = pandas.read_csv(DATA_PATH)
 
-# Constants for plotting
-m = 500
-n = 1000  # Number of data points to plot
+# # Constants for plotting
+if(len(sys.argv)<4):
+    m = 500
+else:
+    m = int(sys.argv[3])
+
+if(len(sys.argv)<5):
+    n= 1000
+else:
+    n = int(sys.argv[4])
+
+# Read parameters from the configuration file
+state_r = float(config['traffic']['state_r'])
 step = 10**9 * float(config['traffic']['packet_size']) / float(config['traffic']['input_rate'])
 
 # Extract packets and dequeue data from the DataFrame
@@ -44,13 +50,7 @@ plt.plot(x, packets, linestyle='-', label='packets')
 plt.plot(x, dequeue, linestyle='-', label='dequeue')
 plt.plot(x, [average for i in x], linestyle='-', label='average({})'.format(average))
 
-# Set plot title and labels
-if(int(sys.argv[1]) == 0):
-    plt.title('Packet Situation (Uniform Distribution)')
-elif(int(sys.argv[1]) == 5):
-    plt.title('Packet Situation (state_r = {})'.format(state_r))
-else:
-    plt.title('Packet Situation (Uniform Distribution)')
+plt.title('Packet Situation ({})'.format(sys.argv[1]))
     
 plt.xlabel('Time(ns)')
 plt.ylabel('Packet Number')

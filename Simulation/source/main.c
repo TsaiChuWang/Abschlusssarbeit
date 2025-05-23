@@ -488,19 +488,23 @@ int main(int argc, char *argv[])
     record_average_loss(label, config); ///< Record the average loss using the provided label and configuration.
 #endif
 
-    //     // #ifdef RECORD_PACKETS_SITUATION
-    //     //     switch (config.traffic_mode)
-    //     //     {
-    //     //     case TRAFFIC_MODE_INTERVAL:
-    //     //         system("python3 ../python/packet_situation.py 0");
-    //     //         break;
+#ifdef RECORD_PACKETS_SITUATION
+    // Check if the traffic mode is less than BURSTY_ALL
+    if (config.traffic_mode < TRAFFIC_MODE_BURSTY_ALL)
+    {
+        // Prepare and execute the command to record packet situation for uniform traffic.
+        sprintf(command, "python3 ../python/%s uniform %s %d %d", PYTHON_PACKET_SITUATION_CHART_PATH, configuration_path, 500, 1000);
+        system(command); ///< Execute the command to run the Python script for uniform traffic.
+    }
 
-    //     //     default:
-    //     //         system("python3 ../python/packet_situation.py 0");
-    //     //         break;
-    //     //     }
-
-    //     // #endif
+    // Check if the traffic mode is BURSTY_ALL or higher
+    if (config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL)
+    {
+        // Prepare and execute the command to record packet situation for burst traffic.
+        sprintf(command, "python3 ../python/%s burst %s %d %d", PYTHON_PACKET_SITUATION_CHART_PATH, configuration_path, 500, 1000);
+        system(command); ///< Execute the command to run the Python script for burst traffic.
+    }
+#endif
 
     free(command);                    ///< Free the memory allocated for the command buffer.
     freeTrafficGenerator(&generator); ///< Free resources associated with the traffic generator.

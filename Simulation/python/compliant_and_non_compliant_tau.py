@@ -3,13 +3,13 @@ import matplotlib.pyplot as plt
 import pandas
 import sys
 
-CONFIGURATION_PATH = '../configuration/main.ini'
+CONFIGURATION_PATH = sys.argv[2]
 config = configparser.ConfigParser()
 config.read(CONFIGURATION_PATH)
 
-IMAGE_PATH_REGULAR = config['simulation']['data_path']+'/images/regular_and_naughty_tau_regular.png'
-IMAGE_PATH_NAUGHTY = config['simulation']['data_path']+'/images/regular_and_naughty_tau_naughty.png'
-DATA_PATH = config['simulation']['data_path']+'/regular_and_naughty_tau.csv'
+IMAGE_PATH_COMPLIANT = config['simulation']['data_path']+'/images/compliant_and_noncompliant_tau_{}_{}_compliant.png'
+IMAGE_PATH_NONCOMPLIANT = config['simulation']['data_path']+'/images/compliant_and_noncompliant_tau_{}_{}_noncompliant.png'
+DATA_PATH = config['simulation']['data_path']+'/compliant_and_noncompliant_tau.csv'
 
 dataframe = pandas.read_csv(DATA_PATH)
 
@@ -17,44 +17,56 @@ tau = dataframe['tau'].tolist()
 tau = list(set(tau))
 tau.sort()
 
-regular_loss = dataframe['regular_loss'].tolist()
-naughty_loss = dataframe['naughty_loss'].tolist()
+name = sys.argv[1]
 
-if(int(sys.argv[1])==0):
-    title = 'Packet Loss with different τ and r value : Naughty {}'.format(config['traffic']['naughty_mean'])
-elif(int(sys.argv[1])==1):
-    average = int(config['traffic']['naughty_mean'])*int(config['traffic']['naughty_tenant_number'])+int(config['traffic']['mean'])*(int(config['simulation']['tenant_number'])-int(config['traffic']['naughty_tenant_number']))
-    average = average/int(config['simulation']['tenant_number'])
-    title = 'Packet Loss with different τ and r value : Average {}'.format(average)
-elif(int(sys.argv[1])==2):
-    title = 'Packet Loss with different τ and r value : Non-Compliant SLA {} [{}]'.format(config['traffic']['naughty_mean'], sys.argv[2])
-else:
-    title = 'Packet Loss with different τ and r value : Non-Compliant SLA {}'.format(config['traffic']['naughty_mean'])
+compliant_loss_pure = dataframe['compliant_loss_pure'].tolist()
+noncompliant_loss_pure = dataframe['noncompliant_loss_pure'].tolist()
+compliant_loss_all = dataframe['compliant_loss_all'].tolist()
+noncompliant_loss_all = dataframe['noncompliant_loss_all'].tolist()
 
-# regular
-plt.plot(tau, regular_loss ,linestyle='-', label='(Compliant SLA, μ = {})'.format(config['traffic']['mean']), alpha = 1)
+title = 'Packet Loss with different τ ({}) : '.format(name)
+
+# Pure
+# compliant
+plt.plot(tau, compliant_loss_pure ,linestyle='-', label='pure', alpha = 1)
 plt.plot(tau, [float(config['simulation']['error'])*100.0 for i in tau], linestyle='-', color = 'red', label='ε')
 plt.ylabel('Loss (%)')
 plt.legend()
 plt.grid(True)
-
-plt.title(title+' (Compliant SLA)')
-
-plt.savefig(IMAGE_PATH_REGULAR)
+plt.title(title+'Compliant')
+plt.savefig(IMAGE_PATH_COMPLIANT.format(name, 'pure'))
 plt.cla()
 
-# naughty
-plt.plot(tau, naughty_loss ,linestyle='-', label='(Non-Compliant SLA, μ = {})'.format(config['traffic']['naughty_mean']), alpha = 1)
+# noncompliant
+plt.plot(tau, noncompliant_loss_pure ,linestyle='-', label='pure', alpha = 1)
 plt.plot(tau, [float(config['simulation']['error'])*100.0 for i in tau], linestyle='-', color = 'red', label='ε')
 plt.ylabel('Loss (%)')
 plt.legend()
 plt.grid(True)
-
-plt.title(title+' (Non-Compliant SLA)')
-
-plt.savefig(IMAGE_PATH_NAUGHTY)
+plt.title(title+'Non-compliant')
+plt.savefig(IMAGE_PATH_NONCOMPLIANT.format(name, 'pure'))
 plt.cla()
 
+# All
+# compliant
+plt.plot(tau, compliant_loss_all ,linestyle='-', label='all', alpha = 1)
+plt.plot(tau, [float(config['simulation']['error'])*100.0 for i in tau], linestyle='-', color = 'red', label='ε')
+plt.ylabel('Loss (%)')
+plt.legend()
+plt.grid(True)
+plt.title(title+'Compliant')
+plt.savefig(IMAGE_PATH_COMPLIANT.format(name, 'all'))
+plt.cla()
+
+# noncompliant
+plt.plot(tau, noncompliant_loss_all ,linestyle='-', label='all', alpha = 1)
+plt.plot(tau, [float(config['simulation']['error'])*100.0 for i in tau], linestyle='-', color = 'red', label='ε')
+plt.ylabel('Loss (%)')
+plt.legend()
+plt.grid(True)
+plt.title(title+'Non-compliant')
+plt.savefig(IMAGE_PATH_NONCOMPLIANT.format(name, 'all'))
+plt.cla()
 
 
 

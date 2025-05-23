@@ -1,18 +1,11 @@
 // /**
 //  * @file main.c
-//  * @brief Main program for network traffic simulation
-//  * @details Handles configuration loading, directory setup, and capacity calculation
+//  * @brief Main entry point for the traffic generation application.
+//  *
+//  * This file includes necessary headers and defines the main function
+//  * for the traffic generation application. It sets up configurations
+//  * and handles the execution flow.
 //  */
-
-// // #define PRINT_GRID_COUNT          ///< Enable to print the count of grids during execution
-
-// // #define PRINT_REGULAR_AND_NAUGHTY ///< Enable to print regular and naughty data
-
-// // //
-
-// // #define RECORD_REGULAR_AND_NAUGHTY_TAU ///< Enable to record tau for regular and naughty data
-// // #define RECORD_REGULAR_AND_NAUGHTY_ALL ///< Enable to record all regular and naughty data
-// // #define RECORD_AVERAGE_LOSS            ///< Enable to record the average loss during processing
 
 #define PRINT_EXECUTION_TIME  ///< Enable timing measurement for execution duration
 #define SHOW_CONFIGURATION    ///< Enable display of the current configuration settings
@@ -29,25 +22,21 @@
 // #define PRINT_FIRST_INIT_GCRA ///< Enable printing of the first initialized GCRA.
 // #define PRINT_LINK_DEQUEUE_COUNT ///< Enable printing of the link dequeue count.
 // #define PRINT_GCRA_UPDATE ///< Enable to print updates related to GCRA
+// #define PRINT_GRID_COUNT ///< Enable printing of the grid count.
+#define PRINT_COMPLIANT_AND_NON_COMPLIANT ///< Enable printing of compliant and non-compliant traffic information.
+#define RECORD_AVERAGE_LOSS               ///< Enable recording of average loss.
 
-#define RECORD_PACKETS_SITUATION ///< Enable recording of packet situations.
+#define RECORD_PACKETS_SITUATION              ///< Enable recording of packet situations.
+#define RECORD_COMPLIANT_AND_NONCOMPLIANT_TAU ///< Enable recording of compliant and non-compliant tau values.
+#define RECORD_COMPLIANT_AND_NONCOMPLIANT_ALL ///< Enable recording of all compliant and non-compliant data.
 
-// /**
-//  * @file main.c
-//  * @brief Main entry point for the traffic generation application.
-//  *
-//  * This file includes necessary headers and defines the main function
-//  * for the traffic generation application. It sets up configurations
-//  * and handles the execution flow.
-//  */
-
-#include "../include/general.h"
-#include "./inih/ini.h"
-#include "../include/configuration.h"
-#include "../include/traffic_generation.h"
-#include "../include/packets_count.h"       ///< Packet counting functions
-#include "../include/GCRA.h"                ///< GCRA (Generic Controlled Rate Algorithm) functions
-#include "../include/link_capacity_queue.h" ///< Link capacity queue management functions
+#include "../include/general.h"             ///< Include general definitions and declarations.
+#include "./inih/ini.h"                     ///< Include INI file handling library.
+#include "../include/configuration.h"       ///< Include configuration management definitions.
+#include "../include/traffic_generation.h"  ///< Include traffic generation functions and definitions.
+#include "../include/packets_count.h"       ///< Include packet counting utilities.
+#include "../include/GCRA.h"                ///< Include Generic Cell Rate Algorithm (GCRA) definitions.
+#include "../include/link_capacity_queue.h" ///< Include link capacity and queue management definitions.
 
 #define CONFIGURATION_PATH "../configuration/main.ini" ///< Path to the main configuration file
 
@@ -459,9 +448,9 @@ int main(int argc, char *argv[])
 #endif
     }
 
-    //     // #ifdef PRINT_GRID_COUNT
-    //     //     printf("grid numbers= %d\n", grid_counts);
-    //     // #endif
+#ifdef PRINT_GRID_COUNT
+    printf("grid numbers= %d\n", grid_counts); ///< Print the current count of grid numbers.
+#endif
 
 #ifdef PRINT_PACKET_COUNTS
     show_packets_count(count); ///< Display the count of packets.
@@ -471,30 +460,33 @@ int main(int argc, char *argv[])
     show_packets_label(label); ///< Display the labels of packets.
 #endif
 
-    //     // #ifdef PRINT_REGULAR_AND_NAUGHTY
-    //     //     if (config.traffic_mode == TRAFFIC_MODE_NAUGHTY || config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL)
-    //     //     {
-    //     //         print_regular_and_naughty(label, config);
-    //     //     }
-    //     // #endif
+#ifdef PRINT_COMPLIANT_AND_NON_COMPLIANT
+    // Check if the traffic mode is non-compliant or bursty, and if there are non-compliant tenants.
+    if ((config.traffic_mode == TRAFFIC_MODE_NONCOMPLIANT_UNIFORM || config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL) && config.noncompliant_tenant_number > 0)
+    {
+        print_compliant_and_noncompliant(label, config); ///< Print details of compliant and non-compliant tenants.
+    }
+#endif
 
-    //     // #ifdef RECORD_REGULAR_AND_NAUGHTY_TAU
-    //     //     if (config.traffic_mode == TRAFFIC_MODE_NAUGHTY || config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL)
-    //     //     {
-    //     //         record_regular_and_naughty_tau(label, config);
-    //     //     }
-    //     // #endif
+#ifdef RECORD_COMPLIANT_AND_NONCOMPLIANT_TAU
+    // Check if the traffic mode is non-compliant or bursty, and if there are non-compliant tenants.
+    if ((config.traffic_mode == TRAFFIC_MODE_NONCOMPLIANT_UNIFORM || config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL) && config.noncompliant_tenant_number > 0)
+    {
+        record_compliant_and_noncompliant_tau(label, config); ///< Record tau values for compliant and non-compliant tenants.
+    }
+#endif
 
-    //     // #ifdef RECORD_REGULAR_AND_NAUGHTY_ALL
-    //     //     if (config.traffic_mode == TRAFFIC_MODE_NAUGHTY || config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL)
-    //     //     {
-    //     //         record_regular_and_naughty_all(label, config);
-    //     //     }
-    //     // #endif
+#ifdef RECORD_COMPLIANT_AND_NONCOMPLIANT_ALL
+    // Check if the traffic mode is non-compliant or bursty, and if there are non-compliant tenants.
+    if ((config.traffic_mode == TRAFFIC_MODE_NONCOMPLIANT_UNIFORM || config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL) && config.noncompliant_tenant_number > 0)
+    {
+        record_compliant_and_noncompliant_all(label, config); ///< Record all data for compliant and non-compliant tenants.
+    }
+#endif
 
-    //     // #ifdef RECORD_AVERAGE_LOSS
-    //     //     record_average_loss(label, config);
-    //     // #endif
+#ifdef RECORD_AVERAGE_LOSS
+    record_average_loss(label, config); ///< Record the average loss using the provided label and configuration.
+#endif
 
     //     // #ifdef RECORD_PACKETS_SITUATION
     //     //     switch (config.traffic_mode)
@@ -510,30 +502,18 @@ int main(int argc, char *argv[])
 
     //     // #endif
 
-    // #ifdef PRINT_EXECUTION_TIME
-    //     /**
-    //      * @brief Calculate and display total execution time
-    //      * @details Measures the elapsed time since program start and converts it to seconds
-    //      *
-    //      * The calculation follows these steps:
-    //      * 1. Subtract start time from current time to get clock ticks
-    //      * 2. Convert clock ticks to seconds by dividing by CLOCKS_PER_SEC
-    //      * 3. Display the result in seconds
-    //      *
-    //      * @note CLOCKS_PER_SEC is system-dependent and defined in time.h
-    //      * @note Precision may vary depending on the system's clock resolution
-    //      */
-    //     execute_clock = clock() - execute_clock;
-    //     double time_taken = ((double)execute_clock) / CLOCKS_PER_SEC;
-    //     printf("Execute time : %f s\n", time_taken);
-    // #endif
+    free(command);                    ///< Free the memory allocated for the command buffer.
+    freeTrafficGenerator(&generator); ///< Free resources associated with the traffic generator.
+    free(meter_queues);               ///< Free the memory allocated for meter queues.
+    free(gcras);                      ///< Free the memory allocated for GCRA structures.
+    free_packets_count(&count);       ///< Free the resources associated with packet count management.
+    free_packets_label(&label);       ///< Free the memory allocated for packet labels.
 
-    free(command);
-    freeTrafficGenerator(&generator);
-    free(meter_queues);
-    free(gcras);
-    free_packets_count(&count);
-    free_packets_label(&label);
+#ifdef PRINT_EXECUTION_TIME
+    execute_clock = clock() - execute_clock;                      ///< Calculate the elapsed execution time.
+    double time_taken = ((double)execute_clock) / CLOCKS_PER_SEC; ///< Convert clock ticks to seconds.
+    printf("Execute time : %f s\n", time_taken);                  ///< Print the execution time in seconds.
+#endif
 
     return EXIT_SUCCESS;
 }

@@ -49,7 +49,7 @@
 #define RECORD_COMPLIANT_AND_NONCOMPLIANT_ALL_HEADER           \
   "tau,noncompliant_mean,noncompliant_tenant_number,state_r,"  \
   "noncompliant_state_r,upper_queue_buffer,link_queue_buffer," \
-  "compliant_loss,noncompliant_loss\n"
+  "compliant_loss_pure,noncompliant_loss_pure,compliant_loss_all,noncompliant_loss_all\n"
 
 /**
  * @def RECORD_AVERAGE_LOSS_HEADER
@@ -627,30 +627,35 @@ void record_compliant_and_noncompliant_all(packets_label label, const configurat
     exit(EXIT_FAILURE);
   }
 
-  double noncompliant_Loss = 0;
-  double compliant_Loss = 0;
+  double noncompliant_Loss_pure = 0;
+  double noncompliant_Loss_all = 0;
+  double compliant_Loss_pure = 0;
+  double compliant_Loss_all = 0;
 
   // Loop through each tenant and calculate the loss percentage for compliant and noncompliant tenants.
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
     if (is_noncompliant_index(tenant, config))
     {
-#ifdef TAG_PURE_LOSS
-      noncompliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
-#else
-      noncompliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
-#endif
+      noncompliant_Loss_pure += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) /
+                                (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]);
+      noncompliant_Loss_all += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) /
+                               (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]);
     }
     else
     {
-#ifdef TAG_PURE_LOSS
-      compliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
-#else
-      compliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
-#endif
+      compliant_Loss_pure += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) /
+                             (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]);
+      compliant_Loss_all += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) /
+                            (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]);
     }
 
+  noncompliant_Loss_pure = noncompliant_Loss_pure * 100.0 / config.noncompliant_tenant_number;
+  noncompliant_Loss_all = noncompliant_Loss_all * 100.0 / config.noncompliant_tenant_number;
+  compliant_Loss_pure = compliant_Loss_pure * 100.0 / (config.tenant_number - config.noncompliant_tenant_number);
+  compliant_Loss_all = compliant_Loss_all * 100.0 / (config.tenant_number - config.noncompliant_tenant_number);
+
   // Append the results to the CSV file with additional configuration details.
-  fprintf(file, "%ld, %d, %d, %f, %f, %d, %d, %f, %f\n", config.tau, config.noncompliant_mean, config.noncompliant_tenant_number, config.state_r, config.noncompliant_state_r, config.upper_queue_buffer, config.link_queue_buffer, compliant_Loss, noncompliant_Loss);
+  fprintf(file, "%ld, %d, %d, %f, %f, %d, %d, %f, %f, %f, %f\n", config.tau, config.noncompliant_mean, config.noncompliant_tenant_number, config.state_r, config.noncompliant_state_r, config.upper_queue_buffer, config.link_queue_buffer, compliant_Loss_pure, noncompliant_Loss_pure, compliant_Loss_all, noncompliant_Loss_all);
   fclose(file); /**< Close the file after writing. */
 }
 

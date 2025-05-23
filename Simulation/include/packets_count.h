@@ -433,9 +433,11 @@ void print_compliant_and_noncompliant(packets_label label, const configuration c
   }
 
   double noncompliant_GCRA = 0;
-  double noncompliant_Loss = 0;
+  double noncompliant_Loss_pure = 0;
+  double noncompliant_Loss_all = 0;
   double compliant_GCRA = 0;
-  double compliant_Loss = 0;
+  double compliant_Loss_pure = 0;
+  double compliant_Loss_all = 0;
 
   // Loop through each tenant and accumulate statistics based on their type (compliant or noncompliant).
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
@@ -443,26 +445,25 @@ void print_compliant_and_noncompliant(packets_label label, const configuration c
     {
       /**< Accumulate GCRA for noncompliant tenants. */
       noncompliant_GCRA += label.labels[tenant][PACKET_LABEL_GCRA_LABELED];
-#ifdef TAG_PURE_LOSS
-      noncompliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
-#else
-      noncompliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
-#endif
+      noncompliant_Loss_pure += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]);                                                                                                                          /**< Calculate average loss percentage. */
+      noncompliant_Loss_all += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
     }
     else
     {
       /**< Accumulate GCRA for compliant tenants. */
       compliant_GCRA += label.labels[tenant][PACKET_LABEL_GCRA_LABELED];
-#ifdef TAG_PURE_LOSS
-      compliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
-#else
-      compliant_Loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
-#endif
+      compliant_Loss_pure += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]);                                                                                                                          /**< Calculate average loss percentage. */
+      compliant_Loss_all += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
     }
 
+  noncompliant_Loss_pure = noncompliant_Loss_pure / config.noncompliant_tenant_number;
+  noncompliant_Loss_all = noncompliant_Loss_all / config.noncompliant_tenant_number;
+  compliant_Loss_pure = compliant_Loss_pure / (config.tenant_number - config.noncompliant_tenant_number);
+  compliant_Loss_all = compliant_Loss_all / (config.tenant_number - config.noncompliant_tenant_number);
+
   // Print the GCRA and loss statistics for compliant and noncompliant tenants.
-  printf("compliant    : GCRA : %-7.12f Loss :%-7.12f% \n", compliant_GCRA / (label.tenant_number - config.noncompliant_tenant_number), compliant_Loss / (label.tenant_number - config.noncompliant_tenant_number));
-  printf("noncompliant : GCRA : %-7.12f Loss :%-7.12f% \n", noncompliant_GCRA / config.noncompliant_tenant_number, noncompliant_Loss / config.noncompliant_tenant_number);
+  printf("compliant    : GCRA : %-7.12f Loss(pure) :%-7.12f%% Loss(all) :%-7.12f%% \n", compliant_GCRA / (label.tenant_number - config.noncompliant_tenant_number), compliant_Loss_pure, compliant_Loss_all);
+  printf("noncompliant : GCRA : %-7.12f Loss(pure) :%-7.12f%% Loss(all) :%-7.12f%% \n", noncompliant_GCRA / config.noncompliant_tenant_number, noncompliant_Loss_pure, noncompliant_Loss_all);
 }
 
 /**
@@ -722,8 +723,8 @@ void record_average_loss(packets_label label, const configuration config)
   // Loop through each tenant and calculate the average loss.
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
   {
-    average_loss_pure += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]);                                                             /**< Calculate average loss percentage. */
-    average_loss_all += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+    average_loss_pure += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]);                                                                                                                          /**< Calculate average loss percentage. */
+    average_loss_all += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
   }
 
   average_loss_pure = average_loss_pure / (config.tenant_number);

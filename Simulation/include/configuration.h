@@ -668,7 +668,6 @@ void show_configuration(const configuration config)
         printf("| noncompliant mean               : %-d\n", config.noncompliant_mean);
         printf("| noncompliant standard deviation : %-d\n", config.noncompliant_standard_deviation);
         printf("| noncompliant tenant number      : %-d\n", config.noncompliant_tenant_number);
-        printf("| noncompliant tenant number      : %-d\n", config.noncompliant_tenant_number);
         printf("| noncompliant mode               : %-d\n", config.noncompliant_mode);
     }
 

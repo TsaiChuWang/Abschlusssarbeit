@@ -413,7 +413,6 @@ int *packet_generation_noncompliant(const traffic_generator generator,
         double prob = is_noncompliant_index(i, config)
                           ? generator.generate_probability_noncompliant
                           : generator.generate_probability;
-
         packets[i] = uniform_distribution(prob);
     }
 
@@ -521,15 +520,10 @@ int *packet_generation_density(const configuration config)
         return NULL;
     }
 
-    /* Calculate acceptance probability */
-    double probability = (config.mean + config.standard_deviation) *
-                         config.unit / config.input_rate;
-    probability = fmin(1.0, fmax(0.0, probability));
-
     /* Generate packet decisions */
     for (int i = 0; i < config.tenant_number; i++)
     {
-        packets[i] = uniform_distribution(probability);
+        packets[i] = PACKET_LABEL_ACCEPT;
     }
 
     return packets;

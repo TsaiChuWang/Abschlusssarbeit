@@ -909,4 +909,43 @@ void test_traffic_generator_h(configuration config)
     print_packets(packets, config.tenant_number);
 }
 
+/**
+ * @brief Generates a shuffled array of integers from 0 to n-1.
+ *
+ * This function allocates memory for an array of integers, initializes it
+ * with values from 0 to n-1, and then shuffles the array using the
+ * Fisher-Yates algorithm.
+ *
+ * @param n The number of elements in the array.
+ * @return int* Pointer to the shuffled array, or NULL if memory allocation fails.
+ */
+int *generateShuffledArray(int n)
+{
+    int *array = (int *)malloc((n) * sizeof(int)); ///< Allocate memory for the array.
+
+    if (array == NULL) ///< Check if memory allocation was successful.
+    {
+        printf("Memory allocation failed\n"); ///< Print error message if allocation fails.
+        return NULL;                          ///< Return NULL to indicate failure.
+    }
+
+    for (int i = 0; i < n; i++) ///< Initialize the array with values from 0 to n-1.
+    {
+        array[i] = i;
+    }
+
+    // Fisher-Yates shuffle algorithm
+    for (int i = n - 1; i > 0; i--) ///< Iterate from the end of the array to the beginning.
+    {
+        int j = rand() % (i + 1); ///< Generate a random index.
+
+        // Swap elements at indices i and j
+        int temp = array[i]; ///< Store the current element in a temporary variable.
+        array[i] = array[j]; ///< Replace the current element with the randomly selected element.
+        array[j] = temp;     ///< Place the stored element in the randomly selected position.
+    }
+
+    return array; ///< Return the pointer to the shuffled array.
+}
+
 #endif /* TRAFFIC_GENERATION_H */

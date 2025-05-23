@@ -67,7 +67,7 @@
 #define RECORD_AVERAGE_LOSS_HEADER                             \
   "tau,noncompliant_mean,noncompliant_tenant_number,state_r,"  \
   "noncompliant_state_r,upper_queue_buffer,link_queue_buffer," \
-  "average_loss\n"
+  "average_loss_pure, average_loss_all\n"
 
 /**
  * @def RECORD_PACKET_SITUATION_HEADER
@@ -716,20 +716,21 @@ void record_average_loss(packets_label label, const configuration config)
     exit(EXIT_FAILURE);
   }
 
-  double average_loss = 0.0;
+  double average_loss_pure = 0.0;
+  double average_loss_all = 0.0;
 
   // Loop through each tenant and calculate the average loss.
   for (int tenant = 0; tenant < label.tenant_number; tenant++)
   {
-#ifdef TAG_PURE_LOSS
-    average_loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
-#else
-    average_loss += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
-#endif
+    average_loss_pure += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]);                                                             /**< Calculate average loss percentage. */
+    average_loss_all += (double)(label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[tenant][PACKET_LABEL_ACCEPT] + label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
   }
 
+  average_loss_pure = average_loss_pure / (config.tenant_number);
+  average_loss_all = average_loss_all / (config.tenant_number);
+
   // Append the results to the CSV file.
-  fprintf(file, "%ld, %d, %d, %f, %f, %d, %d, %f\n", config.tau, config.noncompliant_mean, config.noncompliant_tenant_number, config.state_r, config.noncompliant_state_r, config.upper_queue_buffer, config.link_queue_buffer, average_loss);
+  fprintf(file, "%ld, %d, %d, %f, %f, %d, %d, %f, %f\n", config.tau, config.noncompliant_mean, config.noncompliant_tenant_number, config.state_r, config.noncompliant_state_r, config.upper_queue_buffer, config.link_queue_buffer, average_loss_pure, average_loss_all);
   fclose(file); /**< Close the file after writing. */
 }
 

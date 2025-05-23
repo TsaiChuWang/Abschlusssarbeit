@@ -122,6 +122,58 @@ int write_statistics_header(FILE *file_ptr, int header_type)
   return SUCCESS;
 }
 
+/**
+ * @brief Writes the header for statistics configuration based on the specified header type.
+ *
+ * This function constructs the file path for the output CSV file based on the given header type
+ * and writes the appropriate header to the file. If the file cannot be opened or if writing the
+ * header fails, appropriate error handling is performed.
+ *
+ * @param config The configuration structure containing the data path.
+ * @param header_type The type of header to write (e.g., tau, all, average, packet).
+ * @return Returns SUCCESS if the operation is successful, otherwise UNFOUND.
+ */
+int write_statistics_header_config(const configuration config, int header_type)
+{
+  char file_path[MAX_PATH_LENGTH]; ///< Buffer to store the path for the output file.
+  FILE *file;                      ///< File pointer for the output file.
+
+  // Determine the file path based on the header type.
+  switch (header_type)
+  {
+  case HEADER_TYPE_TAU:
+    sprintf(file_path, "%s/compliant_and_noncompliant_tau.csv", config.data_path); ///< Path for tau statistics.
+    break;
+  case HEADER_TYPE_ALL:
+    sprintf(file_path, "%s/compliant_and_noncompliant_all.csv", config.data_path); ///< Path for all statistics.
+    break;
+  case HEADER_TYPE_AVERAGE:
+    sprintf(file_path, "%s/record_average_loss.csv", config.data_path); ///< Path for average loss statistics.
+    break;
+  case HEADER_TYPE_PACKET:
+    sprintf(file_path, "%s/record_packet_situation.csv", config.data_path); ///< Path for packet situation statistics.
+    break;
+  default:
+    return UNFOUND; ///< Return UNFOUND if the header type is invalid.
+  }
+
+  file = fopen(file_path, "w+"); ///< Open the file for writing.
+  if (!file)                     ///< Check if the file opened successfully.
+  {
+    perror("Error opening file"); ///< Handle file open errors.
+    exit(EXIT_FAILURE);           ///< Exit if the file cannot be opened.
+  }
+
+  // Write the header for the packet statistics.
+  if (write_statistics_header(file, header_type) == FAILURE)
+  {
+    printf(RED_ELOG "write_statistics_header(main) : ERROR\n" RESET); ///< Print error message if writing the header fails.
+  }
+
+  fclose(file);   ///< Ensure the file is properly closed after initialization.
+  return SUCCESS; ///< Return success status after completing the operation.
+}
+
 #endif // RECORD_HEADER
 
 #define PACKETS_COUNT_H

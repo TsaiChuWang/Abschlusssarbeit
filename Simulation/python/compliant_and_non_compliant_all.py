@@ -88,7 +88,7 @@ if(name == 'uniform_different_noncompliant_number'):
     plt.savefig(IMAGE_PATH.format(name,'all', 'compliant'))
     plt.cla()
 
-if(name == 'burst_all_compliant'):
+if(name == 'burst_half_noncompliant'):
     tenant_number = int(config['simulation']['tenant_number'])
     noncompliant_mean = int(config['traffic']['noncompliant_mean'])
     noncompliant_tenant_number = int(config['traffic']['noncompliant_tenant_number'])
@@ -101,9 +101,9 @@ if(name == 'burst_all_compliant'):
     # pure
     keys = list(set(dataframe['state_r'].tolist()))
     for key in keys:
-        noncompliant_loss_pure = dataframe[dataframe['noncompliant_tenant_number'] == key][['noncompliant_loss_pure']]
+        noncompliant_loss_pure = dataframe[dataframe['state_r'] == key][['noncompliant_loss_pure']]
         if(len(noncompliant_loss_pure)!=0):
-            tau = dataframe[dataframe['noncompliant_tenant_number'] == key]['tau'].tolist()
+            tau = dataframe[dataframe['state_r'] == key]['tau'].tolist()
             plt.plot(tau, noncompliant_loss_pure, linestyle='-', label='(pure)r = {}'.format(key), alpha = 1)
     plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
     plt.title('Packet Loss with different τ and r ({}) Non-compliant'.format(name), fontsize=12)
@@ -116,9 +116,9 @@ if(name == 'burst_all_compliant'):
 
     for key in keys:
         real_noncompliant_mean = (noncompliant_mean*key+ mean*(tenant_number-key))/tenant_number
-        compliant_loss_pure = dataframe[dataframe['noncompliant_tenant_number'] == key][['compliant_loss_pure']]
+        compliant_loss_pure = dataframe[dataframe['state_r'] == key][['compliant_loss_pure']]
         if(len(compliant_loss_pure)!=0):
-            tau = dataframe[dataframe['noncompliant_tenant_number'] == key]['tau'].tolist()
+            tau = dataframe[dataframe['state_r'] == key]['tau'].tolist()
             plt.plot(tau, compliant_loss_pure, linestyle='-', label='(pure)r = {}'.format(key), alpha = 1)
     plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
     plt.title('Packet Loss with different τ and r ({}) Compliant'.format(name), fontsize=12)
@@ -132,9 +132,9 @@ if(name == 'burst_all_compliant'):
     # all
     for key in keys:
         real_noncompliant_mean = (noncompliant_mean*key+ mean*(tenant_number-key))/tenant_number
-        noncompliant_loss_all = dataframe[dataframe['noncompliant_tenant_number'] == key][['noncompliant_loss_all']]
+        noncompliant_loss_all = dataframe[dataframe['state_r'] == key][['noncompliant_loss_all']]
         if(len(noncompliant_loss_all)!=0):
-            tau = dataframe[dataframe['noncompliant_tenant_number'] == key]['tau'].tolist()
+            tau = dataframe[dataframe['state_r'] == key]['tau'].tolist()
             plt.plot(tau, noncompliant_loss_all, linestyle='-', label='(all)r = {}'.format(key), alpha = 1)
     plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
     plt.title('Packet Loss with different τ and r ({}) Non-compliant'.format(name), fontsize=12)
@@ -147,9 +147,9 @@ if(name == 'burst_all_compliant'):
 
     for key in keys:
         real_noncompliant_mean = (noncompliant_mean*key+ mean*(tenant_number-key))/tenant_number
-        compliant_loss_all = dataframe[dataframe['noncompliant_tenant_number'] == key][['compliant_loss_all']]
+        compliant_loss_all = dataframe[dataframe['state_r'] == key][['compliant_loss_all']]
         if(len(compliant_loss_all)!=0):
-            tau = dataframe[dataframe['noncompliant_tenant_number'] == key]['tau'].tolist()
+            tau = dataframe[dataframe['state_r'] == key]['tau'].tolist()
             plt.plot(tau, compliant_loss_all, linestyle='-', label='(all)r = {}'.format(key), alpha = 1)
     plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
     plt.title('Packet Loss with different τ and r ({}) Compliant'.format(name), fontsize=12)

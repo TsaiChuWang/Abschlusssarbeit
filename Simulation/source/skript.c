@@ -1,6 +1,7 @@
 #define UNIFORM_ALL_COMPLIANT 0                                           ///< Define a constant for the uniform all-compliant case.
 #define UNIFORM_DISTRIBUTION_NONCOMPLIANT 1                               ///< Defines the constant for uniform distribution non-compliant configuration.
 #define UNIFORM_DISTRIBUTION_NONCOMPLIANT_DIFFERENT_NONCOMPLIANT_NUMBER 2 ///< Defines a constant for the number of non-compliant configurations in uniform distribution scenarios that are different from the standard.
+#define BURST_ALL_COMPLIANT 3                                             ///< Defines a constant for the burst mode in compliant scenarios.
 
 #define BURSTY_ALL_DIFFERENT_R 4
 #define BURSTY_REGULAR 7
@@ -257,6 +258,53 @@ int main(int argc, char *argv[])
             sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_ALL_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
             system(command);                                                                                                  ///< Execute the command.
         }
+        break;
+    case BURST_ALL_COMPLIANT:
+        strcpy(name, "burst_all_compliant");                          ///< Set the name for the configuration.
+        sprintf(configuration_path, "../configuration/%s.ini", name); ///< Construct the path to the configuration INI file.
+        reduction_inif_file(configuration_path);                      ///< Process the INI file to initialize settings.
+
+        // Parse the INI file and load the configuration.
+        if (ini_parse(configuration_path, handler, &config) < 0)
+        {
+            printf(RED_ELOG "Can't load configuration \"%s\"\n", configuration_path); ///< Error message if loading fails.
+            return EXIT_FAILURE;                                                      ///< Exit with failure status if configuration cannot be loaded.
+        }
+
+        sprintf(data_path, "../data/%s", name);       ///< Construct the path for the data directory.
+        config.data_path = data_path;                 ///< Set the data path in the configuration structure.
+        modify_ini_file(configuration_path, &config); ///< Update the INI file with the current configuration.
+
+        // Prepare the data directory by removing existing data and creating new directories.
+        sprintf(command, "rm -r %s", config.data_path);        ///< Command to remove the existing data directory.
+        system(command);                                       ///< Execute the command.
+        sprintf(command, "mkdir %s", config.data_path);        ///< Command to create the data directory.
+        system(command);                                       ///< Execute the command.
+        sprintf(command, "mkdir %s/images", config.data_path); ///< Command to create the images subdirectory.
+        system(command);                                       ///< Execute the command.
+
+        // Write headers for statistics with different types.
+        write_statistics_header_config(config, HEADER_TYPE_AVERAGE); ///< Write the header for average statistics.
+
+        // Set additional configuration parameters for non-compliant mode.
+        config.traffic_mode = TRAFFIC_MODE_BURSTY_ALL; ///< Update traffic mode to non-compliant uniform.
+        config.noncompliant_tenant_number = 0;         ///< Set the initial tenant number for non-compliant mode.
+
+        // Loop through state_r values and tau values, executing the main program for each combination.
+        for (double state_r = 0.6; state_r < 0.9; state_r += state_r_step) // Iterate over state_r values.
+            for (long tau = 0; tau <= 25600; tau += step)                  // Iterate over tau values.
+            {
+                config.state_r = state_r;                     ///< Set the current state_r value in the configuration.
+                config.tau = tau;                             ///< Set the current tau value in the configuration.
+                modify_ini_file(configuration_path, &config); ///< Update the INI file with the new configuration values.
+
+                sprintf(command, "../execution/main %s", configuration_path); ///< Command to execute the main program.
+                system(command);                                              ///< Execute the command.
+
+                // Run Python scripts for data analysis.
+                sprintf(command, "python3 %s %s %s", PYTHON_AVERAGE_LOSS_ALL_CHART_PATH, name, configuration_path); ///< Command for average loss chart.
+                system(command);                                                                                    ///< Execute the command.
+            }
 
         break;
     default:
@@ -266,25 +314,6 @@ int main(int argc, char *argv[])
 
     // switch (atoi(argv[1]))
     // {
-
-    // case BURSTY_ALL_DIFFERENT_R:
-    //     config.traffic_mode = TRAFFIC_MODE_BURSTY_ALL;
-    //     config.noncompliant_tenant_number = 0;
-    //     config.noncompliant_mean = 155;
-    //     for (long tau = 0; tau <= 25600; tau += step)
-    //     {
-    //         for (double state_r = 0.96875; state_r < 1; state_r += state_r_step)
-    //         {
-    //             config.tau = tau;
-    //             config.state_r = state_r;
-    //             modify_ini_file(configuration_path, &config);
-
-    //             system("../execution/main");
-
-    //             system("python3 ../python/average_loss.py 2");
-    //             system("python3 ../python/average_loss_all.py 2");
-    //         }
-    //     }
 
     //     break;
     // case BURSTY_ALL_DIFFERENT_R_NAUGHTY:

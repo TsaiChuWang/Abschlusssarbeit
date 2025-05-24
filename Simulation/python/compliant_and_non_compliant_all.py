@@ -88,65 +88,74 @@ if(name == 'uniform_different_noncompliant_number'):
     plt.savefig(IMAGE_PATH.format(name,'all', 'compliant'))
     plt.cla()
 
-# if(int(sys.argv[1]) == R):
+if(name == 'burst_all_compliant'):
+    tenant_number = int(config['simulation']['tenant_number'])
+    noncompliant_mean = int(config['traffic']['noncompliant_mean'])
+    noncompliant_tenant_number = int(config['traffic']['noncompliant_tenant_number'])
+    mean = int(config['traffic']['mean'])
 
-#     tau_ = dataframe['tau'].tolist()
-#     tau_ = list(set(tau_))
-#     tau_.sort()
+    tau_ = dataframe['tau'].tolist()
+    tau_ = list(set(tau_))
+    tau_.sort()
 
-#     keys = list(set(dataframe['state_r'].tolist()))
-#     keys.sort()
+    # pure
+    keys = list(set(dataframe['state_r'].tolist()))
+    for key in keys:
+        noncompliant_loss_pure = dataframe[dataframe['noncompliant_tenant_number'] == key][['noncompliant_loss_pure']]
+        if(len(noncompliant_loss_pure)!=0):
+            tau = dataframe[dataframe['noncompliant_tenant_number'] == key]['tau'].tolist()
+            plt.plot(tau, noncompliant_loss_pure, linestyle='-', label='(pure)r = {}'.format(key), alpha = 1)
+    plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
+    plt.title('Packet Loss with different τ and r ({}) Non-compliant'.format(name), fontsize=12)
+    plt.ylabel('Loss (%)')
+    plt.xlabel('τ')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH.format(name,'pure', 'noncompliant'))
+    plt.cla()
 
-#     for key in keys:
-#         nloss = dataframe[dataframe['state_r'] == key][['noncompliant_loss']]
-#         if(len(nloss)!=0):
-#             tau = dataframe[dataframe['state_r'] == key]['tau'].tolist()
-#             plt.plot(tau, nloss, linestyle='-', label='(noncompliant)r = '+str(key), alpha = 1)
-#     plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
-#     plt.title('Packet Loss with different τ and r Naughty Flow')
-#     plt.ylabel('Loss (%)')
-#     plt.xlabel('τ')
-#     plt.legend()
-#     plt.grid(True)
-#     plt.savefig(IMAGE_PATH.format('noncompliant'))
-#     plt.cla()
+    for key in keys:
+        real_noncompliant_mean = (noncompliant_mean*key+ mean*(tenant_number-key))/tenant_number
+        compliant_loss_pure = dataframe[dataframe['noncompliant_tenant_number'] == key][['compliant_loss_pure']]
+        if(len(compliant_loss_pure)!=0):
+            tau = dataframe[dataframe['noncompliant_tenant_number'] == key]['tau'].tolist()
+            plt.plot(tau, compliant_loss_pure, linestyle='-', label='(pure)r = {}'.format(key), alpha = 1)
+    plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
+    plt.title('Packet Loss with different τ and r ({}) Compliant'.format(name), fontsize=12)
+    plt.ylabel('Loss (%)')
+    plt.xlabel('τ')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH.format(name,'pure', 'compliant'))
+    plt.cla()
 
-#     for key in keys:
-#         rloss = dataframe[dataframe['state_r'] == key][['compliant_loss']]
-#         if(len(rloss)!=0):
-#             tau = dataframe[dataframe['state_r'] == key]['tau'].tolist()
-#             tau = list(set(tau))
-#             tau.sort()
-#             plt.plot(tau, rloss, linestyle='-', label='(compliant)r = '+str(key), alpha = 1)
-#     plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
-#     plt.title('Packet Loss with different τ and r Regular Flow')
-#     plt.xlabel('τ')
-#     plt.ylabel('Loss (%)')
-#     plt.legend()
-#     plt.grid(True)
-#     plt.savefig(IMAGE_PATH.format('compliant'))
-#     plt.cla()
+    # all
+    for key in keys:
+        real_noncompliant_mean = (noncompliant_mean*key+ mean*(tenant_number-key))/tenant_number
+        noncompliant_loss_all = dataframe[dataframe['noncompliant_tenant_number'] == key][['noncompliant_loss_all']]
+        if(len(noncompliant_loss_all)!=0):
+            tau = dataframe[dataframe['noncompliant_tenant_number'] == key]['tau'].tolist()
+            plt.plot(tau, noncompliant_loss_all, linestyle='-', label='(all)r = {}'.format(key), alpha = 1)
+    plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
+    plt.title('Packet Loss with different τ and r ({}) Non-compliant'.format(name), fontsize=12)
+    plt.ylabel('Loss (%)')
+    plt.xlabel('τ')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH.format(name,'all', 'noncompliant'))
+    plt.cla()
 
-# # kind_key = list(set(dataframe['state_r'].tolist()))
-
-# # n = 1600
-# # for key in kind_key:
-# #     nloss = dataframe[dataframe['state_r'] == key][['noncompliant_loss']]
-# #     rloss = dataframe[dataframe['state_r'] == key][['compliant_loss']]
-
-# #     nloss = nloss/100
-# #     rloss = rloss/100
-# #     plt.plot(tau[:n],nloss[:n], linestyle='-', label='(naghty)r = '+str(key), alpha = 1)
-# #     # plt.plot(tau[:n],rloss[:n], linestyle='-', label='(compliant)r = '+str(key), alpha = 1)
-
-# # plt.plot(tau[:n], [0.1 for i in tau][:n], linestyle='-', color = 'red', label='ε')
-
-# # # plt.title('Average Packet Loss with different τ and r value (All Regular)')
-# # # plt.title('Packet Loss with different τ and r value (Naughty 150) Regular Flow')
-# # plt.title('Packet Loss with different τ and r value (Naughty 150) Naughty Flow')
-# # plt.ylabel('Loss (%)')
-# # plt.legend()
-# # plt.grid(True)
-
-# # plt.savefig(IMAGE_PATH)
-# # plt.cla()
+    for key in keys:
+        real_noncompliant_mean = (noncompliant_mean*key+ mean*(tenant_number-key))/tenant_number
+        compliant_loss_all = dataframe[dataframe['noncompliant_tenant_number'] == key][['compliant_loss_all']]
+        if(len(compliant_loss_all)!=0):
+            tau = dataframe[dataframe['noncompliant_tenant_number'] == key]['tau'].tolist()
+            plt.plot(tau, compliant_loss_all, linestyle='-', label='(all)r = {}'.format(key), alpha = 1)
+    plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
+    plt.title('Packet Loss with different τ and r ({}) Compliant'.format(name), fontsize=12)
+    plt.ylabel('Loss (%)')
+    plt.xlabel('τ')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(IMAGE_PATH.format(name,'all', 'compliant'))
+    plt.cla()

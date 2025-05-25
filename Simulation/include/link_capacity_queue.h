@@ -8,6 +8,15 @@
 #define QUEUE_READY 1
 
 /**
+ * @brief Macro to enable printing the state of the FIFO queue for tenant number 1.
+ *
+ * This macro is used to facilitate debugging by printing the current state
+ * of the FIFO queue specifically for tenant number 1.
+ * Uncomment this line to enable the functionality.
+ */
+// #define PRINT_FIFO_QUEUE_STATE
+
+/**
  * @enum queue_code_t
  * @brief Represents different queue codes.
  */
@@ -272,10 +281,19 @@ void cdequeue(circular_queue *cqueue)
     {
         return; ///< Exit if the queue is empty.
     }
-
+#ifdef PRINT_FIFO_QUEUE_STATE
+    printf("QUEUE_DEQUEUE\n");
+#endif
     int value = cqueue->items[cqueue->front];                 ///< Retrieve the value at the front of the queue.
     cqueue->front = (cqueue->front + 1) % cqueue->max_buffer; ///< Update the front index in a circular manner.
-    cqueue->size--;                                           ///< Decrement the size of the queue.
+    cqueue->size--;
+
+#ifdef PRINT_FIFO_QUEUE_STATE
+    for (int i = 0; i < cqueue->size; i++)
+        printf("%d ", cqueue->items[(cqueue->front + i) % cqueue->max_buffer]);
+    printf("\nsize = %d\n", cqueue->size);
+#endif
+    ///< Decrement the size of the queue.
 }
 
 /**
@@ -296,12 +314,26 @@ void meter_dequeue(meter_queue *mqueue)
  */
 int cenqueue(circular_queue *cqueue)
 {
+
     if (is_full(cqueue)) ///< Check if the queue is full.
     {
+#ifdef PRINT_FIFO_QUEUE_STATE
+        printf(RED_ELOG "QUEUE_FULL_STATE");
+        for (int i = 0; i < cqueue->size; i++)
+            printf("%d ", cqueue->items[(cqueue->front + i) % cqueue->max_buffer]);
+        printf("\nsize = %d\n" RESET, cqueue->size);
+#endif
         return QUEUE_FULL_STATE; ///< Return full state if the queue is full.
     }
     else
     {
+#ifdef PRINT_FIFO_QUEUE_STATE
+        printf("QUEUE_READY_STATE\n");
+        for (int i = 0; i < cqueue->size; i++)
+            printf("%d ", cqueue->items[(cqueue->front + i) % cqueue->max_buffer]);
+        printf("\nsize = %d\n", cqueue->size);
+#endif
+        cqueue->items[cqueue->rear] = PACKET_LABEL_ACCEPT;
         cqueue->rear = (cqueue->rear + 1) % cqueue->max_buffer; ///< Update the rear index in a circular manner.
         cqueue->size++;                                         ///< Increment the size of the queue.
         return QUEUE_READY;                                     ///< Return ready state if enqueue is successful.

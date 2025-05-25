@@ -19,9 +19,9 @@
 // Execution command:
 // ../execution/skript
 
-// #define NORMAL_MODE
+#define NORMAL_MODE
 // #define APPPEND_MODE
-#define VALIDATE_MODE
+// #define VALIDATE_MODE
 
 int main(int argc, char *argv[])
 {
@@ -80,8 +80,6 @@ int main(int argc, char *argv[])
         modify_ini_file(configuration_path, &config);
 
 #ifdef NORMAL_MODE
-#undef APPEND_MODE
-#undef VALIDATE_MODE
         // Prepare the data directory by removing existing data and creating new directories.
         sprintf(command, "rm -r %s", config.data_path);        ///< Command to remove the existing data directory.
         system(command);                                       ///< Execute the command.
@@ -134,7 +132,6 @@ int main(int argc, char *argv[])
         modify_ini_file(configuration_path, &config); ///< Update the INI file with the current configuration.
 
 #ifdef NORMAL_MODE
-#undef APPEND_MODE
         // Prepare the data directory by removing existing data and creating new directories.
         sprintf(command, "rm -r %s", config.data_path);        ///< Command to remove the existing data directory.
         system(command);                                       ///< Execute the command.
@@ -154,17 +151,13 @@ int main(int argc, char *argv[])
         config.noncompliant_mode = NONCOMPLIANT_MODE_AVERAGE;    ///< Set the mode for non-compliant configuration.
 
         // Loop through tau values and execute the main program for each.
-        for (long tau = 0; tau <= 25600; tau += step)
+        for (long tau = 0; tau <= 51200; tau += step)
         {
             config.tau = tau;                             ///< Set the current tau value in the configuration.
             modify_ini_file(configuration_path, &config); ///< Update the INI file with the new tau value.
 
             sprintf(command, "../execution/main %s", configuration_path); ///< Command to execute the main program.
-            system(command);                                              ///< Execute the command.
-
-            // Run Python scripts for data analysis.
-            sprintf(command, "python3 %s %s %s", PYTHON_AVERAGE_LOSS_CHART_PATH, name, configuration_path); ///< Command for average loss chart.
-            system(command);                                                                                ///< Execute the command.
+            system(command);
 
             sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_TAU_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
             system(command);                                                                                                  ///< Execute the command.
@@ -193,6 +186,20 @@ int main(int argc, char *argv[])
             sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_TAU_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
             system(command);                                                                                                  ///< Execute the command.
         }
+#endif
+
+#ifdef VALIDATE_MODE
+        config.tau = default_tau;                                ///< Set the current tau value in the configuration.
+        config.traffic_mode = TRAFFIC_MODE_NONCOMPLIANT_UNIFORM; ///< Update traffic mode to non-compliant uniform.
+        config.noncompliant_mean = 155;                          ///< Set the mean for non-compliant configuration.
+        config.noncompliant_mode = NONCOMPLIANT_MODE_AVERAGE;    ///< Set the mode for non-compliant configuration.
+
+        config.link_queue_buffer = 10;
+
+        modify_ini_file(configuration_path, &config); ///< Update the INI file with the new tau value.
+
+        sprintf(command, "../execution/main %s 1", configuration_path); ///< Command to execute the main program.
+        system(command);                                                ///< Execute the command.
 #endif
         break; ///< End of the case for UNIFORM_DISTRIBUTION_NONCOMPLIANT.
     case UNIFORM_DISTRIBUTION_NONCOMPLIANT_DIFFERENT_NONCOMPLIANT_NUMBER:

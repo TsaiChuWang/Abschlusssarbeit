@@ -63,12 +63,11 @@ int main(int argc, char *argv[])
     int trace_index = 0;
     if (argc > 2)
     {
-#undef RECORD_AVERAGE_LOSS
-#undef RECORD_PACKETS_SITUATION
-#undef RECORD_COMPLIANT_AND_NONCOMPLIANT_TAU
-#undef RECORD_COMPLIANT_AND_NONCOMPLIANT_ALL
-
-#define VALIDATE_MODE
+        // #undef RECORD_AVERAGE_LOSS
+        // #undef RECORD_PACKETS_SITUATION
+        // #undef RECORD_COMPLIANT_AND_NONCOMPLIANT_TAU
+        // #undef RECORD_COMPLIANT_AND_NONCOMPLIANT_ALL
+        // #define VALIDATE_MODE
         // #define CHECK_GCRA
         // #define CHECK_LINK_QUEUE
         // #define VALIDATE_MODE_LINK

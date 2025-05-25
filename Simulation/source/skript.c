@@ -20,7 +20,8 @@
 // ../execution/skript
 
 // #define NORMAL_MODE
-#define APPPEND_MODE
+// #define APPPEND_MODE
+#define VALIDATE_MODE
 
 int main(int argc, char *argv[])
 {
@@ -37,6 +38,7 @@ int main(int argc, char *argv[])
     long step = 256;                          ///< Step size for processing (e.g., data chunks).
     double state_r_step = 0.1;                ///< Step increment for state-related calculations.
     int step_noncompliant_tenant_number = 25; ///< Number of non-compliant (noncompliant) tenants.
+    long default_tau = 5120;
 
     configuration config;                     ///< Structure to hold the configuration settings.
     char name[MAX_NAME_LENGTH];               ///< Buffer for storing the name of the configuration.
@@ -77,6 +79,9 @@ int main(int argc, char *argv[])
         config.traffic_mode = TRAFFIC_MODE_UNIFORM; ///< Set the traffic mode to uniform.
         modify_ini_file(configuration_path, &config);
 
+#ifdef NORMAL_MODE
+#undef APPEND_MODE
+#undef VALIDATE_MODE
         // Prepare the data directory by removing existing data and creating new directories.
         sprintf(command, "rm -r %s", config.data_path);        ///< Command to remove the existing data directory.
         system(command);                                       ///< Execute the command.
@@ -99,6 +104,17 @@ int main(int argc, char *argv[])
             sprintf(command, "python3 %s %s %s", PYTHON_AVERAGE_LOSS_CHART_PATH, name, configuration_path); ///< Command to run the Python script for data analysis.
             system(command);                                                                                ///< Execute the command.
         }
+#endif
+#ifdef VALIDATE_MODE
+        config.tau = default_tau; ///< Set the current tau value in the configuration.
+        config.upper_queue_buffer = 5;
+        // config.tenant_number = 1; // for FIFO queue validation
+        // config.link_queue_buffer = 10;
+        modify_ini_file(configuration_path, &config); ///< Update the INI file with the new tau value.
+
+        sprintf(command, "../execution/main %s 1", configuration_path); ///< Command to execute the main program.
+        system(command);                                                ///< Execute the command.
+#endif
         break;
     case UNIFORM_DISTRIBUTION_NONCOMPLIANT:
         strcpy(name, "uniform_half_noncompliant");                    ///< Set the name for the configuration.

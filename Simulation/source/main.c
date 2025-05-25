@@ -60,6 +60,20 @@ int main(int argc, char *argv[])
     else
         strcpy(configuration_path, argv[1]);
 
+    int trace_index = 0;
+    if (argc > 2)
+    {
+#undef RECORD_AVERAGE_LOSS
+#undef RECORD_PACKETS_SITUATION
+#undef RECORD_COMPLIANT_AND_NONCOMPLIANT_TAU
+#undef RECORD_COMPLIANT_AND_NONCOMPLIANT_ALL
+
+#define VALIDATE_MODE
+        // #define CHECK_GCRA
+        // #define CHECK_LINK_QUEUE
+        // #define VALIDATE_MODE_LINK
+    }
+
     /** @brief Buffer for system commands */
     char *command = (char *)malloc(MAX_COMMAND_LENGTH * sizeof(char));
     memset(command, '\0', MAX_COMMAND_LENGTH * sizeof(char));
@@ -272,6 +286,10 @@ int main(int argc, char *argv[])
         record_packet_situation_agrid(packets, link_dequeue_count, config);
 #endif
 
+#ifdef VALIDATE_MODE
+        printf("%2d : ", *(packets + trace_index));
+#endif
+
         // Generate a shuffled array of tenant indices.
         int *order = generateShuffledArray(tenant_number);
 
@@ -334,7 +352,10 @@ int main(int argc, char *argv[])
                 else
                 {
                     label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] += 1; ///< Increment the drop count for exceeding upper bound.
-                    continue;                                                        ///< Skip to the next iteration if enqueueing fails.
+#ifdef VALIDATE_MODE
+                    printf("%2d", PACKET_LABEL_OVER_UPPERBOUND_DROPPED);
+#endif
+                    continue; ///< Skip to the next iteration if enqueueing fails.
                 }
             }
             else
@@ -355,6 +376,16 @@ int main(int argc, char *argv[])
                 *(packets + tenant) = gcra_update(timestamp, (gcras + tenant), config); ///< Update the packet using GCRA
             }
 
+#ifdef CHECK_GCRA
+            if (tenant == trace_index)
+            {
+                printf("current time : %lf\n", timestamp);
+                show_GCRA(*(gcras + trace_index));
+
+                if (*(packets + trace_index) == PACKET_LABEL_GCRA_LABELED)
+                    printf(RED_ELOG "GCRA out of bucket\n" RESET);
+            }
+#endif
             /**
              * @brief Updates the statistics for packets labeled as GCRA.
              *
@@ -366,6 +397,10 @@ int main(int argc, char *argv[])
             if (*(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is labeled as GCRA
             {
                 label.labels[tenant][PACKET_LABEL_GCRA_LABELED] += 1; ///< Increment the GCRA labeled packet count for the tenant
+#ifdef VALIDATE_MODE
+                if (tenant == trace_index)
+                    printf("%2d \n", PACKET_LABEL_GCRA_LABELED);
+#endif
             }
 
             /**
@@ -377,25 +412,56 @@ int main(int argc, char *argv[])
              * for the link queue, handling potential drops due to capacity limits.
              */
             // Link queue enqueue
+#ifdef CHECK_LINK_QUEUE
+            print_equals_line();
+            print_queue(&link);
+#endif
             if (*(packets + tenant) == PACKET_LABEL_ACCEPT || *(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is ACCEPT or GCRA labeled
             {
+                if (link_dequeue_count > 0) ///< Check if there are packets to dequeue
+                {
+                    int dequeue_index = dequeue(&link);                        ///< Dequeue a packet from the link queue
+                    if (dequeue_index != UNFOUND)                              ///< Check if a valid index was returned
+                        label.labels[dequeue_index][PACKET_LABEL_ACCEPT] += 1; ///< Increment the count for ACCEPT labeled packets
+#ifdef VALIDATE_MODE_LINK
+                    if (dequeue_index == trace_index)
+                        printf(RED_ELOG "%2d \n" RESET, PACKET_LABEL_ACCEPT);
+#endif
+
+                    link_dequeue_count -= 1; ///< Decrease the dequeue count
+                }
+#ifdef CHECK_LINK_QUEUE
+                printf("finished dequeue\n");
+                print_queue(&link);
+#endif
                 if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Further check if the packet is ACCEPT
                 {
-                    if (link_dequeue_count > 0) ///< Check if there are packets to dequeue
-                    {
-                        int index = dequeue(&link);                        ///< Dequeue a packet from the link queue
-                        if (index != UNFOUND)                              ///< Check if a valid index was returned
-                            label.labels[index][PACKET_LABEL_ACCEPT] += 1; ///< Increment the count for ACCEPT labeled packets
-                        link_dequeue_count -= 1;                           ///< Decrease the dequeue count
-                    }
 
                     enqueue(&link, ALPHA, tenant, &drop_tenant); ///< Enqueue the ACCEPT packet into the link queue
 
+#ifdef CHECK_LINK_QUEUE
+                    printf("(alpha)enqueue result : ");
+                    if (drop_tenant != UNFOUND)
+                        printf(RED_ELOG "%d\n" RESET, drop_tenant);
+                    else
+                        printf("%d\n", drop_tenant);
+                    print_queue(&link);
+#endif
+
+#ifdef VALIDATE_MODE_LINK
+                    if (drop_tenant == trace_index)
+                        printf("%2d \n", PACKET_LABEL_OVER_CAPACITY_DROPPED);
+#endif
                     if (drop_tenant != UNFOUND)                                                 ///< Check if a packet was dropped
                         if (drop_tenant != tenant)                                              ///< If the dropped packet is not from the current tenant
                             label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the other tenant
                         else
                             label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the current tenant
+#ifdef VALIDATE_MODE_LINK
+                    if (tenant == trace_index)
+                        printf("\n");
+#endif
+                    continue;
                 }
 
                 /**
@@ -410,12 +476,34 @@ int main(int argc, char *argv[])
                 {
                     enqueue(&link, BETA, tenant, &drop_tenant); ///< Enqueue the GCRA labeled packet into the link queue
 
+#ifdef CHECK_LINK_QUEUE
+                    printf("(beta)enqueue result : ");
+                    if (drop_tenant != UNFOUND)
+                        printf(RED_ELOG "%d\n" RESET, drop_tenant);
+                    else
+                        printf("%d\n", drop_tenant);
+                    print_queue(&link);
+#endif
+
+#ifdef VALIDATE_MODE_LINK
+                    if (drop_tenant == trace_index)
+                        printf("%2d \n", PACKET_LABEL_OVER_CAPACITY_DROPPED);
+#endif
+
                     if (drop_tenant != UNFOUND)                                             ///< Check if a packet was dropped
                         label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the tenant whose packet was dropped
+#ifdef VALIDATE_MODE_LINK
+                    if (tenant == trace_index)
+                        printf("\n");
+#endif
+                    continue;
                 }
             }
         }
 
+#ifdef VALIDATE_MODE
+        printf("\n");
+#endif
         // Iterate over each tenant.
         for (int tenant = 0; tenant < tenant_number; tenant++)
         {

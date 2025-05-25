@@ -41,7 +41,7 @@ for j in different_r:
         elif(k<j):
             keys.append([k, j])
 
-
+print()
 
 for key in keys:
     nloss = dataframe[(dataframe['state_r'] == key[0]) & (dataframe['diff'] == key[1])]['naughty_loss'].tolist()
@@ -66,41 +66,3 @@ plt.legend()
 plt.grid(True)
 plt.savefig(IMAGE_PATH.format('regular'))
 plt.cla()  
-# if(int(sys.argv[1]) == R):
-
-#     tau_ = dataframe['tau'].tolist()
-#     tau_ = list(set(tau_))
-#     tau_.sort()
-
-#     keys = list(set(dataframe['state_r'].tolist()))
-#     keys.sort()
-
-#     for key in keys:
-#         nloss = dataframe[dataframe['state_r'] == key][['naughty_loss']]
-#         if(len(nloss)!=0):
-#             tau = dataframe[dataframe['state_r'] == key]['tau'].tolist()
-#             plt.plot(tau, nloss, linestyle='-', label='(naughty)r = '+str(key), alpha = 1)
-#     plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
-#     plt.title('Packet Loss with different τ and r Naughty Flow')
-#     plt.ylabel('Loss (%)')
-#     plt.xlabel('τ')
-#     plt.legend()
-#     plt.grid(True)
-#     plt.savefig(IMAGE_PATH.format('naughty'))
-#     plt.cla()
-
-#     for key in keys:
-#         rloss = dataframe[dataframe['state_r'] == key][['regular_loss']]
-#         if(len(rloss)!=0):
-#             tau = dataframe[dataframe['state_r'] == key]['tau'].tolist()
-#             tau = list(set(tau))
-#             tau.sort()
-#             plt.plot(tau, rloss, linestyle='-', label='(regular)r = '+str(key), alpha = 1)
-#     plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
-#     plt.title('Packet Loss with different τ and r Regular Flow')
-#     plt.xlabel('τ')
-#     plt.ylabel('Loss (%)')
-#     plt.legend()
-#     plt.grid(True)
-#     plt.savefig(IMAGE_PATH.format('regular'))
-#     plt.cla()

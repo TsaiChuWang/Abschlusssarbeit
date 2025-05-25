@@ -19,6 +19,9 @@
 // Execution command:
 // ../execution/skript
 
+// #define NORMAL_MODE
+#define APPPEND_MODE
+
 int main(int argc, char *argv[])
 {
     /**
@@ -114,6 +117,8 @@ int main(int argc, char *argv[])
         config.traffic_mode = TRAFFIC_MODE_UNIFORM;   ///< Set the traffic mode to uniform.
         modify_ini_file(configuration_path, &config); ///< Update the INI file with the current configuration.
 
+#ifdef NORMAL_MODE
+#undef APPEND_MODE
         // Prepare the data directory by removing existing data and creating new directories.
         sprintf(command, "rm -r %s", config.data_path);        ///< Command to remove the existing data directory.
         system(command);                                       ///< Execute the command.
@@ -148,7 +153,31 @@ int main(int argc, char *argv[])
             sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_TAU_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
             system(command);                                                                                                  ///< Execute the command.
         }
+#endif
 
+#ifdef APPPEND_MODE
+        // Set additional configuration parameters for non-compliant mode.
+        config.traffic_mode = TRAFFIC_MODE_NONCOMPLIANT_UNIFORM; ///< Update traffic mode to non-compliant uniform.
+        config.noncompliant_mean = 155;                          ///< Set the mean for non-compliant configuration.
+        config.noncompliant_mode = NONCOMPLIANT_MODE_AVERAGE;    ///< Set the mode for non-compliant configuration.
+
+        // Loop through tau values and execute the main program for each.
+        for (long tau = 25600 + step; tau <= 51200; tau += step)
+        {
+            config.tau = tau;                             ///< Set the current tau value in the configuration.
+            modify_ini_file(configuration_path, &config); ///< Update the INI file with the new tau value.
+
+            sprintf(command, "../execution/main %s", configuration_path); ///< Command to execute the main program.
+            system(command);                                              ///< Execute the command.
+
+            // Run Python scripts for data analysis.
+            sprintf(command, "python3 %s %s %s", PYTHON_AVERAGE_LOSS_CHART_PATH, name, configuration_path); ///< Command for average loss chart.
+            system(command);                                                                                ///< Execute the command.
+
+            sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_TAU_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
+            system(command);                                                                                                  ///< Execute the command.
+        }
+#endif
         break; ///< End of the case for UNIFORM_DISTRIBUTION_NONCOMPLIANT.
     case UNIFORM_DISTRIBUTION_NONCOMPLIANT_DIFFERENT_NONCOMPLIANT_NUMBER:
         strcpy(name, "uniform_different_noncompliant_number");        ///< Set the name for the configuration.
@@ -410,65 +439,5 @@ int main(int argc, char *argv[])
         printf(RED_ELOG "CODE DOES NOT EXIST!\n" RESET); ///< Error message for unsupported configuration.
         return EXIT_FAILURE;                             ///< Exit with failure status for unknown configurations.
     }
-
-    // switch (atoi(argv[1]))
-    // {
-
-    //     break;
-    // case BRUSTY_DIFFERENT_R:
-    //     config.traffic_mode = TRAFFIC_MODE_DIFFERENT_R;
-    //     config.input_rate = 335544320;
-    //     config.noncompliant_mean = 155;
-
-    //     config.noncompliant_mode = 2;
-
-    //     for (long tau = 0; tau <= 51200; tau += (step * 2))
-    //     {
-    //         for (int noncompliant_number = 25; noncompliant_number <= 75; noncompliant_number += 25)
-    //         {
-    //             config.noncompliant_tenant_number = noncompliant_number;
-    //             for (double r = 0.6; r < 0.9; r += state_r_step)
-    //                 for (double state_r = 0.6; state_r < 0.9; state_r += state_r_step)
-    //                 {
-    //                     if (r == state_r)
-    //                         continue;
-
-    //                     config.tau = tau;
-    //                     config.state_r = state_r;
-    //                     modify_ini_file(configuration_path, &config);
-
-    //                     sprintf(command, "../execution/main %f", r);
-    //                     system(command);
-
-    //                     system("python3 ../python/average_loss.py 1");
-    //                     system("python3 ../python/regular_and_noncompliant_tau.py 2 burst");
-    //                     system("python3 ../python/regular_and_noncompliant_all.py 2");
-    //                     // system("python3 ../python/different_r.py");
-    //                 }
-    //         }
-    //     }
-
-    //     system("rm -r ../data/different_r_dn");
-    //     sprintf(command, "cp -R %s ../data/different_r_dn", config.data_path);
-    //     system(command);
-    //     break;
-    // default:
-    //     // config.traffic_mode = TRAFFIC_MODE_INTERVAL;
-    //     // for (long tau = 0; tau <= 25600; tau += step)
-    //     // {
-    //     //     config.tau = tau;
-    //     //     modify_ini_file(configuration_path, &config);
-
-    //     //     system("../execution/main");
-
-    //     //     system("python3 ../python/average_loss.py 0");
-    //     // }
-
-    //     // system("rm -r ../data/unifrom_regular");
-    //     // sprintf(command, "cp -R %s ../data/unifrom_regular", config.data_path);
-    //     // system(command);
-    //     // break;
-    // }
-
-    return 0;
+    return EXIT_SUCCESS;
 }

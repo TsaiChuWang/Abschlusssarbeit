@@ -34,7 +34,7 @@ plt.cla()
 plt.plot(tau, average_loss_all, linestyle='-', label='average_loss(all)')
 plt.title('Average Packet Loss with different τ ({})'.format(name))
 
-# plt.plot(tau, [float(config['simulation']['error'])*100 for i in tau], linestyle='-', color = 'red', label='ε')
+plt.plot(tau, [float(config['simulation']['error'])*100 for i in tau], linestyle='-', color = 'red', label='ε')
 
 plt.xlabel('τ')
 plt.ylabel('Loss (%)')

@@ -6,7 +6,8 @@ DATA_PATH = './record_average_loss.csv'
 dataframe = pandas.read_csv(DATA_PATH)
 
 state_r = float(sys.argv[1])
-queue_buffer = list(set(dataframe['upper_queue_buffer'].tolist()))
+# queue_buffer = list(set(dataframe['upper_queue_buffer'].tolist()))
+queue_buffer = [21+i for i in range(10)]
 
 tau_ = dataframe['tau'].tolist()
 tau_ = list(set(tau_))
@@ -18,6 +19,8 @@ tau_.sort()
 # pure
 for key in queue_buffer:
     average_loss_pure = dataframe[(dataframe['state_r'] ==state_r) & (dataframe['upper_queue_buffer'] == key)][['average_loss_pure']]
+    # print(key)
+    # print(average_loss_pure)
     if(len(average_loss_pure)!=0):
         tau = dataframe[(dataframe['state_r'] ==state_r) & (dataframe['upper_queue_buffer'] == key)]['tau'].tolist()
         plt.plot(tau, average_loss_pure, linestyle='-', label='(pure)r = {}, buffer = {}'.format(state_r, key), alpha = 1)

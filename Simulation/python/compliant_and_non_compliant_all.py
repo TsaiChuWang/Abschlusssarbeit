@@ -376,3 +376,189 @@ if(name == 'uniform_different_noncompliant_number_FIFO'):
         plt.grid(True)
         plt.savefig(IMAGE_PATH.format(name,'all', 'compliant'+str(n)))
         plt.cla()
+
+if(name == 'burst_half_noncompliant_six_seven'):
+    tau_ = dataframe['tau'].tolist()
+    tau_ = list(set(tau_))
+    tau_.sort()
+
+    buffers = list(set(dataframe['upper_queue_buffer'].tolist()))
+    print(buffers)
+
+    for buffer in buffers:
+        # pure
+        keys = list(set(dataframe['state_r'].tolist()))
+        for key in keys:
+            noncompliant_loss_pure = dataframe[(dataframe['state_r'] == key) & (dataframe['upper_queue_buffer'] == buffer)][['noncompliant_loss_pure']]
+            if(len(noncompliant_loss_pure)!=0):
+                tau = dataframe[(dataframe['state_r'] == key) & (dataframe['upper_queue_buffer'] == buffer)]['tau'].tolist()
+                plt.plot(tau, noncompliant_loss_pure, linestyle='-', label='(pure)r = {}'.format(key), alpha = 1)
+        plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
+        plt.title('Packet Loss with different τ and r ({}) Non-compliant'.format(name), fontsize=12)
+        plt.ylabel('Loss (%)')
+        plt.xlabel('τ')
+        plt.legend()
+        plt.grid(True)
+        plt.savefig(IMAGE_PATH.format(name,'pure', 'noncompliant'+'_'+str(buffer)))
+        plt.cla()
+
+        for key in keys:
+            compliant_loss_pure = dataframe[(dataframe['state_r'] == key) & (dataframe['upper_queue_buffer'] == buffer)][['compliant_loss_pure']]
+            if(len(compliant_loss_pure)!=0):
+                tau = dataframe[(dataframe['state_r'] == key) & (dataframe['upper_queue_buffer'] == buffer)]['tau'].tolist()
+                plt.plot(tau, compliant_loss_pure, linestyle='-', label='(pure)r = {}'.format(key), alpha = 1)
+        plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
+        plt.title('Packet Loss with different τ and r ({}) Compliant'.format(name), fontsize=12)
+        plt.ylabel('Loss (%)')
+        plt.xlabel('τ')
+        plt.legend()
+        plt.grid(True)
+        plt.savefig(IMAGE_PATH.format(name,'pure', 'compliant'+'_'+str(buffer)))
+        plt.cla()
+
+        # all
+        for key in keys:
+            noncompliant_loss_all = dataframe[(dataframe['state_r'] == key) & (dataframe['upper_queue_buffer'] == buffer)][['noncompliant_loss_all']]
+            if(len(noncompliant_loss_all)!=0):
+                tau = dataframe[(dataframe['state_r'] == key) & (dataframe['upper_queue_buffer'] == buffer)]['tau'].tolist()
+                plt.plot(tau, noncompliant_loss_all, linestyle='-', label='(all)r = {}'.format(key), alpha = 1)
+        plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
+        plt.title('Packet Loss with different τ and r ({}) Non-compliant'.format(name), fontsize=12)
+        plt.ylabel('Loss (%)')
+        plt.xlabel('τ')
+        plt.legend()
+        plt.grid(True)
+        plt.savefig(IMAGE_PATH.format(name,'all', 'noncompliant'+'_'+str(buffer)))
+        plt.cla()
+
+        for key in keys:
+            compliant_loss_all = dataframe[(dataframe['state_r'] == key) & (dataframe['upper_queue_buffer'] == buffer)][['compliant_loss_all']]
+            if(len(compliant_loss_all)!=0):
+                tau = dataframe[(dataframe['state_r'] == key) & (dataframe['upper_queue_buffer'] == buffer)]['tau'].tolist()
+                plt.plot(tau, compliant_loss_all, linestyle='-', label='(all)r = {}'.format(key), alpha = 1)
+        plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
+        plt.title('Packet Loss with different τ and r ({}) Compliant'.format(name), fontsize=12)
+        plt.ylabel('Loss (%)')
+        plt.xlabel('τ')
+        plt.legend()
+        plt.grid(True)
+        plt.savefig(IMAGE_PATH.format(name,'all', 'compliant'+'_'+str(buffer)))
+        plt.cla()
+
+if(name == 'burst_half_noncompliant_7_25'):
+    tau = dataframe['tau'].tolist()
+    tau = list(set(tau))
+    tau.sort()
+
+    buffers = list(set(dataframe['upper_queue_buffer'].tolist()))
+    title = 'Packet loss rate with different τ, r=0.7, n=25 '
+    for buffer in buffers:
+        compliant_loss_pure = dataframe[(dataframe['upper_queue_buffer'] == buffer)]['compliant_loss_pure'].tolist()
+        noncompliant_loss_pure = dataframe[(dataframe['upper_queue_buffer'] == buffer)]['noncompliant_loss_pure'].tolist()
+        compliant_loss_all = dataframe[(dataframe['upper_queue_buffer'] == buffer)]['compliant_loss_all'].tolist()
+        noncompliant_loss_all = dataframe[(dataframe['upper_queue_buffer'] == buffer)]['noncompliant_loss_all'].tolist()
+
+        # Pure
+        # compliant
+        plt.plot(tau, compliant_loss_pure ,linestyle='-', label='pure', alpha = 1)
+        plt.plot(tau, [float(config['simulation']['error'])*100.0 for i in tau], linestyle='-', color = 'red', label='ε')
+        plt.ylabel('Loss (%)')
+        plt.xlabel('τ')
+        plt.legend()
+        plt.grid(True)
+        plt.title(title+'Compliant')
+        plt.savefig(IMAGE_PATH.format(name,'pure', 'compliant'+'_'+str(buffer)))
+        plt.cla()
+
+        # noncompliant
+        plt.plot(tau, noncompliant_loss_pure ,linestyle='-', label='pure', alpha = 1)
+        plt.plot(tau, [float(config['simulation']['error'])*100.0 for i in tau], linestyle='-', color = 'red', label='ε')
+        plt.ylabel('Loss (%)')
+        plt.xlabel('τ')
+        plt.legend()
+        plt.grid(True)
+        plt.title(title+'Non-compliant')
+        plt.savefig(IMAGE_PATH.format(name,'pure', 'noncompliant'+'_'+str(buffer)))
+        plt.cla()
+
+        # All
+        # compliant
+        plt.plot(tau, compliant_loss_all ,linestyle='-', label='all', alpha = 1)
+        plt.plot(tau, [float(config['simulation']['error'])*100.0 for i in tau], linestyle='-', color = 'red', label='ε')
+        plt.ylabel('Loss (%)')
+        plt.xlabel('τ')
+        plt.legend()
+        plt.grid(True)
+        plt.title(title+'Compliant')
+        plt.savefig(IMAGE_PATH.format(name,'all', 'compliant'+'_'+str(buffer)))
+        plt.cla()
+
+        # noncompliant
+        plt.plot(tau, noncompliant_loss_all ,linestyle='-', label='all', alpha = 1)
+        plt.plot(tau, [float(config['simulation']['error'])*100.0 for i in tau], linestyle='-', color = 'red', label='ε')
+        plt.ylabel('Loss (%)')
+        plt.xlabel('τ')
+        plt.legend()
+        plt.grid(True)
+        plt.title(title+'Non-compliant')
+        plt.savefig(IMAGE_PATH.format(name,'all', 'compliant'+'_'+str(buffer)))
+        plt.cla()
+
+if(name == 'sensitive_noncompliant_number'):
+    tau = dataframe['tau'].tolist()
+    tau = list(set(tau))
+    tau.sort()
+
+    title = 'Packet loss rate with different Noncompliant Tenant Number '
+    for t in tau:
+        compliant_loss_pure = dataframe[(dataframe['tau'] == t)]['compliant_loss_pure'].tolist()
+        noncompliant_loss_pure = dataframe[(dataframe['tau'] == t)]['noncompliant_loss_pure'].tolist()
+        compliant_loss_all = dataframe[(dataframe['tau'] == t)]['compliant_loss_all'].tolist()
+        noncompliant_loss_all = dataframe[(dataframe['tau'] == t)]['noncompliant_loss_all'].tolist()
+
+        noncompliant_tenant_number = dataframe[(dataframe['tau'] == t)]['noncompliant_tenant_number'].tolist()
+        # Pure
+        # compliant
+        plt.plot(noncompliant_tenant_number, compliant_loss_pure ,linestyle='-', label='pure', alpha = 1)
+        plt.plot(noncompliant_tenant_number, [float(config['simulation']['error'])*100.0 for i in noncompliant_tenant_number], linestyle='-', color = 'red', label='ε')
+        plt.ylabel('Loss (%)')
+        plt.xlabel('Noncompliant Tenant Number')
+        plt.legend()
+        plt.grid(True)
+        plt.title(title+'Compliant')
+        plt.savefig(IMAGE_PATH.format(name,'pure', 'compliant'+'_'+str(t)))
+        plt.cla()
+
+        # noncompliant
+        plt.plot(noncompliant_tenant_number, noncompliant_loss_pure ,linestyle='-', label='pure', alpha = 1)
+        plt.plot(noncompliant_tenant_number, [float(config['simulation']['error'])*100.0 for i in noncompliant_tenant_number], linestyle='-', color = 'red', label='ε')
+        plt.ylabel('Loss (%)')
+        plt.xlabel('Noncompliant Tenant Number')
+        plt.legend()
+        plt.grid(True)
+        plt.title(title+'Non-compliant')
+        plt.savefig(IMAGE_PATH.format(name,'pure', 'noncompliant'+'_'+str(t)))
+        plt.cla()
+
+        # All
+        # compliant
+        plt.plot(noncompliant_tenant_number, compliant_loss_all ,linestyle='-', label='all', alpha = 1)
+        plt.plot(noncompliant_tenant_number, [float(config['simulation']['error'])*100.0 for i in noncompliant_tenant_number], linestyle='-', color = 'red', label='ε')
+        plt.ylabel('Loss (%)')
+        plt.xlabel('Noncompliant Tenant Number')
+        plt.legend()
+        plt.grid(True)
+        plt.title(title+'Compliant')
+        plt.savefig(IMAGE_PATH.format(name,'all', 'compliant'+'_'+str(t)))
+        plt.cla()
+
+        # noncompliant
+        plt.plot(noncompliant_tenant_number, noncompliant_loss_all ,linestyle='-', label='all', alpha = 1)
+        plt.plot(noncompliant_tenant_number, [float(config['simulation']['error'])*100.0 for i in noncompliant_tenant_number], linestyle='-', color = 'red', label='ε')
+        plt.ylabel('Loss (%)')
+        plt.xlabel('Noncompliant Tenant Number')
+        plt.legend()
+        plt.grid(True)
+        plt.title(title+'Non-compliant')
+        plt.savefig(IMAGE_PATH.format(name,'all', 'noncompliant'+'_'+str(t)))
+        plt.cla()

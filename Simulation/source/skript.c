@@ -12,6 +12,7 @@
 #define BURST_NONCOMPLIANT_7_25 10
 
 #define SENSITIVE_NONCOMPLIANT_NUMBER 11
+#define UNIFORM_DISTRIBUTION_NONCOMPLIANT_DIFFERENT_NONCOMPLIANT_NUMBER_RATIO 12
 
 #define REDUCTION
 
@@ -458,7 +459,7 @@ int main(int argc, char *argv[])
 
         // Loop through state_r values and tau values, executing the main program for each combination.
         for (double state_r = 0.6; state_r < 0.9; state_r += state_r_step) // Iterate over state_r values.
-            for (long tau = 0; tau <= 25600; tau += step)                  // Iterate over tau values.
+            for (long tau = 0; tau <= 51200; tau += (step*8))                  // Iterate over tau values.
             {
                 config.state_r = state_r; ///< Set the current state_r value in the configuration.
                 config.tau = tau;         ///< Set the current tau value in the configuration.
@@ -683,15 +684,12 @@ int main(int argc, char *argv[])
 
         // Loop through state_r values and tau values, executing the main program for each combination.
 
-        for (int upper_queue_buffer = 16; upper_queue_buffer <= 40; upper_queue_buffer += 4)
-            for (double state_r = 0.8; state_r < 0.9; state_r += state_r_step) // Iterate over state_r values.
-                for (long tau = 0; tau <= 51200; tau += (step * 10))           // Iterate over tau values.
+        for (int upper_queue_buffer = 5; upper_queue_buffer <= 100; upper_queue_buffer += 5)
+            for (double state_r = 0.6; state_r < 0.9; state_r += state_r_step) // Iterate over state_r values.
                 {
-                    config.upper_queue_buffer = (tau / 512) * 4;
-                    // if (config.upper_queue_buffer < 1)
-                    //     config.upper_queue_buffer = 4;
+                    config.upper_queue_buffer = upper_queue_buffer;
                     config.state_r = state_r;                     ///< Set the current state_r value in the configuration.
-                    config.tau = tau;                             ///< Set the current tau value in the configuration.
+                    config.tau = 25600;                             ///< Set the current tau value in the configuration.
                     modify_ini_file(configuration_path, &config); ///< Update the INI file with the new configuration values.
 
                     sprintf(command, "../execution/main %s", configuration_path); ///< Command to execute the main program.
@@ -713,22 +711,22 @@ int main(int argc, char *argv[])
             return EXIT_FAILURE;                                                      ///< Exit with failure status if configuration cannot be loaded.
         }
 
-        sprintf(data_path, "../data/%s", name);       ///< Construct the path for the data directory.
-        config.data_path = data_path;                 ///< Set the data path in the configuration structure.
-        modify_ini_file(configuration_path, &config); ///< Update the INI file with the current configuration.
+        // sprintf(data_path, "../data/%s", name);       ///< Construct the path for the data directory.
+        // config.data_path = data_path;                 ///< Set the data path in the configuration structure.
+        // modify_ini_file(configuration_path, &config); ///< Update the INI file with the current configuration.
 
-        // Prepare the data directory by removing existing data and creating new directories.
-        sprintf(command, "rm -r %s", config.data_path);        ///< Command to remove the existing data directory.
-        system(command);                                       ///< Execute the command.
-        sprintf(command, "mkdir %s", config.data_path);        ///< Command to create the data directory.
-        system(command);                                       ///< Execute the command.
-        sprintf(command, "mkdir %s/images", config.data_path); ///< Command to create the images subdirectory.
-        system(command);                                       ///< Execute the command.
+        // // Prepare the data directory by removing existing data and creating new directories.
+        // sprintf(command, "rm -r %s", config.data_path);        ///< Command to remove the existing data directory.
+        // system(command);                                       ///< Execute the command.
+        // sprintf(command, "mkdir %s", config.data_path);        ///< Command to create the data directory.
+        // system(command);                                       ///< Execute the command.
+        // sprintf(command, "mkdir %s/images", config.data_path); ///< Command to create the images subdirectory.
+        // system(command);                                       ///< Execute the command.
 
-        // Write headers for statistics with different types.
-        write_statistics_header_config(config, HEADER_TYPE_AVERAGE); ///< Write the header for average statistics.
-        write_statistics_header_config(config, HEADER_TYPE_ALL);     ///< Write the header for all statistics.
-        write_statistics_header_config(config, HEADER_TYPE_TAU);     ///< Write the header for tau statistics.
+        // // Write headers for statistics with different types.
+        // write_statistics_header_config(config, HEADER_TYPE_AVERAGE); ///< Write the header for average statistics.
+        // write_statistics_header_config(config, HEADER_TYPE_ALL);     ///< Write the header for all statistics.
+        // write_statistics_header_config(config, HEADER_TYPE_TAU);     ///< Write the header for tau statistics.
 
         // Set additional configuration parameters for non-compliant mode.
         config.traffic_mode = TRAFFIC_MODE_BURSTY_ALL; ///< Update traffic mode to non-compliant uniform.
@@ -752,23 +750,36 @@ int main(int argc, char *argv[])
         //     }
 
         // Loop through state_r values and tau values, executing the main program for each combination.
-        for (int upper_queue_buffer = 16; upper_queue_buffer <= 40; upper_queue_buffer += 4)
-            for (double state_r = 0.6; state_r <= 0.7; state_r += 0.01) // Iterate over state_r values.
-                for (long tau = 0; tau <= 51200; tau += (512 * 4))      // Iterate over tau values.
-                {
-                    config.upper_queue_buffer = upper_queue_buffer;
-                    config.state_r = state_r; ///< Set the current state_r value in the configuration.
-                    config.tau = tau;         ///< Set the current tau value in the configuration.
 
-                    modify_ini_file(configuration_path, &config); ///< Update the INI file with the new configuration values.
+        for (double state_r = 0.6; state_r <= 0.64; state_r += 0.01) // Iterate over state_r values.
+        for (long tau = 0; tau <= 51200; tau += (512 * 4))      // Iterate over tau values.
+        {
+            config.upper_queue_buffer = 36;
+            config.state_r = state_r; ///< Set the current state_r value in the configuration.
+            config.tau = tau;         ///< Set the current tau value in the configuration.
 
-                    sprintf(command, "../execution/main %s", configuration_path); ///< Command to execute the main program.
-                    system(command);                                              ///< Execute the command.
+            modify_ini_file(configuration_path, &config); ///< Update the INI file with the new configuration values.
 
-                    sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_ALL_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
-                    system(command);                                                                                                  ///< Execute the command.
-                }
+            sprintf(command, "../execution/main %s", configuration_path); ///< Command to execute the main program.
+            system(command);                                              ///< Execute the command.
 
+            sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_ALL_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
+            system(command);                                                                                                  ///< Execute the command.
+        }
+        for (long tau = 0; tau < 47104; tau += (512 * 4))      // Iterate over tau values.
+        {
+            config.upper_queue_buffer = 36;
+            config.state_r = 0.65; ///< Set the current state_r value in the configuration.
+            config.tau = tau;         ///< Set the current tau value in the configuration.
+
+            modify_ini_file(configuration_path, &config); ///< Update the INI file with the new configuration values.
+
+            sprintf(command, "../execution/main %s", configuration_path); ///< Command to execute the main program.
+            system(command);                                              ///< Execute the command.
+
+            sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_ALL_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
+            system(command);                                                                                                  ///< Execute the command.
+        }
         break;
     case BURST_NONCOMPLIANT_7_25:
         strcpy(name, "burst_half_noncompliant_7_25");                 ///< Set the name for the configuration.
@@ -868,6 +879,75 @@ int main(int argc, char *argv[])
             system(command);                                                                                                  ///< Execute the command.
         }
         break;
+
+    case UNIFORM_DISTRIBUTION_NONCOMPLIANT_DIFFERENT_NONCOMPLIANT_NUMBER_RATIO:
+    strcpy(name, "uniform_different_noncompliant_number_ratio");   ///< Set the name for the configuration.
+    sprintf(configuration_path, "../configuration/%s.ini", name); ///< Construct the path to the configuration INI file.
+    reduction_inif_file(configuration_path);                      ///< Process the INI file to initialize settings.
+
+    // Parse the INI file and load the configuration.
+    if (ini_parse(configuration_path, handler, &config) < 0)
+    {
+        printf(RED_ELOG "Can't load configuration \"%s\"\n", configuration_path); ///< Error message if loading fails.
+        return EXIT_FAILURE;                                                      ///< Exit with failure status if configuration cannot be loaded.
+    }
+
+    sprintf(data_path, "../data/%s", name);       ///< Construct the path for the data directory.
+    config.data_path = data_path;                 ///< Set the data path in the configuration structure.
+    modify_ini_file(configuration_path, &config); ///< Update the INI file with the current configuration.
+
+    // Prepare the data directory by removing existing data and creating new directories.
+    sprintf(command, "rm -r %s", config.data_path);        ///< Command to remove the existing data directory.
+    system(command);                                       ///< Execute the command.
+    sprintf(command, "mkdir %s", config.data_path);        ///< Command to create the data directory.
+    system(command);                                       ///< Execute the command.
+    sprintf(command, "mkdir %s/images", config.data_path); ///< Command to create the images subdirectory.
+    system(command);                                       ///< Execute the command.
+
+    // Write headers for statistics with different types.
+    write_statistics_header_config(config, HEADER_TYPE_AVERAGE); ///< Write the header for average statistics.
+    write_statistics_header_config(config, HEADER_TYPE_ALL);     ///< Write the header for all statistics.
+    write_statistics_header_config(config, HEADER_TYPE_TAU);     ///< Write the header for tau statistics.
+
+    config.traffic_mode = TRAFFIC_MODE_NONCOMPLIANT_UNIFORM; ///< Update traffic mode to non-compliant uniform.
+    config.noncompliant_mean = 155;                          ///< Set the mean for non-compliant configuration.
+    config.noncompliant_mode = NONCOMPLIANT_MODE_BEFORE;    ///< Set the mode for non-compliant configuration to average.
+
+    system("gcc ./advanced_more_capacity.c inih/ini.c -o ../execution/advanced_more_capacity -lm");
+
+    // Loop through tenant numbers and tau values for further analysis.
+    for (float ratio = 1.0001; ratio<=1.001;ratio+=0.0001)
+        for (int noncompliant_tenant_number = 60;noncompliant_tenant_number<100;noncompliant_tenant_number++)
+        {
+            config.noncompliant_tenant_number = noncompliant_tenant_number;
+            config.upper_queue_buffer = 10;
+            config.tau = 51200;                             ///< Set the current tau value in the configuration.
+                                                          ///< Update the tenant number for the current iteration.
+            modify_ini_file(configuration_path, &config); ///< Update the INI file with the new configuration.
+
+            sprintf(command, "../execution/advanced_more_capacity %s %f", configuration_path, ratio); ///< Command to execute the main program.
+            system(command);                                              ///< Execute the command.
+
+            sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_ALL_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
+            system(command);
+        }
+
+        for (float ratio = 1.0001; ratio<=1.001;ratio+=0.0001)
+        for (int noncompliant_tenant_number = 60;noncompliant_tenant_number<100;noncompliant_tenant_number++)
+        {
+            config.noncompliant_tenant_number = noncompliant_tenant_number;
+            config.upper_queue_buffer = 10;
+            config.tau = 25600;                             ///< Set the current tau value in the configuration.
+                                                          ///< Update the tenant number for the current iteration.
+            modify_ini_file(configuration_path, &config); ///< Update the INI file with the new configuration.
+
+            sprintf(command, "../execution/advanced_more_capacity %s %f", configuration_path, ratio); ///< Command to execute the main program.
+            system(command);                                              ///< Execute the command.
+
+            sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_ALL_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
+            system(command);
+        }
+    break;
     default:
         printf(RED_ELOG "CODE DOES NOT EXIST!\n" RESET); ///< Error message for unsupported configuration.
         return EXIT_FAILURE;                             ///< Exit with failure status for unknown configurations.

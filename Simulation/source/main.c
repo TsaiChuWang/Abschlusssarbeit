@@ -40,6 +40,40 @@
 
 #define CONFIGURATION_PATH "../configuration/main.ini" ///< Path to the main configuration file
 
+/**
+ * @brief Macro to enable validation mode in the system.
+ *
+ * When this macro is defined, additional checks and validations 
+ * are enabled for various components of the system.
+ */
+// #define VALIDATE_MODE
+
+#ifdef VALIDATE_MODE
+    /**
+     * @brief Enable checks for GCRA (Generic Cell Rate Algorithm).
+     *
+     * This macro activates validation checks related to the 
+     * Generic Cell Rate Algorithm, ensuring proper rate control.
+     */
+    #define CHECK_GCRA
+
+    /**
+     * @brief Enable checks for the link queue.
+     *
+     * This macro activates validation checks for the link queue,
+     * ensuring that the queue operates correctly and efficiently.
+     */
+    #define CHECK_LINK_QUEUE
+
+    /**
+     * @brief Enable validation mode for the link.
+     *
+     * This macro activates additional validation checks specifically 
+     * for link-related operations.
+     */
+    #define VALIDATE_MODE_LINK
+#endif
+
 /** @brief Compilation command
  *  @code{.sh}
  *  gcc ./main.c inih/ini.c -o ../execution/main -lm
@@ -49,29 +83,29 @@
 /** @brief Execution command
  *  @code{.sh}
  *  ../execution/main
+ *  ../execution/main [configuration_path]
  *  @endcode
  */
 
 int main(int argc, char *argv[])
 {
+    /**
+     * @brief Declare a character array to hold the configuration file path.
+     */
     char configuration_path[MAX_PATH_LENGTH];
+
+    /**
+     * @brief Initialize the configuration path based on command-line arguments.
+     *
+     * If the number of arguments (argc) is less than 2, the default configuration path
+     * is used. Otherwise, the path is set to the first command-line argument (argv[1]).
+     */
     if (argc < 2)
-        strcpy(configuration_path, CONFIGURATION_PATH);
+        strcpy(configuration_path, CONFIGURATION_PATH); ///< Use default configuration path.
     else
-        strcpy(configuration_path, argv[1]);
+        strcpy(configuration_path, argv[1]);            ///< Use user-provided configuration path.
 
     int trace_index = 0;
-    if (argc > 2)
-    {
-        // #undef RECORD_AVERAGE_LOSS
-        // #undef RECORD_PACKETS_SITUATION
-        // #undef RECORD_COMPLIANT_AND_NONCOMPLIANT_TAU
-        // #undef RECORD_COMPLIANT_AND_NONCOMPLIANT_ALL
-        // #define VALIDATE_MODE
-        // #define CHECK_GCRA
-        // #define CHECK_LINK_QUEUE
-        // #define VALIDATE_MODE_LINK
-    }
 
     /** @brief Buffer for system commands */
     char *command = (char *)malloc(MAX_COMMAND_LENGTH * sizeof(char));

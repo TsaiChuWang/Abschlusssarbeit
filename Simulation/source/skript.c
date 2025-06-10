@@ -456,6 +456,7 @@ int main(int argc, char *argv[])
         config.traffic_mode = TRAFFIC_MODE_BURSTY_ALL; ///< Update traffic mode to non-compliant uniform.
         config.noncompliant_tenant_number = 50;        ///< Set the initial tenant number for non-compliant mode.
         config.noncompliant_mode = NONCOMPLIANT_MODE_AVERAGE;
+        config.upper_queue_buffer = 25;
 
         // Loop through state_r values and tau values, executing the main program for each combination.
         for (double state_r = 0.6; state_r < 0.9; state_r += state_r_step) // Iterate over state_r values.

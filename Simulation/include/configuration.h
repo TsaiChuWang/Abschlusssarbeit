@@ -148,7 +148,7 @@ void reduction_inif_file(const char *filename)
     fprintf(file, "data_path = %s\n", INITIAL_CONFIGURATION_DATA_PATH);
     if (fprintf(file, "unit = %ld\n\n", INITIAL_CONFIGURATION_UNIT) < 0)
         goto write_error;
-    if (fprintf(file, "ratio = %ld\n\n", INITIAL_CONFIGURATION_RATIO) < 0)
+    if (fprintf(file, "ratio = %lf\n\n", INITIAL_CONFIGURATION_RATIO) < 0)
         goto write_error;
 
     // Write [traffic] section

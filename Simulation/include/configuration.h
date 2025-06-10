@@ -146,7 +146,7 @@ void reduction_inif_file(const char *filename)
     if (fprintf(file, "error = %f\n", INITIAL_CONFIGURATION_ERROR) < 0)
         goto write_error;
     fprintf(file, "data_path = %s\n", INITIAL_CONFIGURATION_DATA_PATH);
-    if (fprintf(file, "unit = %ld\n\n", INITIAL_CONFIGURATION_UNIT) < 0)
+    if (fprintf(file, "unit = %ld\n", INITIAL_CONFIGURATION_UNIT) < 0)
         goto write_error;
     if (fprintf(file, "ratio = %lf\n\n", INITIAL_CONFIGURATION_RATIO) < 0)
         goto write_error;
@@ -583,7 +583,7 @@ int modify_ini_file(const char *filename, const configuration *config)
     WRITE_CHECK("error = %.6f\n", config->error);
     WRITE_CHECK("data_path = %s\n", config->data_path ? config->data_path : "");
     WRITE_CHECK("unit = %ld\n", config->unit);
-    WRITE_CHECK("ratio = %ld\n", config->ratio);
+    WRITE_CHECK("ratio = %lf\n", config->ratio);
     try_write(file, "\n");
 
     // Write [traffic] section

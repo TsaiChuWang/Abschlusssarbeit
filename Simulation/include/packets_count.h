@@ -46,9 +46,9 @@
  * - compliant_loss: Compliant packet loss rate
  * - noncompliant_loss: Non-compliant packet loss rate
  */
-#define RECORD_COMPLIANT_AND_NONCOMPLIANT_ALL_HEADER           \
-  "tau,noncompliant_mean,noncompliant_tenant_number,state_r,"  \
-  "noncompliant_state_r,upper_queue_buffer,link_queue_buffer," \
+#define RECORD_COMPLIANT_AND_NONCOMPLIANT_ALL_HEADER                 \
+  "tau,noncompliant_mean,noncompliant_tenant_number,state_r,"        \
+  "noncompliant_state_r,upper_queue_buffer,link_queue_buffer,ratio," \
   "compliant_loss_pure,noncompliant_loss_pure,compliant_loss_all,noncompliant_loss_all\n"
 
 /**
@@ -64,9 +64,9 @@
  * - link_queue_buffer: Link queue buffer size
  * - average_loss: Average packet loss rate
  */
-#define RECORD_AVERAGE_LOSS_HEADER                             \
-  "tau,noncompliant_mean,noncompliant_tenant_number,state_r,"  \
-  "noncompliant_state_r,upper_queue_buffer,link_queue_buffer," \
+#define RECORD_AVERAGE_LOSS_HEADER                                   \
+  "tau,noncompliant_mean,noncompliant_tenant_number,state_r,"        \
+  "noncompliant_state_r,upper_queue_buffer,link_queue_buffer,ratio," \
   "average_loss_pure,average_loss_all\n"
 
 /**
@@ -708,7 +708,7 @@ void record_compliant_and_noncompliant_all(packets_label label, const configurat
   compliant_Loss_all = compliant_Loss_all * 100.0 / (config.tenant_number - config.noncompliant_tenant_number);
 
   // Append the results to the CSV file with additional configuration details.
-  fprintf(file, "%ld, %d, %d, %f, %f, %d, %d, %f, %f, %f, %f\n", config.tau, config.noncompliant_mean, config.noncompliant_tenant_number, config.state_r, config.noncompliant_state_r, config.upper_queue_buffer, config.link_queue_buffer, compliant_Loss_pure, noncompliant_Loss_pure, compliant_Loss_all, noncompliant_Loss_all);
+  fprintf(file, "%ld, %d, %d, %f, %f, %d, %d, %f, %f, %f, %f, %f\n", config.tau, config.noncompliant_mean, config.noncompliant_tenant_number, config.state_r, config.noncompliant_state_r, config.upper_queue_buffer, config.link_queue_buffer, config.ratio, compliant_Loss_pure, noncompliant_Loss_pure, compliant_Loss_all, noncompliant_Loss_all);
   fclose(file); /**< Close the file after writing. */
 }
 
@@ -783,7 +783,7 @@ void record_average_loss(packets_label label, const configuration config)
   average_loss_all = average_loss_all / (config.tenant_number);
 
   // Append the results to the CSV file.
-  fprintf(file, "%ld, %d, %d, %f, %f, %d, %d, %f, %f\n", config.tau, config.noncompliant_mean, config.noncompliant_tenant_number, config.state_r, config.noncompliant_state_r, config.upper_queue_buffer, config.link_queue_buffer, average_loss_pure, average_loss_all);
+  fprintf(file, "%ld, %d, %d, %f, %f, %d, %d, %f, %f, %f\n", config.tau, config.noncompliant_mean, config.noncompliant_tenant_number, config.state_r, config.noncompliant_state_r, config.upper_queue_buffer, config.link_queue_buffer, config.ratio, average_loss_pure, average_loss_all);
   fclose(file); /**< Close the file after writing. */
 }
 

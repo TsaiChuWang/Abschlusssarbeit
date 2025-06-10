@@ -71,6 +71,7 @@
 #define INITIAL_CONFIGURATION_ERROR 0.001              ///< Acceptable error margin for calculations.
 #define INITIAL_CONFIGURATION_DATA_PATH "../data/main" ///< Path to the main data directory.
 #define INITIAL_CONFIGURATION_UNIT 1048576             ///< Unit size in bytes (1 MB).
+#define INITIAL_CONFIGURATION_RATIO (double)1.0        ///< Unit size in bytes (1 MB).
 
 /**
  * @brief Traffic generation and control parameters.
@@ -147,6 +148,8 @@ void reduction_inif_file(const char *filename)
     fprintf(file, "data_path = %s\n", INITIAL_CONFIGURATION_DATA_PATH);
     if (fprintf(file, "unit = %ld\n\n", INITIAL_CONFIGURATION_UNIT) < 0)
         goto write_error;
+    if (fprintf(file, "ratio = %ld\n\n", INITIAL_CONFIGURATION_RATIO) < 0)
+        goto write_error;
 
     // Write [traffic] section
     if (fprintf(file, "[traffic]\n") < 0)
@@ -219,6 +222,7 @@ typedef struct
     double error;              /**< Acceptable error margin. */
     char *data_path;           /**< Path to data files. */
     long unit;                 /**< Measurement unit (e.g., 1048576 for 1MB). */
+    double ratio;
 
     /** @name Traffic Control Parameters */
     long input_rate;        /**< Input traffic rate in bytes per second. */
@@ -338,6 +342,11 @@ static int handler(void *config, const char *section, const char *name, const ch
         {
             SAFE_STRTOL(value, 0, LONG_MAX);
             pconfig->unit = temp_long;
+        }
+        else if (MATCH("simulation", "ratio"))
+        {
+            SAFE_STRTOD(value, 0.0, DBL_MAX);
+            pconfig->ratio = temp_double;
         }
         else
         {
@@ -574,6 +583,7 @@ int modify_ini_file(const char *filename, const configuration *config)
     WRITE_CHECK("error = %.6f\n", config->error);
     WRITE_CHECK("data_path = %s\n", config->data_path ? config->data_path : "");
     WRITE_CHECK("unit = %ld\n", config->unit);
+    WRITE_CHECK("ratio = %ld\n", config->ratio);
     try_write(file, "\n");
 
     // Write [traffic] section
@@ -655,6 +665,7 @@ void show_configuration(const configuration config)
     default:
         printf("| unit                            : Mbps\n");
     }
+    printf("| ratio                           : %-lf\n", config.ratio);
 
     printf("- Traffic :\n");
     printf("| input rate                      : %-ld\n", config.input_rate);

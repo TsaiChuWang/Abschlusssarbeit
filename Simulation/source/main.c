@@ -43,35 +43,35 @@
 /**
  * @brief Macro to enable validation mode in the system.
  *
- * When this macro is defined, additional checks and validations 
+ * When this macro is defined, additional checks and validations
  * are enabled for various components of the system.
  */
 // #define VALIDATE_MODE
 
 #ifdef VALIDATE_MODE
-    /**
-     * @brief Enable checks for GCRA (Generic Cell Rate Algorithm).
-     *
-     * This macro activates validation checks related to the 
-     * Generic Cell Rate Algorithm, ensuring proper rate control.
-     */
-    #define CHECK_GCRA
+/**
+ * @brief Enable checks for GCRA (Generic Cell Rate Algorithm).
+ *
+ * This macro activates validation checks related to the
+ * Generic Cell Rate Algorithm, ensuring proper rate control.
+ */
+#define CHECK_GCRA
 
-    /**
-     * @brief Enable checks for the link queue.
-     *
-     * This macro activates validation checks for the link queue,
-     * ensuring that the queue operates correctly and efficiently.
-     */
-    #define CHECK_LINK_QUEUE
+/**
+ * @brief Enable checks for the link queue.
+ *
+ * This macro activates validation checks for the link queue,
+ * ensuring that the queue operates correctly and efficiently.
+ */
+#define CHECK_LINK_QUEUE
 
-    /**
-     * @brief Enable validation mode for the link.
-     *
-     * This macro activates additional validation checks specifically 
-     * for link-related operations.
-     */
-    #define VALIDATE_MODE_LINK
+/**
+ * @brief Enable validation mode for the link.
+ *
+ * This macro activates additional validation checks specifically
+ * for link-related operations.
+ */
+#define VALIDATE_MODE_LINK
 #endif
 
 /** @brief Compilation command
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     if (argc < 2)
         strcpy(configuration_path, CONFIGURATION_PATH); ///< Use default configuration path.
     else
-        strcpy(configuration_path, argv[1]);            ///< Use user-provided configuration path.
+        strcpy(configuration_path, argv[1]); ///< Use user-provided configuration path.
 
     int trace_index = 0;
 
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
      */
     sprintf(command, "python3 ../python/capacity.py %s 0", configuration_path);
     system(command);
-    double capacity = obtain_capacity(); ///< Variable to hold the calculated capacity
+    double capacity = obtain_capacity() * config.ratio; ///< Variable to hold the calculated capacity
 
 #ifdef PRINT_CAPACITY
     /** @brief Display the calculated capacity.

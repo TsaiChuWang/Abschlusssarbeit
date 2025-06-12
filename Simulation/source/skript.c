@@ -986,7 +986,7 @@ int main(int argc, char *argv[])
 
         // Loop through tau values and execute the main program for each.
         for (double ratio = 1.001; ratio < 1.01; ratio += 0.001)
-            for (long tau = 0; tau <= 51200; tau += (step * 8))
+            for (long tau = 0; tau <= 51200; tau += (step * 2))
             {
                 config.tau = tau;
                 config.ratio = ratio;                         ///< Set the current tau value in the configuration.

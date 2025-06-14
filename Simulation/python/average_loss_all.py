@@ -113,44 +113,42 @@ if(name == 'burst_all_compliant_different_FIFO'):
     plt.savefig(IMAGE_PATH.format(name,'all'))
     plt.cla()
 
-    # rs = list(set(dataframe['state_r'].tolist()))
-    # queue_buffer = list(set(dataframe['upper_queue_buffer'].tolist()))
-    # # queue_buffer = [20,40,60,80]
-    # keys = []
-    # for state_r in rs:
-    #     for buff in queue_buffer:
-    #         keys.append([state_r, buff])
+if(name == "burst_all_compliant_FIFO_ratio"):
+    rs = list(set(dataframe['state_r'].tolist()))
+    queue_buffer = list(set(dataframe['upper_queue_buffer'].tolist()))
+    queue_buffer.sort()
+    queue_buffer = [t*512 for t in  queue_buffer]
+    ratios = list(set(dataframe['ratio'].tolist()))
 
-    # tau_ = dataframe['tau'].tolist()
-    # tau_ = list(set(tau_))
-    # tau_.sort()
+    for r in rs:
+        # pure
+        for key in ratios:
+            average_loss_pure = dataframe[(dataframe['ratio'] == key) & (dataframe['state_r'] == r)][['average_loss_pure']]
+            if(len(average_loss_pure)!=0):
+                tau = dataframe[(dataframe['ratio'] == key) & (dataframe['state_r'] == r)]['upper_queue_buffer'].tolist()
+                tau =[t*512 for t in tau]
+                plt.plot(tau, average_loss_pure, linestyle='-', label='(pure)ratio = {}'.format(key), alpha = 1)
+        plt.plot(queue_buffer, [0.1 for i in queue_buffer], linestyle='-', color = 'red', label='ε')
+        plt.title('Packet Loss with FIFO Queue Buffer and Ratio', fontsize=12)
+        plt.ylabel('Loss (%)')
+        plt.xlabel('FIFO Queue Buffer')
+        plt.legend()
+        plt.grid(True)
+        plt.savefig(IMAGE_PATH.format(name,'pure'+str(r)))
+        plt.cla()
 
-    # # pure
-    # for key in keys:
-    #     average_loss_pure = dataframe[(dataframe['state_r'] == key[0]) & (dataframe['upper_queue_buffer'] == key[1])][['average_loss_pure']]
-    #     if(len(average_loss_pure)!=0):
-    #         tau = dataframe[(dataframe['state_r'] == key[0]) & (dataframe['upper_queue_buffer'] == key[1])]['tau'].tolist()
-    #         plt.plot(tau, average_loss_pure, linestyle='-', label='(pure)r = {}, buffer = {}'.format(key[0], key[1]), alpha = 1)
-    # plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
-    # plt.title('Packet Loss with different τ and r ({})'.format(name), fontsize=10)
-    # plt.ylabel('Loss (%)')
-    # plt.xlabel('τ')
-    # plt.legend()
-    # plt.grid(True)
-    # plt.savefig(IMAGE_PATH.format(name,'pure'))
-    # plt.cla()
-
-    # # all
-    # for key in keys:
-    #     average_loss_all = dataframe[(dataframe['state_r'] == key[0]) & (dataframe['upper_queue_buffer'] == key[1])][['average_loss_all']]
-    #     if(len(average_loss_all)!=0):
-    #         tau = dataframe[(dataframe['state_r'] == key[0]) & (dataframe['upper_queue_buffer'] == key[1])]['tau'].tolist()
-    #         plt.plot(tau, average_loss_all, linestyle='-', label='(all)r = {}, buffer = {}'.format(key[0], key[1]), alpha = 1)
-    # plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
-    # plt.title('Packet Loss with different τ and r ({})'.format(name), fontsize=10)
-    # plt.ylabel('Loss (%)')
-    # plt.xlabel('τ')
-    # plt.legend()
-    # plt.grid(True)
-    # plt.savefig(IMAGE_PATH.format(name,'all'))
-    # plt.cla()
+        # all
+        for key in ratios:
+            average_loss_all = dataframe[(dataframe['ratio'] == key) & (dataframe['state_r'] == r)][['average_loss_all']]
+            if(len(average_loss_all)!=0):
+                tau = dataframe[(dataframe['ratio'] == key) & (dataframe['state_r'] == r)]['upper_queue_buffer'].tolist()
+                tau =[t*512 for t in tau]
+                plt.plot(tau, average_loss_all, linestyle='-', label='(all)ratio = {}'.format(key), alpha = 1)
+        plt.plot(queue_buffer, [0.1 for i in queue_buffer], linestyle='-', color = 'red', label='ε')
+        plt.title('Packet Loss with different FIFO Queue Buffer and Ratio', fontsize=12)
+        plt.ylabel('Loss (%)')
+        plt.xlabel('FIFO Queue Buffer')
+        plt.legend()
+        plt.grid(True)
+        plt.savefig(IMAGE_PATH.format(name,'all'+str(r)))
+        plt.cla()

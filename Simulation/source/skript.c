@@ -14,6 +14,8 @@
 #define SENSITIVE_NONCOMPLIANT_NUMBER 11
 #define UNIFORM_DISTRIBUTION_NONCOMPLIANT_DIFFERENT_NONCOMPLIANT_NUMBER_RATIO 12
 #define UNIFORM_DISTRIBUTION_NONCOMPLIANT_RATIO 13
+#define BURST_ALL_COMPLIANT_FIFO_RATIO 14
+#define BURST_NONCOMPLIANT_RATIO 15
 #define REDUCTION
 
 #include "../include/general.h"       ///< Include general definitions and declarations.
@@ -998,6 +1000,114 @@ int main(int argc, char *argv[])
                 sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_ALL_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
                 system(command);                                                                                                  ///< Execute the command.
             }
+
+        break; ///< End of the case for UNIFORM_DISTRIBUTION_NONCOMPLIANT.
+    case BURST_ALL_COMPLIANT_FIFO_RATIO:
+        strcpy(name, "burst_all_compliant_FIFO_ratio");               ///< Set the name for the configuration.
+        sprintf(configuration_path, "../configuration/%s.ini", name); ///< Construct the path to the configuration INI file.
+        reduction_inif_file(configuration_path);                      ///< Process the INI file to initialize settings.
+
+        // Parse the INI file and load the configuration.
+        if (ini_parse(configuration_path, handler, &config) < 0)
+        {
+            printf(RED_ELOG "Can't load configuration \"%s\"\n", configuration_path); ///< Error message if loading fails.
+            return EXIT_FAILURE;                                                      ///< Exit with failure status if configuration cannot be loaded.
+        }
+
+        sprintf(data_path, "../data/%s", name);       ///< Construct the path for the data directory.
+        config.data_path = data_path;                 ///< Set the data path in the configuration structure.
+        config.traffic_mode = TRAFFIC_MODE_UNIFORM;   ///< Set the traffic mode to uniform.
+        modify_ini_file(configuration_path, &config); ///< Update the INI file with the current configuration.
+
+        // Prepare the data directory by removing existing data and creating new directories.
+        sprintf(command, "rm -r %s", config.data_path);        ///< Command to remove the existing data directory.
+        system(command);                                       ///< Execute the command.
+        sprintf(command, "mkdir %s", config.data_path);        ///< Command to create the data directory.
+        system(command);                                       ///< Execute the command.
+        sprintf(command, "mkdir %s/images", config.data_path); ///< Command to create the images subdirectory.
+        system(command);                                       ///< Execute the command.
+
+        // Write headers for statistics with different types.
+        write_statistics_header_config(config, HEADER_TYPE_AVERAGE); ///< Write the header for average statistics.
+        write_statistics_header_config(config, HEADER_TYPE_ALL);     ///< Write the header for all statistics.
+        write_statistics_header_config(config, HEADER_TYPE_TAU);     ///< Write the header for tau statistics.
+
+        // Set additional configuration parameters for non-compliant mode.
+        config.traffic_mode = TRAFFIC_MODE_BURSTY_ALL; ///< Update traffic mode to non-compliant uniform.
+        config.noncompliant_tenant_number = 0;         ///< Set the mean for non-compliant configuration.
+        config.tau = 25600;
+
+        // Loop through tau values and execute the main program for each.
+        for (double ratio = 1.001; ratio < 1.01; ratio += 0.001)
+            for (double state_r = 0.6; state_r < 0.9; state_r += 0.01)
+                for (int upper_buffer = 1; upper_buffer <= 100; upper_buffer++)
+                {
+                    config.state_r = state_r;
+                    config.upper_queue_buffer = upper_buffer;
+                    config.ratio = ratio;                         ///< Set the current tau value in the configuration.
+                    modify_ini_file(configuration_path, &config); ///< Update the INI file with the new tau value.
+
+                    sprintf(command, "../execution/main %s", configuration_path); ///< Command to execute the main program.
+                    system(command);
+
+                    sprintf(command, "python3 %s %s %s", PYTHON_AVERAGE_LOSS_ALL_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
+                    system(command);                                                                                    ///< Execute the command.
+                }
+
+        break; ///< End of the case for UNIFORM_DISTRIBUTION_NONCOMPLIANT.
+    case BURST_NONCOMPLIANT_RATIO:
+        strcpy(name, "burst_half_noncompliant_ratio");                ///< Set the name for the configuration.
+        sprintf(configuration_path, "../configuration/%s.ini", name); ///< Construct the path to the configuration INI file.
+        reduction_inif_file(configuration_path);                      ///< Process the INI file to initialize settings.
+
+        // Parse the INI file and load the configuration.
+        if (ini_parse(configuration_path, handler, &config) < 0)
+        {
+            printf(RED_ELOG "Can't load configuration \"%s\"\n", configuration_path); ///< Error message if loading fails.
+            return EXIT_FAILURE;                                                      ///< Exit with failure status if configuration cannot be loaded.
+        }
+
+        sprintf(data_path, "../data/%s", name);       ///< Construct the path for the data directory.
+        config.data_path = data_path;                 ///< Set the data path in the configuration structure.
+        config.traffic_mode = TRAFFIC_MODE_UNIFORM;   ///< Set the traffic mode to uniform.
+        modify_ini_file(configuration_path, &config); ///< Update the INI file with the current configuration.
+
+        // Prepare the data directory by removing existing data and creating new directories.
+        sprintf(command, "rm -r %s", config.data_path);        ///< Command to remove the existing data directory.
+        system(command);                                       ///< Execute the command.
+        sprintf(command, "mkdir %s", config.data_path);        ///< Command to create the data directory.
+        system(command);                                       ///< Execute the command.
+        sprintf(command, "mkdir %s/images", config.data_path); ///< Command to create the images subdirectory.
+        system(command);                                       ///< Execute the command.
+
+        // Write headers for statistics with different types.
+        write_statistics_header_config(config, HEADER_TYPE_AVERAGE); ///< Write the header for average statistics.
+        write_statistics_header_config(config, HEADER_TYPE_ALL);     ///< Write the header for all statistics.
+        write_statistics_header_config(config, HEADER_TYPE_TAU);     ///< Write the header for tau statistics.
+
+        // Set additional configuration parameters for non-compliant mode.
+        config.traffic_mode = TRAFFIC_MODE_BURSTY_ALL; ///< Update traffic mode to non-compliant uniform.
+        config.noncompliant_tenant_number = 50;        ///< Set the mean for non-compliant configuration.
+        config.noncompliant_mean = 155;
+        config.upper_queue_buffer = 25;
+        config.noncompliant_mode = NONCOMPLIANT_MODE_AVERAGE;
+
+        // Loop through tau values and execute the main program for each.
+        for (double ratio = 1.001; ratio < 1.01; ratio += 0.001)
+            for (double state_r = 0.6; state_r < 0.9; state_r += 0.1)
+                for (long tau = 0; tau <= 51200; tau += (step * 4))
+                {
+                    config.state_r = state_r;
+                    config.tau = tau;
+                    config.ratio = ratio;                         ///< Set the current tau value in the configuration.
+                    modify_ini_file(configuration_path, &config); ///< Update the INI file with the new tau value.
+
+                    sprintf(command, "../execution/main %s", configuration_path); ///< Command to execute the main program.
+                    system(command);
+
+                    sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_ALL_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
+                    system(command);                                                                                                  ///< Execute the command.
+                }
 
         break; ///< End of the case for UNIFORM_DISTRIBUTION_NONCOMPLIANT.
     default:

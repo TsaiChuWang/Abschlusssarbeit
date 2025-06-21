@@ -232,26 +232,50 @@ int main(int argc, char *argv[])
 #ifdef PRINT_METER_DEQUEUE_COUNT
         print_equals_line(); ///< Print a line of equal signs for formatting.
 #endif
+
+        int link_dequeue_count = 0; ///< Initialize the count of link dequeues to zero.
+        // Loop until the dequeue timestamp exceeds the current timestamp.
+        while (link.dequeue_timestamp <= (double)timestamp)
+        {
+            link.dequeue_timestamp += link.dequeue_interval; ///< Update the dequeue timestamp by the interval.
+            link_dequeue_count += 1;                         ///< Increment the dequeue count for each dequeue operation.
+        }
+#ifdef PRINT_LINK_DEQUEUE_COUNT
+        printf("link dequeue_count = %-3d\n", link_dequeue_count); ///< Print the total number of link dequeues.
+#endif
+
+        grid_counts++; ///< Increment the grid counts.
+
+        // Advanced Uniform All uniform
+        int *packets = (int *)malloc(tenant_number * sizeof(int));
+        for (int i = 0; i < 20; i++)
+        {
+            *(packets + i) = uniform_distribution((double)120 * config.unit / config.input_rate);
+        }
+        for (int i = 20; i < 40; i++)
+        {
+            *(packets + i) = uniform_distribution((double)140 * config.unit / config.input_rate);
+        }
+        for (int i = 40; i < 50; i++)
+        {
+            *(packets + i) = uniform_distribution((double)80 * config.unit / config.input_rate);
+        }
+        for (int i = 50; i < 80; i++)
+        {
+            *(packets + i) = uniform_distribution((double)160 * config.unit / config.input_rate);
+        }
+        for (int i = 80; i < 100; i++)
+        {
+            *(packets + i) = uniform_distribution((double)130 * config.unit / config.input_rate);
+        }
+//
+#ifdef PRINT_EACH_GRID_PACKET
+        print_packets(packets, config.tenant_number); ///< Print the generated packets for each tenant.
+#endif
     }
-
-    //         int link_dequeue_count = 0; ///< Initialize the count of link dequeues to zero.
-    //         // Loop until the dequeue timestamp exceeds the current timestamp.
-    //         while (link.dequeue_timestamp <= (double)timestamp)
-    //         {
-    //             link.dequeue_timestamp += link.dequeue_interval; ///< Update the dequeue timestamp by the interval.
-    //             link_dequeue_count += 1;                         ///< Increment the dequeue count for each dequeue operation.
-    //         }
-    // #ifdef PRINT_LINK_DEQUEUE_COUNT
-    //         printf("link dequeue_count = %-3d\n", link_dequeue_count); ///< Print the total number of link dequeues.
-    // #endif
-
-    //         grid_counts++; ///< Increment the grid counts.
 
     //         // Generate packets based on the configuration provided by the generator.
     //         int *packets = packet_generation_configuration(generator, config);
-    // #ifdef PRINT_EACH_GRID_PACKET
-    //         print_packets(packets, config.tenant_number); ///< Print the generated packets for each tenant.
-    // #endif
 
     // #ifdef RECORD_PACKETS_SITUATION
     //         record_packet_situation_agrid(packets, link_dequeue_count, config);

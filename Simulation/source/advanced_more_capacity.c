@@ -169,91 +169,70 @@ int main(int argc, char *argv[])
     // Initialize an array of meter queues based on the provided configuration.
     meter_queue *meter_queues = init_meter_queues_advanced(config);
 
-    //     /**
-    //      * @brief Initializes an array of GCRA structures for traffic shaping
-    //      * @details Creates and initializes an array of GCRA (Generic Cell Rate Algorithm)
-    //      *          instances for multiple tenants, with each GCRA controlling the traffic
-    //      *          rate and burst characteristics for a specific tenant.
-    //      */
-    //     GCRA *gcras = initializeGCRAs(tenant_number, config.tau, config.packet_size);
+    GCRA *gcras = initializeGCRAs(tenant_number, config.tau, config.packet_size);
 
-    // #ifdef PRINT_FIRST_INIT_GCRA
-    //     show_GCRA(*(gcras)); ///< Display the details of the first initialized GCRA instance.
-    // #endif
+#ifdef PRINT_FIRST_INIT_GCRA
+    show_GCRA(*(gcras)); ///< Display the details of the first initialized GCRA instance.
+#endif
 
-    //     /**
-    //      * @brief Initializes a link priority queue.
-    //      */
-    //     link_priority_queue link;                                                   ///< Link priority queue instance
-    //     initlink_priority_queue(&link, config.link_queue_buffer, config, capacity); ///< Initialize the link priority queue
+    /**
+     * @brief Initializes a link priority queue.
+     */
+    link_priority_queue link;                                                   ///< Link priority queue instance
+    initlink_priority_queue(&link, config.link_queue_buffer, config, capacity); ///< Initialize the link priority queue
 
-    //     /** @brief Stores the total number of grids processed. */
-    //     int grid_counts = 0;
-    //     int drop_tenant = UNFOUND;
+    /** @brief Stores the total number of grids processed. */
+    int grid_counts = 0;
+    int drop_tenant = UNFOUND;
 
-    // #ifdef RECORD_PACKETS_SITUATION
-    //     char file_path_packet_situation[MAX_PATH_LENGTH];                                        ///< Path for the packet situation file.
-    //     sprintf(file_path_packet_situation, "%s/record_packet_situation.csv", config.data_path); ///< Format the file path.
+#ifdef RECORD_PACKETS_SITUATION
+    char file_path_packet_situation[MAX_PATH_LENGTH];                                        ///< Path for the packet situation file.
+    sprintf(file_path_packet_situation, "%s/record_packet_situation.csv", config.data_path); ///< Format the file path.
 
-    //     // Open the file for writing (create if it doesn't exist).
-    //     file = fopen(file_path_packet_situation, "w+");
-    //     if (!file) ///< Check if the file opened successfully.
-    //     {
-    //         perror("Error opening file"); /**< Handle file open errors. */
-    //         exit(EXIT_FAILURE);           ///< Exit if the file cannot be opened.
-    //     }
+    // Open the file for writing (create if it doesn't exist).
+    file = fopen(file_path_packet_situation, "w+");
+    if (!file) ///< Check if the file opened successfully.
+    {
+        perror("Error opening file"); /**< Handle file open errors. */
+        exit(EXIT_FAILURE);           ///< Exit if the file cannot be opened.
+    }
 
-    //     // Write the header for the packet statistics.
-    //     if (write_statistics_header(file, HEADER_TYPE_PACKET) == FAILURE)
-    //     {
-    //         printf(RED_ELOG "write_statistics_header(main) : ERROR\n" RESET); ///< Print error message if writing the header fails.
-    //     }
+    // Write the header for the packet statistics.
+    if (write_statistics_header(file, HEADER_TYPE_PACKET) == FAILURE)
+    {
+        printf(RED_ELOG "write_statistics_header(main) : ERROR\n" RESET); ///< Print error message if writing the header fails.
+    }
 
-    //     fclose(file); /**< Ensure the file is properly closed after initialization. */
-    // #endif
+    fclose(file); /**< Ensure the file is properly closed after initialization. */
+#endif
 
-    //     /**
-    //      * @brief Main simulation loop
-    //      * @details Iterates through the simulation time, processing traffic events
-    //      *          at each time step until reaching the configured end time.
-    //      *
-    //      * @note Simulation time is converted to nanoseconds using ONE_SECOND_IN_NS
-    //      * @see ONE_SECOND_IN_NS
-    //      * @see config.simulation_time
-    //      */
-    //     while (timestamp <= (TIME_TYPE)(config.simulation_time * ONE_SECOND_IN_NS))
-    //     {
-    //         // Increment the timestamp by the step size defined in the generator.
-    //         timestamp += (TIME_TYPE)(generator.step_size);
-    // #ifdef PRINT_EACH_TIMESTAMP
-    //         printf("timestamp : %-lf\n", timestamp); ///< Print the current timestamp with a formatted output.
-    // #endif
+    while (timestamp <= (TIME_TYPE)(config.simulation_time * ONE_SECOND_IN_NS))
+    {
+        // Increment the timestamp by the step size defined in the generator.
+        timestamp += (TIME_TYPE)(generator.step_size);
+#ifdef PRINT_EACH_TIMESTAMP
+        printf("timestamp : %-lf\n", timestamp); ///< Print the current timestamp with a formatted output.
+#endif
 
-    //         // Initialize the count of dequeued meters.
-    //         int meter_dequeue_count = 0;
-
-    //         // Loop until the dequeue timestamp exceeds the current timestamp.
-    //         while ((meter_queues)->dequeue_timestamp <= (double)timestamp)
-    //         {
-    //             (meter_queues)->dequeue_timestamp += (meter_queues)->dequeue_interval; ///< Update the dequeue timestamp by the dequeue interval.
-    //             meter_dequeue_count += 1;                                              ///< Increment the count of dequeued meters.
-    //         }
-    // #ifdef PRINT_METER_DEQUEUE_COUNT
-    //         printf("meter_dequeue_count = %d \n", meter_dequeue_count); ///< Print the total meter dequeue count.
-    // #endif
-
-    //         // Allocate memory for an array to store the dequeue counts for each tenant.
-    //         int *meter_dequeue_counts = (int *)malloc(tenant_number * sizeof(int));
-    //         for (int index = 0; index < tenant_number; index++)
-    //         {
-    //             *(meter_dequeue_counts + index) = meter_dequeue_count; ///< Store the meter dequeue count for the current tenant.
-    // #ifdef PRINT_METER_DEQUEUE_COUNT
-    //             printf("%d \n", *(meter_dequeue_counts + index)); ///< Print the dequeue count for the current tenant.
-    // #endif
-    //         }
-    // #ifdef PRINT_METER_DEQUEUE_COUNT
-    //         print_equals_line(); ///< Print a line of equal signs for formatting.
-    // #endif
+        // Initialize the count of dequeued meters.
+        int *meter_dequeue_count = (int *)calloc(tenant_number, sizeof(int));
+        // Loop until the dequeue timestamp exceeds the current timestamp.
+        for (int index = 0; index < tenant_number; index++)
+        {
+            while ((meter_queues + index)->dequeue_timestamp <= (double)timestamp)
+            {
+                (meter_queues + index)->dequeue_timestamp += (meter_queues + index)->dequeue_interval; ///< Update the dequeue timestamp by the dequeue interval.
+                *(meter_dequeue_count + index) += 1;                                                   ///< Increment the count of dequeued meters.
+            }
+#ifdef PRINT_METER_DEQUEUE_COUNT
+            printf("%2d : meter_dequeue_count = %d \n", index, *(meter_dequeue_count + index)); ///< Print the total meter dequeue count.
+            printf("%lf : %lf \n", (meter_queues + index)->dequeue_interval, (meter_queues + index)->dequeue_timestamp);
+#endif
+        }
+#ifdef PRINT_METER_DEQUEUE_COUNT
+        print_equals_line(); ///< Print a line of equal signs for formatting.
+#endif
+    }
 
     //         int link_dequeue_count = 0; ///< Initialize the count of link dequeues to zero.
     //         // Loop until the dequeue timestamp exceeds the current timestamp.

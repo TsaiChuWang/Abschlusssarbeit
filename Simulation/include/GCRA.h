@@ -124,4 +124,50 @@ int gcra_update(TIME_TYPE timestamp, GCRA *pgcra, const configuration config)
     return PACKET_LABEL_ACCEPT; // Redundant but kept for safety
 }
 
+int gcra_update_advanced(TIME_TYPE timestamp, GCRA *pgcra, const configuration config, int index)
+{
+    // Calculate the rate based on the time interval and mean traffic rate
+    long rate = 0;
+    if (index < 20)
+        rate = (long)(timestamp - pgcra->last_time) * (((double)120 * config.unit) / ONE_SECOND_IN_NS);
+    if (index > 19 && index < 40)
+        rate = (long)(timestamp - pgcra->last_time) * (((double)140 * config.unit) / ONE_SECOND_IN_NS);
+    if (index > 39 && index < 50)
+        rate = (long)(timestamp - pgcra->last_time) * (((double)80 * config.unit) / ONE_SECOND_IN_NS);
+    if (index > 49 && index < 80)
+        rate = (long)(timestamp - pgcra->last_time) * (((double)160 * config.unit) / ONE_SECOND_IN_NS);
+    if (index > 79 && index < 100)
+        rate = (long)(timestamp - pgcra->last_time) * (((double)130 * config.unit) / ONE_SECOND_IN_NS);
+
+    long x = (long)(pgcra->x - rate);
+
+#ifdef PRINT_GCRA_UPDATE
+    // Compute upper bound for valid timestamp intervals
+    double upper = (double)(ONE_SECOND_IN_NS * config.packet_size) / (config.mean * config.unit);
+    if (timestamp - pgcra->last_time > (long)(upper))
+        printf("lst = %9lf, time = %-7f, inter = %7lf, rate = %6ld x= %6ld\n",
+               pgcra->last_time, timestamp, timestamp - pgcra->last_time, rate, x);
+    else
+        printf("lst = %9lf, time = %-7f, inter = \x1B[1;31m%6lf\x1B[0m, rate = %6ld x= %6ld\n",
+               pgcra->last_time, timestamp, timestamp - pgcra->last_time, rate, x);
+
+    printf("x = %ld, tau = %ld %d\n", x, pgcra->tau, x > pgcra->tau);
+#endif
+
+    // Check if the packet exceeds the threshold and should be dropped
+    if (x > pgcra->tau)
+    {
+        return PACKET_LABEL_GCRA_LABELED;
+    }
+    else
+    {
+        // Update GCRA state and accept the packet
+        pgcra->x = MAX((long)0, x) + pgcra->l;
+        pgcra->last_time = timestamp;
+        return PACKET_LABEL_ACCEPT;
+    }
+
+    return PACKET_LABEL_ACCEPT; // Redundant but kept for safety
+}
+
 #endif // GCRA_H

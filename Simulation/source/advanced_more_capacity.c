@@ -228,6 +228,7 @@ int main(int argc, char *argv[])
             printf("%2d : meter_dequeue_count = %d \n", index, *(meter_dequeue_count + index)); ///< Print the total meter dequeue count.
             printf("%lf : %lf \n", (meter_queues + index)->dequeue_interval, (meter_queues + index)->dequeue_timestamp);
 #endif
+            // printf("%2d : %lf : %lf \n", index, (meter_queues + index)->dequeue_interval, (meter_queues + index)->dequeue_timestamp);
         }
 #ifdef PRINT_METER_DEQUEUE_COUNT
         print_equals_line(); ///< Print a line of equal signs for formatting.
@@ -272,335 +273,301 @@ int main(int argc, char *argv[])
 #ifdef PRINT_EACH_GRID_PACKET
         print_packets(packets, config.tenant_number); ///< Print the generated packets for each tenant.
 #endif
+
+#ifdef RECORD_PACKETS_SITUATION
+        record_packet_situation_agrid(packets, link_dequeue_count, config);
+#endif
+
+        // Generate a shuffled array of tenant indices.
+        int *order = generateShuffledArray(tenant_number);
+
+        // Iterate over each tenant index in the shuffled array.
+        for (int index = 0; index < tenant_number; index++)
+        {
+#ifdef PRINT_ORDER
+            printf("%d ", *(order + index)); ///< Print the current tenant index.
+#endif
+            int tenant = *(order + index); ///< Retrieve the tenant index from the shuffled array.
+
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
+            {
+                *(count.count + tenant) += 1; ///< Increment the count for the tenant
+            }
+            else
+                continue; ///< Skip to the next iteration if there is no relevant packet
+
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant.
+            {
+                if (*(meter_dequeue_count + tenant) > 0) ///< Check if there are packets to dequeue for the tenant.
+                {
+                    meter_dequeue((meter_queues + tenant)); ///< Dequeue a packet from the meter queue for the tenant.
+                    *(meter_dequeue_count + tenant) -= 1;   ///< Decrement the count of dequeued packets for the tenant.
+                }
+
+                // Enqueue a packet if the meter queue is ready.
+                if (meter_enqueue((meter_queues + tenant)) == QUEUE_READY)
+                {
+                    *(packets + tenant) = PACKET_LABEL_ACCEPT; ///< Set the packet label to ACCEPT for the tenant.
+                }
+                else
+                {
+                    label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] += 1; ///< Increment the drop count for exceeding upper bound.
+                    continue;                                                        ///< Skip to the next iteration if enqueueing fails.
+                }
+            }
+            else
+            {
+                continue; ///< Skip to the next iteration if there is no relevant packet.
+            }
+
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
+            {
+                *(packets + tenant) = gcra_update_advanced(timestamp, (gcras + tenant), config, tenant); ///< Update the packet using GCRA
+            }
+
+#ifdef CHECK_GCRA
+            if (tenant == trace_index)
+            {
+                printf("current time : %lf\n", timestamp);
+                show_GCRA(*(gcras + trace_index));
+
+                if (*(packets + trace_index) == PACKET_LABEL_GCRA_LABELED)
+                    printf(RED_ELOG "GCRA out of bucket\n" RESET);
+            }
+#endif
+
+            if (*(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is labeled as GCRA
+            {
+                label.labels[tenant][PACKET_LABEL_GCRA_LABELED] += 1; ///< Increment the GCRA labeled packet count for the tenant
+#ifdef VALIDATE_MODE
+                if (tenant == trace_index)
+                    printf("%2d \n", PACKET_LABEL_GCRA_LABELED);
+#endif
+            }
+
+            // Link queue enqueue
+#ifdef CHECK_LINK_QUEUE
+            print_equals_line();
+            print_queue(&link);
+#endif
+
+            if (*(packets + tenant) == PACKET_LABEL_ACCEPT || *(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is ACCEPT or GCRA labeled
+            {
+                if (link_dequeue_count > 0) ///< Check if there are packets to dequeue
+                {
+                    int dequeue_index = dequeue(&link);                        ///< Dequeue a packet from the link queue
+                    if (dequeue_index != UNFOUND)                              ///< Check if a valid index was returned
+                        label.labels[dequeue_index][PACKET_LABEL_ACCEPT] += 1; ///< Increment the count for ACCEPT labeled packets
+#ifdef VALIDATE_MODE_LINK
+                    if (dequeue_index == trace_index)
+                        printf(RED_ELOG "%2d \n" RESET, PACKET_LABEL_ACCEPT);
+#endif
+
+                    link_dequeue_count -= 1; ///< Decrease the dequeue count
+                }
+#ifdef CHECK_LINK_QUEUE
+                printf("finished dequeue\n");
+                print_queue(&link);
+#endif
+                if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Further check if the packet is ACCEPT
+                {
+
+                    enqueue(&link, ALPHA, tenant, &drop_tenant); ///< Enqueue the ACCEPT packet into the link queue
+
+#ifdef CHECK_LINK_QUEUE
+                    printf("(alpha)enqueue result : ");
+                    if (drop_tenant != UNFOUND)
+                        printf(RED_ELOG "%d\n" RESET, drop_tenant);
+                    else
+                        printf("%d\n", drop_tenant);
+                    print_queue(&link);
+#endif
+
+#ifdef VALIDATE_MODE_LINK
+                    if (drop_tenant == trace_index)
+                        printf("%2d \n", PACKET_LABEL_OVER_CAPACITY_DROPPED);
+#endif
+                    if (drop_tenant != UNFOUND)                                                 ///< Check if a packet was dropped
+                        if (drop_tenant != tenant)                                              ///< If the dropped packet is not from the current tenant
+                            label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the other tenant
+                        else
+                            label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the current tenant
+#ifdef VALIDATE_MODE_LINK
+                    if (tenant == trace_index)
+                        printf("\n");
+#endif
+                    continue;
+                }
+
+                /**
+                 * @brief Enqueues packets labeled as GCRA into the link queue.
+                 *
+                 * This code checks if the packet for the specified tenant is labeled
+                 * as PACKET_LABEL_GCRA_LABELED. If it is, the packet is enqueued
+                 * into the link queue, and any drops due to capacity limits are
+                 * recorded.
+                 */
+                if (*(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is labeled as GCRA
+                {
+                    enqueue(&link, BETA, tenant, &drop_tenant); ///< Enqueue the GCRA labeled packet into the link queue
+
+#ifdef CHECK_LINK_QUEUE
+                    printf("(beta)enqueue result : ");
+                    if (drop_tenant != UNFOUND)
+                        printf(RED_ELOG "%d\n" RESET, drop_tenant);
+                    else
+                        printf("%d\n", drop_tenant);
+                    print_queue(&link);
+#endif
+
+#ifdef VALIDATE_MODE_LINK
+                    if (drop_tenant == trace_index)
+                        printf("%2d \n", PACKET_LABEL_OVER_CAPACITY_DROPPED);
+#endif
+
+                    if (drop_tenant != UNFOUND)                                             ///< Check if a packet was dropped
+                        label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the tenant whose packet was dropped
+#ifdef VALIDATE_MODE_LINK
+                    if (tenant == trace_index)
+                        printf("\n");
+#endif
+                    continue;
+                }
+            }
+#ifdef VALIDATE_MODE
+            printf("\n");
+#endif
+        }
+
+        // Iterate over each tenant.
+        for (int tenant = 0; tenant < tenant_number; tenant++)
+        {
+            // Dequeue packets from the meter queue while there are packets to dequeue for the tenant.
+            while (*(meter_dequeue_count + tenant) > 0)
+            {
+                meter_dequeue((meter_queues + tenant)); ///< Dequeue a packet from the meter queue for the tenant.
+                *(meter_dequeue_count + tenant) -= 1;   ///< Decrement the count of dequeued packets for the tenant.
+            }
+        }
+
+        while (link_dequeue_count > 0) ///< Continue processing while there are packets to dequeue
+        {
+            int index = dequeue(&link);                        ///< Dequeue a packet from the link queue
+            if (index != UNFOUND)                              ///< Check if a valid index was returned
+                label.labels[index][PACKET_LABEL_ACCEPT] += 1; ///< Increment the count for ACCEPT labeled packets
+            link_dequeue_count -= 1;                           ///< Decrease the dequeue count
+        }
+#ifdef PRINT_ORDER
+        printf("\n");        ///< Print a newline for better output formatting.
+        print_equals_line(); ///< Print a line of equal signs for visual separation in the output.
+#endif
     }
 
-    //         // Generate packets based on the configuration provided by the generator.
-    //         int *packets = packet_generation_configuration(generator, config);
+#ifdef PRINT_GRID_COUNT
+    printf("grid numbers= %d\n", grid_counts); ///< Print the current count of grid numbers.
+#endif
 
-    // #ifdef RECORD_PACKETS_SITUATION
-    //         record_packet_situation_agrid(packets, link_dequeue_count, config);
-    // #endif
+#ifdef PRINT_PACKET_COUNTS
+    show_packets_count(count); ///< Display the count of packets.
+#endif
 
-    // #ifdef VALIDATE_MODE
-    //         printf("%2d : ", *(packets + trace_index));
-    // #endif
+#ifdef PRINT_PACKET_LABEL
+    show_packets_label(label); ///< Display the labels of packets.
+#endif
 
-    //         // Generate a shuffled array of tenant indices.
-    //         int *order = generateShuffledArray(tenant_number);
+#ifdef PRINT_COMPLIANT_AND_NON_COMPLIANT
+    // Check if the traffic mode is non-compliant or bursty, and if there are non-compliant tenants.
+    if ((config.traffic_mode == TRAFFIC_MODE_NONCOMPLIANT_UNIFORM || config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL) && config.noncompliant_tenant_number > 0)
+    {
+        print_compliant_and_noncompliant(label, config); ///< Print details of compliant and non-compliant tenants.
+    }
+#endif
 
-    //         // Iterate over each tenant index in the shuffled array.
-    //         for (int index = 0; index < tenant_number; index++)
-    //         {
-    // #ifdef PRINT_ORDER
-    //             printf("%d ", *(order + index)); ///< Print the current tenant index.
-    // #endif
-    //             int tenant = *(order + index); ///< Retrieve the tenant index from the shuffled array.
+#ifdef RECORD_COMPLIANT_AND_NONCOMPLIANT_TAU
+    // Check if the traffic mode is non-compliant or bursty, and if there are non-compliant tenants.
+    if ((config.traffic_mode == TRAFFIC_MODE_NONCOMPLIANT_UNIFORM || config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL) && config.noncompliant_tenant_number > 0)
+    {
+        record_compliant_and_noncompliant_tau(label, config); ///< Record tau values for compliant and non-compliant tenants.
+    }
+#endif
 
-    //             /**
-    //              * @brief Increments the packet count for a specific tenant based on packet label.
-    //              *
-    //              * This code checks if the packet for the specified tenant is of the
-    //              * type PACKET_LABEL_ACCEPT. If it is, the count for that tenant is
-    //              * incremented. If not, the loop continues without any further action.
-    //              */
-    //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
-    //             {
-    //                 *(count.count + tenant) += 1; ///< Increment the count for the tenant
-    //             }
-    //             else
-    //                 continue; ///< Skip to the next iteration if there is no relevant packet
+#ifdef RECORD_COMPLIANT_AND_NONCOMPLIANT_ALL
+    // Check if the traffic mode is non-compliant or bursty, and if there are non-compliant tenants.
+    if ((config.traffic_mode == TRAFFIC_MODE_NONCOMPLIANT_UNIFORM || config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL) && config.noncompliant_tenant_number > 0)
+    {
+        record_compliant_and_noncompliant_all(label, config); ///< Record all data for compliant and non-compliant tenants.
+    }
+#endif
 
-    //             /**
-    //              * @brief Check for upper bound exceeded traffic operation.
-    //              *
-    //              * This section of code verifies whether the traffic operation for a specific tenant
-    //              * exceeds the upper bound of accepted packets. It specifically checks if the packet
-    //              * label for the tenant is set to ACCEPT. If the packet label is ACCEPT, the code
-    //              * proceeds to manage the meter dequeue and enqueue operations accordingly.
-    //              *
-    //              * The following checks are performed:
-    //              * - If the packet label is ACCEPT, it checks if there are packets available to
-    //              *   dequeue from the meter.
-    //              * - If there are packets to dequeue, it performs the dequeue operation and
-    //              *   decrements the count of available packets for the tenant.
-    //              * - After dequeuing, it attempts to enqueue a packet back into the meter queue.
-    //              * - If the enqueue operation is successful, the packet label remains ACCEPT.
-    //              * - If the enqueue operation fails, it increments the drop count for packets that
-    //              *   exceed the upper bound and continues to the next tenant.
-    //              *
-    //              * If the packet label is not ACCEPT, the code skips to the next iteration without
-    //              * performing any operations.
-    //              */
-    //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant.
-    //             {
-    //                 if (*(meter_dequeue_counts + tenant) > 0) ///< Check if there are packets to dequeue for the tenant.
-    //                 {
-    //                     meter_dequeue((meter_queues + tenant)); ///< Dequeue a packet from the meter queue for the tenant.
-    //                     *(meter_dequeue_counts + tenant) -= 1;  ///< Decrement the count of dequeued packets for the tenant.
-    //                 }
+#ifdef RECORD_AVERAGE_LOSS
+    record_average_loss(label, config); ///< Record the average loss using the provided label and configuration.
+#endif
 
-    //                 // Enqueue a packet if the meter queue is ready.
-    //                 if (meter_enqueue((meter_queues + tenant)) == QUEUE_READY)
-    //                 {
-    //                     *(packets + tenant) = PACKET_LABEL_ACCEPT; ///< Set the packet label to ACCEPT for the tenant.
-    //                 }
-    //                 else
-    //                 {
-    //                     label.labels[tenant][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] += 1; ///< Increment the drop count for exceeding upper bound.
-    // #ifdef VALIDATE_MODE
-    //                     printf("%2d", PACKET_LABEL_OVER_UPPERBOUND_DROPPED);
-    // #endif
-    //                     continue; ///< Skip to the next iteration if enqueueing fails.
-    //                 }
-    //             }
-    //             else
-    //             {
-    //                 continue; ///< Skip to the next iteration if there is no relevant packet.
-    //             }
+#ifdef RECORD_PACKETS_SITUATION
+    // Check if the traffic mode is less than BURSTY_ALL
+    if (config.traffic_mode < TRAFFIC_MODE_BURSTY_ALL)
+    {
+        // Prepare and execute the command to record packet situation for uniform traffic.
+        sprintf(command, "python3 ../python/%s uniform %s %d %d", PYTHON_PACKET_SITUATION_CHART_PATH, configuration_path, 500, 1000);
+        system(command); ///< Execute the command to run the Python script for uniform traffic.
+    }
 
-    //             /**
-    //              * @brief Processes packets through the GCRA algorithm.
-    //              *
-    //              * This code checks if the packet for the specified tenant is of the
-    //              * type PACKET_LABEL_ACCEPT. If it is, the packet undergoes an update
-    //              * using the GCRA algorithm based on the current timestamp and tenant's
-    //              * GCRA instance.
-    //              */
-    //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
-    //             {
-    //                 *(packets + tenant) = gcra_update(timestamp, (gcras + tenant), config); ///< Update the packet using GCRA
-    //             }
+    // Check if the traffic mode is BURSTY_ALL or higher
+    if (config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL)
+    {
+        // Prepare and execute the command to record packet situation for burst traffic.
+        sprintf(command, "python3 ../python/%s burst %s %d %d", PYTHON_PACKET_SITUATION_CHART_PATH, configuration_path, 500, 1000);
+        system(command); ///< Execute the command to run the Python script for burst traffic.
+    }
+#endif
 
-    // #ifdef CHECK_GCRA
-    //             if (tenant == trace_index)
-    //             {
-    //                 printf("current time : %lf\n", timestamp);
-    //                 show_GCRA(*(gcras + trace_index));
+    printf("         Interval       | mean | number |    loss\n");
+    for (int j = 0; j < 5; j++)
+    {
+        double average_loss_all = 0.0;
+        switch (j)
+        {
+        case 0:
+            for (int i = 0; i < 20; i++)
+                average_loss_all += (double)(label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[i][PACKET_LABEL_ACCEPT] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] + label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+            printf(" Interval %d : %03d ~ %03d |  %03d |   %2d   | %.7lf %%\n", j, 80, 160, 120, 20, average_loss_all / 20);
+            break;
+        case 1:
+            for (int i = 20; i < 40; i++)
+                average_loss_all += (double)(label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[i][PACKET_LABEL_ACCEPT] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] + label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+            printf(" Interval %d : %03d ~ %03d |  %03d |   %2d   | %.7lf %%\n", j, 110, 170, 140, 20, average_loss_all / 20);
+            break;
+        case 2:
+            for (int i = 40; i < 50; i++)
+                average_loss_all += (double)(label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[i][PACKET_LABEL_ACCEPT] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] + label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+            printf(" Interval %d : %03d ~ %03d |  %03d |   %2d   | %.7lf %%\n", j, 30, 130, 80, 10, average_loss_all / 10);
+            break;
+        case 3:
+            for (int i = 50; i < 80; i++)
+                average_loss_all += (double)(label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[i][PACKET_LABEL_ACCEPT] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] + label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+            printf(" Interval %d : %03d ~ %03d |  %03d |   %2d   | %.7lf %%\n", j, 140, 180, 160, 30, average_loss_all / 30);
+            break;
+        case 4:
+            for (int i = 80; i < 100; i++)
+                average_loss_all += (double)(label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[i][PACKET_LABEL_ACCEPT] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] + label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
+            printf(" Interval %d : %03d ~ %03d |  %03d |   %2d    %.7lf %%\n", j, 120, 140, 130, 20, average_loss_all / 20);
+            break;
+        default:
+            break;
+        }
+    }
+    free(command);                    ///< Free the memory allocated for the command buffer.
+    freeTrafficGenerator(&generator); ///< Free resources associated with the traffic generator.
+    free(meter_queues);               ///< Free the memory allocated for meter queues.
+    free(gcras);                      ///< Free the memory allocated for GCRA structures.
+    free_packets_count(&count);       ///< Free the resources associated with packet count management.
+    free_packets_label(&label);       ///< Free the memory allocated for packet labels.
 
-    //                 if (*(packets + trace_index) == PACKET_LABEL_GCRA_LABELED)
-    //                     printf(RED_ELOG "GCRA out of bucket\n" RESET);
-    //             }
-    // #endif
-    //             /**
-    //              * @brief Updates the statistics for packets labeled as GCRA.
-    //              *
-    //              * This code checks if the packet for the specified tenant is labeled
-    //              * as PACKET_LABEL_GCRA_LABELED. If it is, the corresponding statistic
-    //              * for that label is incremented in the labels structure.
-    //              */
-    //             // Statistic for the number of packets labeled as GCRA
-    //             if (*(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is labeled as GCRA
-    //             {
-    //                 label.labels[tenant][PACKET_LABEL_GCRA_LABELED] += 1; ///< Increment the GCRA labeled packet count for the tenant
-    // #ifdef VALIDATE_MODE
-    //                 if (tenant == trace_index)
-    //                     printf("%2d \n", PACKET_LABEL_GCRA_LABELED);
-    // #endif
-    //             }
-
-    //             /**
-    //              * @brief Enqueues packets into the link queue based on their labels.
-    //              *
-    //              * This code checks if the packet for the specified tenant is either
-    //              * labeled as PACKET_LABEL_ACCEPT or PACKET_LABEL_GCRA_LABELED. If
-    //              * the packet is labeled as ACCEPT, it processes the enqueue operation
-    //              * for the link queue, handling potential drops due to capacity limits.
-    //              */
-    //             // Link queue enqueue
-    // #ifdef CHECK_LINK_QUEUE
-    //             print_equals_line();
-    //             print_queue(&link);
-    // #endif
-    //             if (*(packets + tenant) == PACKET_LABEL_ACCEPT || *(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is ACCEPT or GCRA labeled
-    //             {
-    //                 if (link_dequeue_count > 0) ///< Check if there are packets to dequeue
-    //                 {
-    //                     int dequeue_index = dequeue(&link);                        ///< Dequeue a packet from the link queue
-    //                     if (dequeue_index != UNFOUND)                              ///< Check if a valid index was returned
-    //                         label.labels[dequeue_index][PACKET_LABEL_ACCEPT] += 1; ///< Increment the count for ACCEPT labeled packets
-    // #ifdef VALIDATE_MODE_LINK
-    //                     if (dequeue_index == trace_index)
-    //                         printf(RED_ELOG "%2d \n" RESET, PACKET_LABEL_ACCEPT);
-    // #endif
-
-    //                     link_dequeue_count -= 1; ///< Decrease the dequeue count
-    //                 }
-    // #ifdef CHECK_LINK_QUEUE
-    //                 printf("finished dequeue\n");
-    //                 print_queue(&link);
-    // #endif
-    //                 if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Further check if the packet is ACCEPT
-    //                 {
-
-    //                     enqueue(&link, ALPHA, tenant, &drop_tenant); ///< Enqueue the ACCEPT packet into the link queue
-
-    // #ifdef CHECK_LINK_QUEUE
-    //                     printf("(alpha)enqueue result : ");
-    //                     if (drop_tenant != UNFOUND)
-    //                         printf(RED_ELOG "%d\n" RESET, drop_tenant);
-    //                     else
-    //                         printf("%d\n", drop_tenant);
-    //                     print_queue(&link);
-    // #endif
-
-    // #ifdef VALIDATE_MODE_LINK
-    //                     if (drop_tenant == trace_index)
-    //                         printf("%2d \n", PACKET_LABEL_OVER_CAPACITY_DROPPED);
-    // #endif
-    //                     if (drop_tenant != UNFOUND)                                                 ///< Check if a packet was dropped
-    //                         if (drop_tenant != tenant)                                              ///< If the dropped packet is not from the current tenant
-    //                             label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the other tenant
-    //                         else
-    //                             label.labels[tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the current tenant
-    // #ifdef VALIDATE_MODE_LINK
-    //                     if (tenant == trace_index)
-    //                         printf("\n");
-    // #endif
-    //                     continue;
-    //                 }
-
-    //                 /**
-    //                  * @brief Enqueues packets labeled as GCRA into the link queue.
-    //                  *
-    //                  * This code checks if the packet for the specified tenant is labeled
-    //                  * as PACKET_LABEL_GCRA_LABELED. If it is, the packet is enqueued
-    //                  * into the link queue, and any drops due to capacity limits are
-    //                  * recorded.
-    //                  */
-    //                 if (*(packets + tenant) == PACKET_LABEL_GCRA_LABELED) ///< Check if the packet is labeled as GCRA
-    //                 {
-    //                     enqueue(&link, BETA, tenant, &drop_tenant); ///< Enqueue the GCRA labeled packet into the link queue
-
-    // #ifdef CHECK_LINK_QUEUE
-    //                     printf("(beta)enqueue result : ");
-    //                     if (drop_tenant != UNFOUND)
-    //                         printf(RED_ELOG "%d\n" RESET, drop_tenant);
-    //                     else
-    //                         printf("%d\n", drop_tenant);
-    //                     print_queue(&link);
-    // #endif
-
-    // #ifdef VALIDATE_MODE_LINK
-    //                     if (drop_tenant == trace_index)
-    //                         printf("%2d \n", PACKET_LABEL_OVER_CAPACITY_DROPPED);
-    // #endif
-
-    //                     if (drop_tenant != UNFOUND)                                             ///< Check if a packet was dropped
-    //                         label.labels[drop_tenant][PACKET_LABEL_OVER_CAPACITY_DROPPED] += 1; ///< Increment the drop count for the tenant whose packet was dropped
-    // #ifdef VALIDATE_MODE_LINK
-    //                     if (tenant == trace_index)
-    //                         printf("\n");
-    // #endif
-    //                     continue;
-    //                 }
-    //             }
-    //         }
-
-    // #ifdef VALIDATE_MODE
-    //         printf("\n");
-    // #endif
-    //         // Iterate over each tenant.
-    //         for (int tenant = 0; tenant < tenant_number; tenant++)
-    //         {
-    //             // Dequeue packets from the meter queue while there are packets to dequeue for the tenant.
-    //             while (*(meter_dequeue_counts + tenant) > 0)
-    //             {
-    //                 meter_dequeue((meter_queues + tenant)); ///< Dequeue a packet from the meter queue for the tenant.
-    //                 *(meter_dequeue_counts + tenant) -= 1;  ///< Decrement the count of dequeued packets for the tenant.
-    //             }
-    //         }
-
-    //         /**
-    //          * @brief Dequeues packets from the link queue and updates statistics.
-    //          *
-    //          * This code processes packets in the link queue while there are
-    //          * packets available to dequeue. For each dequeued packet, the
-    //          * corresponding statistic for PACKET_LABEL_ACCEPT is incremented.
-    //          */
-    //         while (link_dequeue_count > 0) ///< Continue processing while there are packets to dequeue
-    //         {
-    //             int index = dequeue(&link);                        ///< Dequeue a packet from the link queue
-    //             if (index != UNFOUND)                              ///< Check if a valid index was returned
-    //                 label.labels[index][PACKET_LABEL_ACCEPT] += 1; ///< Increment the count for ACCEPT labeled packets
-    //             link_dequeue_count -= 1;                           ///< Decrease the dequeue count
-    //         }
-
-    // #ifdef PRINT_ORDER
-    //         printf("\n");        ///< Print a newline for better output formatting.
-    //         print_equals_line(); ///< Print a line of equal signs for visual separation in the output.
-    // #endif
-    //     }
-
-    // #ifdef PRINT_GRID_COUNT
-    //     printf("grid numbers= %d\n", grid_counts); ///< Print the current count of grid numbers.
-    // #endif
-
-    // #ifdef PRINT_PACKET_COUNTS
-    //     show_packets_count(count); ///< Display the count of packets.
-    // #endif
-
-    // #ifdef PRINT_PACKET_LABEL
-    //     show_packets_label(label); ///< Display the labels of packets.
-    // #endif
-
-    // #ifdef PRINT_COMPLIANT_AND_NON_COMPLIANT
-    //     // Check if the traffic mode is non-compliant or bursty, and if there are non-compliant tenants.
-    //     if ((config.traffic_mode == TRAFFIC_MODE_NONCOMPLIANT_UNIFORM || config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL) && config.noncompliant_tenant_number > 0)
-    //     {
-    //         print_compliant_and_noncompliant(label, config); ///< Print details of compliant and non-compliant tenants.
-    //     }
-    // #endif
-
-    // #ifdef RECORD_COMPLIANT_AND_NONCOMPLIANT_TAU
-    //     // Check if the traffic mode is non-compliant or bursty, and if there are non-compliant tenants.
-    //     if ((config.traffic_mode == TRAFFIC_MODE_NONCOMPLIANT_UNIFORM || config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL) && config.noncompliant_tenant_number > 0)
-    //     {
-    //         record_compliant_and_noncompliant_tau(label, config); ///< Record tau values for compliant and non-compliant tenants.
-    //     }
-    // #endif
-
-    // #ifdef RECORD_COMPLIANT_AND_NONCOMPLIANT_ALL
-    //     // Check if the traffic mode is non-compliant or bursty, and if there are non-compliant tenants.
-    //     if ((config.traffic_mode == TRAFFIC_MODE_NONCOMPLIANT_UNIFORM || config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL) && config.noncompliant_tenant_number > 0)
-    //     {
-    //         record_compliant_and_noncompliant_all(label, config); ///< Record all data for compliant and non-compliant tenants.
-    //     }
-    // #endif
-
-    // #ifdef RECORD_AVERAGE_LOSS
-    //     record_average_loss(label, config); ///< Record the average loss using the provided label and configuration.
-    // #endif
-
-    // #ifdef RECORD_PACKETS_SITUATION
-    //     // Check if the traffic mode is less than BURSTY_ALL
-    //     if (config.traffic_mode < TRAFFIC_MODE_BURSTY_ALL)
-    //     {
-    //         // Prepare and execute the command to record packet situation for uniform traffic.
-    //         sprintf(command, "python3 ../python/%s uniform %s %d %d", PYTHON_PACKET_SITUATION_CHART_PATH, configuration_path, 500, 1000);
-    //         system(command); ///< Execute the command to run the Python script for uniform traffic.
-    //     }
-
-    //     // Check if the traffic mode is BURSTY_ALL or higher
-    //     if (config.traffic_mode >= TRAFFIC_MODE_BURSTY_ALL)
-    //     {
-    //         // Prepare and execute the command to record packet situation for burst traffic.
-    //         sprintf(command, "python3 ../python/%s burst %s %d %d", PYTHON_PACKET_SITUATION_CHART_PATH, configuration_path, 500, 1000);
-    //         system(command); ///< Execute the command to run the Python script for burst traffic.
-    //     }
-    // #endif
-
-    //     free(command);                    ///< Free the memory allocated for the command buffer.
-    //     freeTrafficGenerator(&generator); ///< Free resources associated with the traffic generator.
-    //     free(meter_queues);               ///< Free the memory allocated for meter queues.
-    //     free(gcras);                      ///< Free the memory allocated for GCRA structures.
-    //     free_packets_count(&count);       ///< Free the resources associated with packet count management.
-    //     free_packets_label(&label);       ///< Free the memory allocated for packet labels.
-
-    // #ifdef PRINT_EXECUTION_TIME
-    //     execute_clock = clock() - execute_clock;                      ///< Calculate the elapsed execution time.
-    //     double time_taken = ((double)execute_clock) / CLOCKS_PER_SEC; ///< Convert clock ticks to seconds.
-    //     printf("Execute time : %f s\n", time_taken);                  ///< Print the execution time in seconds.
-    // #endif
+#ifdef PRINT_EXECUTION_TIME
+    execute_clock = clock() - execute_clock;                      ///< Calculate the elapsed execution time.
+    double time_taken = ((double)execute_clock) / CLOCKS_PER_SEC; ///< Convert clock ticks to seconds.
+    printf("Execute time : %f s\n", time_taken);                  ///< Print the execution time in seconds.
+#endif
 
     return EXIT_SUCCESS;
 }

@@ -25,6 +25,8 @@
 /** @brief Traffic mode for different rates. */
 #define TRAFFIC_MODE_DIFFERENT_R 8
 
+#define TRAFFIC_MODE_ADVANCED_DIFFERENT 9
+
 /**
  * @def NONCOMPLIANT_MODE_BEFORE
  * @brief Positions compliant flows before other flows in the sequence.

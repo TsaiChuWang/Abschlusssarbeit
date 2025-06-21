@@ -157,6 +157,19 @@ meter_queue init_meter_queue(const configuration config)
     return mqueue; ///< Return the initialized meter queue.
 }
 
+meter_queue init_meter_queue_advanced(const configuration config, int mean, int standard_deviation)
+{
+    meter_queue mqueue = {0}; ///< Initialize the meter queue structure to zero.
+
+    init_circular_queue(&(mqueue.queue), config.upper_queue_buffer); ///< Initialize the circular queue.
+
+    mqueue.dequeue_timestamp = (TIME_TYPE)0; ///< Initialize the dequeue timestamp to zero.
+    mqueue.dequeue_interval = (TIME_TYPE)(config.packet_size *
+                                          (double)ONE_SECOND_IN_NS / ((mean + standard_deviation) * config.unit)); ///< Calculate the dequeue interval.
+
+    return mqueue; ///< Return the initialized meter queue.
+}
+
 /**
  * @brief Initializes multiple meter queues for each tenant.
  *
@@ -173,6 +186,32 @@ meter_queue *init_meter_queues(const configuration config)
     for (int i = 0; i < config.tenant_number; i++)
     {
         *(mqueues + i) = init_meter_queue(config); ///< Initialize each meter queue.
+    }
+    return mqueues; ///< Return the pointer to the array of meter queues.
+}
+
+meter_queue *init_meter_queues_advanced(const configuration config)
+{
+    meter_queue *mqueues = (meter_queue *)malloc(sizeof(meter_queue) * config.tenant_number); ///< Allocate memory for meter queues.
+    for (int i = 0; i < 20; i++)
+    {
+        *(mqueues + i) = init_meter_queue_advanced(config, 120, 40); ///< Initialize each meter queue.
+    }
+    for (int i = 20; i < 40; i++)
+    {
+        *(mqueues + i) = init_meter_queue_advanced(config, 140, 30); ///< Initialize each meter queue.
+    }
+    for (int i = 40; i < 50; i++)
+    {
+        *(mqueues + i) = init_meter_queue_advanced(config, 80, 50); ///< Initialize each meter queue.
+    }
+    for (int i = 50; i < 80; i++)
+    {
+        *(mqueues + i) = init_meter_queue_advanced(config, 160, 20); ///< Initialize each meter queue.
+    }
+    for (int i = 80; i < 100; i++)
+    {
+        *(mqueues + i) = init_meter_queue_advanced(config, 130, 10); ///< Initialize each meter queue.
     }
     return mqueues; ///< Return the pointer to the array of meter queues.
 }

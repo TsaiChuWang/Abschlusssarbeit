@@ -152,22 +152,22 @@ int main(int argc, char *argv[])
 
     TIME_TYPE timestamp = (TIME_TYPE)0; ///< Initialize the timestamp variable to zero.
 
-    // #ifdef SHOW_TRAFFICGENERATOR
-    //     showTrafficGenerator(generator); ///< Display the current state and configuration of the traffic generator.
-    // #endif
+#ifdef SHOW_TRAFFICGENERATOR
+    showTrafficGenerator(generator); ///< Display the current state and configuration of the traffic generator.
+#endif
 
-    //     /** @brief Structure to store packet counts for each tenant. */
-    //     packets_count count;
-    //     /**  @brief Initializes packet count tracking. */
-    //     init_packets_count(&count, tenant_number, obtain_grids_number(config));
+    /** @brief Structure to store packet counts for each tenant. */
+    packets_count count;
+    /**  @brief Initializes packet count tracking. */
+    init_packets_count(&count, tenant_number, obtain_grids_number(config));
 
-    //     /** @brief Structure to label packets based on their classification. */
-    //     packets_label label;
-    //     /** @brief Initializes packet labeling structure. */
-    //     init_Packets_Label(&label, tenant_number, &count);
+    /** @brief Structure to label packets based on their classification. */
+    packets_label label;
+    /** @brief Initializes packet labeling structure. */
+    init_Packets_Label(&label, tenant_number, &count);
 
-    //     // Initialize an array of meter queues based on the provided configuration.
-    //     meter_queue *meter_queues = init_meter_queues(config);
+    // Initialize an array of meter queues based on the provided configuration.
+    meter_queue *meter_queues = init_meter_queues_advanced(config);
 
     //     /**
     //      * @brief Initializes an array of GCRA structures for traffic shaping

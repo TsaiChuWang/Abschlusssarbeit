@@ -205,6 +205,70 @@ write_error:
     return;
 }
 
+/**
+ * @brief Writes common configuration settings to an INI file.
+ *
+ * This function creates or overwrites the specified INI file with
+ * configuration settings for simulation, traffic, and threshold sections.
+ *
+ * @param filename The path to the INI file to be written.
+ */
+void reduction_inif_file_common_configuration(const char *filename)
+{
+    // Check if the provided filename is NULL.
+    if (filename == NULL)
+    {
+        fprintf(stderr, "Error: NULL filename provided\n");
+        return;
+    }
+
+    // Open the file for writing.
+    FILE *file = fopen(filename, "w");
+    if (!file)
+    {
+        fprintf(stderr, "Error: Unable to open file \"%s\" for writing\n", filename);
+        perror("File opening failed");
+        return;
+    }
+
+    // Write [simulation] section
+    if (fprintf(file, "[simulation]\n") < 0)
+        goto write_error; // Handle write error
+    if (fprintf(file, "tenant_number = %d\n", INITIAL_CONFIGURATION_TENANT_NUMBER) < 1)
+        goto write_error; // Handle write error
+    if (fprintf(file, "simulation_time = %lf\n", INITIAL_CONFIGURATION_SIMULATION_TIME) < 0)
+        goto write_error; // Handle write error
+    if (fprintf(file, "error = %f\n", INITIAL_CONFIGURATION_ERROR) < 0)
+        goto write_error; // Handle write error
+    fprintf(file, "data_path = %s\n", INITIAL_CONFIGURATION_DATA_PATH); // No error check for data_path
+    if (fprintf(file, "unit = %ld\n", INITIAL_CONFIGURATION_UNIT) < 0)
+        goto write_error; // Handle write error
+    if (fprintf(file, "ratio = %lf\n\n", INITIAL_CONFIGURATION_RATIO) < 0)
+        goto write_error; // Handle write error
+
+    // Write [traffic] section
+    if (fprintf(file, "[traffic]\n") < 0)
+        goto write_error; // Handle write error
+    if (fprintf(file, "input_rate = %ld\n", INITIAL_CONFIGURATION_INPUT_RATE) < 0)
+        goto write_error; // Handle write error
+
+    // Write [threshold] section
+    if (fprintf(file, "[threshold]\n") < 0)
+        goto write_error; // Handle write error
+    if (fprintf(file, "link_queue_buffer = %ld\n", INITIAL_CONFIGURATION_LINK_QUEUE_BUFFER) < 0)
+        goto write_error; // Handle write error
+
+    fclose(file); // Close the file successfully
+    return; // Exit the function normally
+
+write_error:
+    fprintf(stderr, "Error: Failed to write to file \"%s\"\n", filename);
+    perror("Write operation failed"); // Print the error for the write operation
+    fclose(file); // Close the file if an error occurred
+    exit(EXIT_FAILURE); // Exit with failure status
+}
+
+
 #endif // REDUCTION
 
 #ifdef CONFIG_H
@@ -248,6 +312,23 @@ typedef struct
     long tau;                /**< Token bucket depth. */
     int link_queue_buffer;   /**< Max link queue buffer size. */
 } configuration;
+
+
+typedef struct
+{
+    int tenant_number;         /**< Number of tenants in the simulation. */
+    TIME_TYPE simulation_time; /**< Duration of the simulation. */
+    double error;              /**< Acceptable error margin. */
+    char *data_path;           /**< Path to data files. */
+    long unit;                 /**< Measurement unit (e.g., 1048576 for 1MB). */
+    double ratio;
+
+    /** @name Traffic Control Parameters */
+    long input_rate;        /**< Input traffic rate in bytes per second. */
+
+    /** @name Buffer and Queue Parameters */
+    int link_queue_buffer;   /**< Max link queue buffer size. */
+} common_configuration;
 
 /**
  * @brief Handler function to populate configuration structure from INI file

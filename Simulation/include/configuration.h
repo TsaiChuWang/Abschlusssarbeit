@@ -1225,38 +1225,105 @@ int is_noncompliant_index(int index, const configuration config)
 
 #ifdef CSV_CONFIGURSTION_H
 
+#define MAX_LINE_LENGTH 2048
 
+typedef struct{
+    int kind_number;
+    int fields_number;
+}csv_configuration;
+
+/**
+ * @brief Counts the number of rows in a CSV file.
+ *
+ * This function opens a specified CSV file and counts the number of rows
+ * based on newline characters. It handles the case where the last line
+ * may not end with a newline.
+ *
+ * @param filename The path to the CSV file to be read.
+ * @return The number of rows in the CSV file, or -1 if the file cannot be opened.
+ */
 int count_csv_rows(const char* filename) {
-    FILE *file = fopen(filename, "r");
+    FILE *file = fopen(filename, "r"); // Open the file for reading
     if (file == NULL) {
-        printf(RED_ELOG"Cannot open file: %s\n"RESET, filename);
-        return -1;
+        printf(RED_ELOG "Cannot open file: %s\n" RESET, filename); // Error message if file can't be opened
+        return -1; // Return -1 to indicate an error
     }
     
-    int row_count = 0;
-    char ch;
+    int row_count = 0; // Initialize row count
+    char ch; // Variable to store each character read from the file
     
+    // Read each character until the end of the file
     while ((ch = fgetc(file)) != EOF) {
         if (ch == '\n') {
-            row_count++;
+            row_count++; // Increment row count for each newline character
         }
     }
 
-    fseek(file, -1, SEEK_END);
-    if (ftell(file) > 0) {
-        ch = fgetc(file);
+    // Check if the last line does not end with a newline
+    fseek(file, -1, SEEK_END); // Move the file pointer to the last character
+    if (ftell(file) > 0) { // Ensure the file is not empty
+        ch = fgetc(file); // Read the last character
         if (ch != '\n') {
-            row_count++;
+            row_count++; // Increment row count if the last line does not end with a newline
         }
     }
     
-    fclose(file);
-    return row_count;
+    fclose(file); // Close the file
+    return row_count; // Return the total row count
+}
+
+/**
+ * @brief Counts the number of columns in a CSV file.
+ *
+ * This function opens a specified CSV file and counts the number of columns
+ * based on the number of commas in the first line. It assumes that the first
+ * line contains the header or the data format.
+ *
+ * @param filename The path to the CSV file to be read.
+ * @return The number of columns in the CSV file, or -1 if the file cannot be opened.
+ *         Returns 0 if the file is empty or cannot read the first line.
+ */
+int count_csv_columns(const char* filename) {
+    FILE *file = fopen(filename, "r"); // Open the file for reading
+    if (file == NULL) {
+        printf(RED_ELOG "Cannot open file: %s\n" RESET, filename); // Error message if file can't be opened
+        return -1; // Return -1 to indicate an error
+    }
+    
+    char line[MAX_LINE_LENGTH]; // Buffer to hold the first line of the CSV file
+    
+    // Read the first line from the file
+    if (fgets(line, sizeof(line), file) == NULL) {
+        fclose(file); // Close the file if reading fails
+        return 0; // Return 0 if the file is empty or cannot read the first line
+    }
+    
+    // Remove the newline character from the end of the line, if present
+    line[strcspn(line, "\n")] = '\0';
+    
+    int comma_count = 0; // Initialize comma count
+    // Count the number of commas in the line
+    for (int i = 0; line[i] != '\0'; i++) {
+        if (line[i] == ',') {
+            comma_count++; // Increment comma count for each comma found
+        }
+    }
+    
+    fclose(file); // Close the file
+    
+    return comma_count + 1; // Return the number of columns (commas + 1)
 }
 
 void test_csv_function(const char* filename){
+    csv_configuration config;
+
     int row_number = count_csv_rows(filename);
-    printf("row : %d\n", row_number);
+    config.kind_number = row_number-1;
+    printf("row    : %d\n", row_number);
+
+    int column_number = count_csv_columns(filename);
+    config.fields_number = column_number;
+    printf("column : %d\n", column_number);
 }
 
 #endif

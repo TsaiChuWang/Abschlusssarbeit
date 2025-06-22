@@ -929,7 +929,6 @@ cleanup:
     return status; // Return the final status
 }
 
-
 /**
  * @brief Display the current configuration settings
  *
@@ -998,6 +997,37 @@ void show_configuration(const configuration config)
     print_equals_line();
 }
 
+void show_configuration_common_configuration(const common_configuration config)
+{
+    print_equals_line();
+    printf("- Simulation :\n");
+    printf("| tenant number                   : %-d\n", config.tenant_number);
+    printf("| simulation time                 : %-lf\n", config.simulation_time);
+    printf("| error                           : %-f\n", config.error);
+    printf("| data path                       : %-s\n", config.data_path);
+
+    switch (config.unit)
+    {
+    case GBPS:
+        printf("| unit                            : Gbps\n");
+        break;
+    case MBPS:
+        printf("| unit                            : Mbps\n");
+        break;
+    case KBPS:
+        printf("| unit                            : kbps\n");
+        break;
+    default:
+        printf("| unit                            : Mbps\n");
+    }
+    printf("| ratio                           : %-lf\n", config.ratio);
+
+    printf("- Traffic :\n");
+    printf("| input rate                      : %-ld\n", config.input_rate);
+
+    printf("| link queue buffer               : %-d\n", config.link_queue_buffer);
+    print_equals_line();
+}
 /**
  * @brief Calculates the Greatest Common Divisor (GCD) of two integers
  * @details Uses the Euclidean algorithm to find the largest positive integer

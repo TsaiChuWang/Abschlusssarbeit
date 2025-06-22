@@ -1220,3 +1220,11 @@ int is_noncompliant_index(int index, const configuration config)
 }
 
 #endif
+
+#define CSV_CONFIGURSTION_H
+
+#ifdef CSV_CONFIGURSTION_H
+
+
+
+#endif

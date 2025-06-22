@@ -1,0 +1,6 @@
+index,traffic_mode,mean,standard_deviation,number,packet_size,real_traffic,state_r,FIFO_queue_buffer,tau
+0,0, 120,40,20,512,120,0.6,25600
+1,0,140,30,20,512,140,0.6,25600
+2,0,80,50,10,512,80,0.6,25600
+3,0,160,20,30,512,160,0.6,25600
+4,0,130,10,20,512,130,0.6,25600

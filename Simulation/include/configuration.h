@@ -1331,37 +1331,58 @@ int count_csv_columns(const char* filename) {
     return comma_count + 1; // Return the number of columns (commas + 1)
 }
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_LINE_LENGTH 1024
+
+/**
+ * @brief Reads a specific row from a CSV file by index.
+ *
+ * This function opens the specified CSV file and reads it line by line
+ * until it reaches the specified index. It returns the contents of that
+ * row as a dynamically allocated string. The caller is responsible for
+ * freeing the allocated memory.
+ *
+ * @param filename The path to the CSV file to read.
+ * @param index The zero-based index of the row to read.
+ * @return A pointer to a dynamically allocated string containing the row data,
+ *         or NULL if the file cannot be opened or if the row does not exist.
+ */
 char* read_csv_row_by_index(const char* filename, int index) {
-    FILE *file = fopen(filename, "r");
+    FILE *file = fopen(filename, "r"); // Open the file for reading
     if (file == NULL) {
-        printf("無法開啟檔案: %s\n", filename);
-        return NULL;
+        printf("Cannot open file: %s\n", filename); // Error message if file can't be opened
+        return NULL; // Return NULL to indicate an error
     }
     
-    char line[MAX_LINE_LENGTH];
-    int current_index = 0;
+    char line[MAX_LINE_LENGTH]; // Buffer to hold each line of the CSV file
+    int current_index = 0; // Initialize the current index counter
     
+    // Read lines until the specified index is reached or end of file
     while (fgets(line, sizeof(line), file) != NULL) {
-        if (current_index == index) {
-            // 找到目標行
-            fclose(file);
+        if (current_index == index) { // Check if the current index matches the specified index
+            fclose(file); // Close the file
             
-            // 移除換行符號
-            line[strcspn(line, "\n")] = '\0';
+            line[strcspn(line, "\n")] = '\0'; // Remove the newline character
             
-            // 分配記憶體並複製字串
+            // Allocate memory for the result string
             char* result = malloc(strlen(line) + 1);
-            if (result != NULL) {
-                strcpy(result, line);
+            if (result == NULL) {
+                printf("Memory allocation failed.\n"); // Handle memory allocation failure
+                return NULL; // Return NULL if allocation fails
             }
-            return result;
+            strcpy(result, line); // Copy the line into the result string
+            return result; // Return the result
         }
-        current_index++;
+        current_index++; // Increment the index counter
     }
     
-    fclose(file);
-    return NULL; // 索引超出範圍
+    fclose(file); // Close the file if the specified index is not found
+    return NULL; // Return NULL if the row does not exist
 }
+
 
 
 void test_csv_function(const char* filename){
@@ -1374,6 +1395,8 @@ void test_csv_function(const char* filename){
     int column_number = count_csv_columns(filename);
     config.fields_number = column_number;
     printf("column : %d\n", column_number);
+
+    printf("%s\n", read_csv_row_by_index(filename,1));
 }
 
 #endif

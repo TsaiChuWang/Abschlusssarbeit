@@ -268,6 +268,120 @@ write_error:
     exit(EXIT_FAILURE); // Exit with failure status
 }
 
+/**
+ * @brief Tests the configuration handling functionality.
+ *
+ * This function performs a series of operations to test loading,
+ * modifying, and displaying configuration settings from an INI file.
+ *
+ * @param filename The name of the INI file to be processed.
+ */
+void test_configuration_h(const char *filename)
+{
+    configuration config;
+
+    printf("===== handler =====\n");
+    if (ini_parse(filename, handler, &config) < 0)
+    {
+        printf(RED_ELOG "Can't load configuration \"%s\"\n", filename);
+        exit(EXIT_FAILURE);
+    }
+    show_configuration(config);
+
+    printf("===== reduction_inif_file =====\n");
+    reduction_inif_file(filename);
+    if (ini_parse(filename, handler, &config) < 0)
+    {
+        printf(RED_ELOG "Can't load configuration \"%s\"\n", filename);
+        exit(EXIT_FAILURE);
+    }
+    show_configuration(config);
+
+    printf("===== obtain_capacity =====\n");
+    char command[MAX_COMMAND_LENGTH];
+    sprintf(command, "python3 ../python/capacity.py %s 0", filename);
+    system(command);
+    printf("capacity = %f\n", obtain_capacity());
+
+    printf("===== modify_ini_file =====\n");
+    config.tau = 114514;
+    int status = modify_ini_file(filename, &config);
+    if (status == FAILURE)
+    {
+        printf(RED_ELOG "modify_ini_file failed\n" RESET);
+        exit(FAILURE);
+    }
+    if (ini_parse(filename, handler, &config) < 0)
+    {
+        printf(RED_ELOG "Can't load configuration \"%s\"\n", filename);
+        exit(EXIT_FAILURE);
+    }
+    show_configuration(config);
+
+    reduction_inif_file(filename);
+}
+
+
+/**
+ * @brief Tests the configuration handling for common_configuration.
+ *
+ * This function parses a configuration file, displays its contents,
+ * modifies the configuration, and then verifies the changes by reloading
+ * and displaying the updated configuration.
+ *
+ * @param filename The path to the configuration file to be tested.
+ */
+void test_configuration_h_common_configuration(const char *filename)
+{
+    common_configuration config; // Structure to hold configuration settings
+
+    printf("===== handler =====\n");
+    // Parse the INI file and load configurations into 'config'
+    if (ini_parse(filename, handler_common_configuration, &config) < 0)
+    {
+        printf(RED_ELOG "Can't load configuration \"%s\"\n", filename); // Error message if loading fails
+        exit(EXIT_FAILURE); // Exit if configuration loading fails
+    }
+    show_configuration_common_configuration(config); // Display the loaded configuration
+
+    printf("===== reduction_inif_file =====\n");
+    reduction_inif_file_common_configuration(filename); // Reduce the INI file
+    // Re-parse the INI file after reduction
+    if (ini_parse(filename, handler_common_configuration, &config) < 0)
+    {
+        printf(RED_ELOG "Can't load configuration \"%s\"\n", filename); // Error message if loading fails
+        exit(EXIT_FAILURE); // Exit if configuration loading fails
+    }
+    show_configuration_common_configuration(config); // Display the reduced configuration
+
+    printf("===== obtain_capacity =====\n");
+    char command[MAX_COMMAND_LENGTH];
+    // Uncomment the following line to execute a Python script for capacity calculation
+    // sprintf(command, "python3 ../python/capacity.py %s 0", filename);
+    // system(command); // Execute the command
+    printf("capacity = %f\n", obtain_capacity()); // Display the obtained capacity
+
+    printf("===== modify_ini_file =====\n");
+    config.link_queue_buffer = 114514; // Modify a specific field in the configuration
+    int status = modify_ini_file_common_configuration(filename, &config); // Save the modified configuration
+    if (status == FAILURE)
+    {
+        printf(RED_ELOG "modify_ini_file failed\n" RESET); // Error message if modification fails
+        exit(FAILURE); // Exit if modification fails
+    }
+    // Re-parse the INI file after modification
+    if (ini_parse(filename, handler_common_configuration, &config) < 0)
+    {
+        printf(RED_ELOG "Can't load configuration \"%s\"\n", filename); // Error message if loading fails
+        exit(EXIT_FAILURE); // Exit if configuration loading fails
+    }
+    show_configuration_common_configuration(config); // Display the updated configuration
+
+    reduction_inif_file_common_configuration(filename); // Final reduction of the INI file
+
+    // Call the function to test the configuration handling
+    // test_configuration_h_common_configuration(configuration_path);
+}
 
 #endif // REDUCTION
 
@@ -1104,118 +1218,5 @@ int is_noncompliant_index(int index, const configuration config)
         return (index >= (config.tenant_number - config.noncompliant_tenant_number));
     }
 }
-
-/**
- * @brief Tests the configuration handling functionality.
- *
- * This function performs a series of operations to test loading,
- * modifying, and displaying configuration settings from an INI file.
- *
- * @param filename The name of the INI file to be processed.
- */
-void test_configuration_h(const char *filename)
-{
-    configuration config;
-
-    printf("===== handler =====\n");
-    if (ini_parse(filename, handler, &config) < 0)
-    {
-        printf(RED_ELOG "Can't load configuration \"%s\"\n", filename);
-        exit(EXIT_FAILURE);
-    }
-    show_configuration(config);
-
-    printf("===== reduction_inif_file =====\n");
-    reduction_inif_file(filename);
-    if (ini_parse(filename, handler, &config) < 0)
-    {
-        printf(RED_ELOG "Can't load configuration \"%s\"\n", filename);
-        exit(EXIT_FAILURE);
-    }
-    show_configuration(config);
-
-    printf("===== obtain_capacity =====\n");
-    char command[MAX_COMMAND_LENGTH];
-    sprintf(command, "python3 ../python/capacity.py %s 0", filename);
-    system(command);
-    printf("capacity = %f\n", obtain_capacity());
-
-    printf("===== modify_ini_file =====\n");
-    config.tau = 114514;
-    int status = modify_ini_file(filename, &config);
-    if (status == FAILURE)
-    {
-        printf(RED_ELOG "modify_ini_file failed\n" RESET);
-        exit(FAILURE);
-    }
-    if (ini_parse(filename, handler, &config) < 0)
-    {
-        printf(RED_ELOG "Can't load configuration \"%s\"\n", filename);
-        exit(EXIT_FAILURE);
-    }
-    show_configuration(config);
-
-    reduction_inif_file(filename);
-}
-
-
-/**
- * @brief Tests the configuration handling for common_configuration.
- *
- * This function parses a configuration file, displays its contents,
- * modifies the configuration, and then verifies the changes by reloading
- * and displaying the updated configuration.
- *
- * @param filename The path to the configuration file to be tested.
- */
-void test_configuration_h_common_configuration(const char *filename)
-{
-    common_configuration config; // Structure to hold configuration settings
-
-    printf("===== handler =====\n");
-    // Parse the INI file and load configurations into 'config'
-    if (ini_parse(filename, handler_common_configuration, &config) < 0)
-    {
-        printf(RED_ELOG "Can't load configuration \"%s\"\n", filename); // Error message if loading fails
-        exit(EXIT_FAILURE); // Exit if configuration loading fails
-    }
-    show_configuration_common_configuration(config); // Display the loaded configuration
-
-    printf("===== reduction_inif_file =====\n");
-    reduction_inif_file_common_configuration(filename); // Reduce the INI file
-    // Re-parse the INI file after reduction
-    if (ini_parse(filename, handler_common_configuration, &config) < 0)
-    {
-        printf(RED_ELOG "Can't load configuration \"%s\"\n", filename); // Error message if loading fails
-        exit(EXIT_FAILURE); // Exit if configuration loading fails
-    }
-    show_configuration_common_configuration(config); // Display the reduced configuration
-
-    printf("===== obtain_capacity =====\n");
-    char command[MAX_COMMAND_LENGTH];
-    // Uncomment the following line to execute a Python script for capacity calculation
-    // sprintf(command, "python3 ../python/capacity.py %s 0", filename);
-    // system(command); // Execute the command
-    printf("capacity = %f\n", obtain_capacity()); // Display the obtained capacity
-
-    printf("===== modify_ini_file =====\n");
-    config.link_queue_buffer = 114514; // Modify a specific field in the configuration
-    int status = modify_ini_file_common_configuration(filename, &config); // Save the modified configuration
-    if (status == FAILURE)
-    {
-        printf(RED_ELOG "modify_ini_file failed\n" RESET); // Error message if modification fails
-        exit(FAILURE); // Exit if modification fails
-    }
-    // Re-parse the INI file after modification
-    if (ini_parse(filename, handler_common_configuration, &config) < 0)
-    {
-        printf(RED_ELOG "Can't load configuration \"%s\"\n", filename); // Error message if loading fails
-        exit(EXIT_FAILURE); // Exit if configuration loading fails
-    }
-    show_configuration_common_configuration(config); // Display the updated configuration
-
-    reduction_inif_file_common_configuration(filename); // Final reduction of the INI file
-}
-
 
 #endif

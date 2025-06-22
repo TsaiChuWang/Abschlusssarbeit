@@ -1,11 +1,12 @@
 #define PRINT_EXECUTION_TIME ///< Enable timing measurement for execution duration
-#define SHOW_CONFIGURATION   ///< Enable display of the current configuration settings
+// #define SHOW_CONFIGURATION   ///< Enable display of the current configuration settings
 
 #include "../include/general.h"             ///< Include general definitions and declarations.
 #include "./inih/ini.h"                     ///< Include INI file handling library.
 #include "../include/configuration.h"       ///< Include configuration management definitions.
 
 #define CONFIGURATION_PATH "../configuration/advanced.ini" ///< Path to the main configuration file
+#define CSV_PATH "../configuration/csv/advanced.csv"  ///< Path to the main csv file
 
 /** @brief Compilation command
  *  @code{.sh}
@@ -49,6 +50,8 @@ int main(int argc, char *argv[])
 #ifdef SHOW_CONFIGURATION
     show_configuration_common_configuration(config); /** @brief Display current configuration if enabled. */
 #endif
+
+  test_csv_function(CSV_PATH);
 
 #ifdef PRINT_EXECUTION_TIME
      execute_clock = clock() - execute_clock;                      ///< Calculate the elapsed execution time.

@@ -1226,5 +1226,37 @@ int is_noncompliant_index(int index, const configuration config)
 #ifdef CSV_CONFIGURSTION_H
 
 
+int count_csv_rows(const char* filename) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf(RED_ELOG"Cannot open file: %s\n"RESET, filename);
+        return -1;
+    }
+    
+    int row_count = 0;
+    char ch;
+    
+    while ((ch = fgetc(file)) != EOF) {
+        if (ch == '\n') {
+            row_count++;
+        }
+    }
+
+    fseek(file, -1, SEEK_END);
+    if (ftell(file) > 0) {
+        ch = fgetc(file);
+        if (ch != '\n') {
+            row_count++;
+        }
+    }
+    
+    fclose(file);
+    return row_count;
+}
+
+void test_csv_function(const char* filename){
+    int row_number = count_csv_rows(filename);
+    printf("row : %d\n", row_number);
+}
 
 #endif

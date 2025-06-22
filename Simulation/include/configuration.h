@@ -534,6 +534,153 @@ static int handler(void *config, const char *section, const char *name, const ch
 }
 
 /**
+ * @brief Handles common configuration settings from a given section and name.
+ *
+ * This function processes configuration values for various sections such as 
+ * "simulation", "traffic", and "threshold". It validates and assigns values 
+ * to the corresponding fields in the common_configuration structure.
+ *
+ * @param config Pointer to a common_configuration structure.
+ * @param section The section of the configuration (e.g., "simulation").
+ * @param name The name of the configuration parameter (e.g., "tenant_number").
+ * @param value The value associated with the parameter.
+ * @return SUCCESS if the operation was successful, FAILURE if an error occurred,
+ *         or UNFOUND if the parameter was not recognized.
+ */
+static int handler_common_configuration(void *config, const char *section, const char *name, const char *value)
+{
+    // Check for NULL pointers in the input parameters.
+    if (!config || !section || !name || !value)
+    {
+        fprintf(stderr, "Error: NULL pointer passed to handler\n");
+        return FAILURE;
+    }
+
+    common_configuration *pconfig = (common_configuration *)config; // Cast config to common_configuration
+    char *endptr; // Pointer for string conversion
+    long temp_long; // Temporary variable for long values
+    double temp_double; // Temporary variable for double values
+
+    // Helper macro for string comparison
+    #define MATCH(s, n) (strcmp(section, s) == 0 && strcmp(name, n) == 0)
+
+    // Safe string to long conversion
+    #define SAFE_STRTOL(val, min, max)                                                       \
+        do                                                                                   \
+        {                                                                                    \
+            temp_long = strtol(val, &endptr, 10);                                            \
+            if (*endptr != '\0' || temp_long < min || temp_long > max)                       \
+            {                                                                                \
+                fprintf(stderr, "Error: Invalid value for %s.%s: %s\n", section, name, val); \
+                return FAILURE;                                                              \
+            }                                                                                \
+        } while (0)
+
+    // Safe string to double conversion
+    #define SAFE_STRTOD(val, min, max)                                                       \
+        do                                                                                   \
+        {                                                                                    \
+            temp_double = strtod(val, &endptr);                                              \
+            if (*endptr != '\0' || temp_double < min || temp_double > max)                   \
+            {                                                                                \
+                fprintf(stderr, "Error: Invalid value for %s.%s: %s\n", section, name, val); \
+                return FAILURE;                                                              \
+            }                                                                                \
+        } while (0)
+
+    // Handle sections and parameters
+    if (strcmp(section, "simulation") == 0)
+    {
+        // Process simulation parameters
+        if (MATCH("simulation", "tenant_number"))
+        {
+            SAFE_STRTOL(value, 1, INT_MAX); // Validate and convert tenant_number
+            pconfig->tenant_number = (int)temp_long; // Assign value
+        }
+        else if (MATCH("simulation", "simulation_time"))
+        {
+            SAFE_STRTOD(value, 0.0, DBL_MAX); // Validate and convert simulation_time
+            pconfig->simulation_time = temp_double; // Assign value
+        }
+        else if (MATCH("simulation", "error"))
+        {
+            SAFE_STRTOD(value, 0.0, 1.0); // Validate and convert error
+            pconfig->error = temp_double; // Assign value
+        }
+        else if (MATCH("simulation", "data_path"))
+        {
+            // Validate data_path length
+            if (strlen(value) > MAX_PATH_LENGTH)
+            {
+                fprintf(stderr, "Error: Path too long: %s\n", value);
+                return FAILURE;
+            }
+            char *temp_str = strdup(value); // Duplicate string for data_path
+            if (!temp_str)
+            {
+                fprintf(stderr, "Error: Memory allocation failed for data_path\n");
+                return FAILURE;
+            }
+            // free(pconfig->data_path); // Free existing path if any
+            pconfig->data_path = temp_str; // Assign new path
+        }
+        else if (MATCH("simulation", "unit"))
+        {
+            SAFE_STRTOL(value, 0, LONG_MAX); // Validate and convert unit
+            pconfig->unit = temp_long; // Assign value
+        }
+        else if (MATCH("simulation", "ratio"))
+        {
+            SAFE_STRTOD(value, 0.0, DBL_MAX); // Validate and convert ratio
+            pconfig->ratio = temp_double; // Assign value
+        }
+        else
+        {
+            return UNFOUND; // Parameter not found
+        }
+    }
+    else if (strcmp(section, "traffic") == 0)
+    {
+        // Process traffic parameters
+        if (MATCH("traffic", "input_rate"))
+        {
+            SAFE_STRTOL(value, 0, LONG_MAX); // Validate and convert input_rate
+            pconfig->input_rate = temp_long; // Assign value
+        }
+        else
+        {
+            return UNFOUND; // Parameter not found
+        }
+    }
+    else if (strcmp(section, "threshold") == 0)
+    {
+        // Process threshold parameters
+        if (MATCH("threshold", "link_queue_buffer"))
+        {
+            SAFE_STRTOL(value, 0, INT_MAX); // Validate and convert link_queue_buffer
+            pconfig->link_queue_buffer = (int)temp_long; // Assign value
+        }
+        else
+        {
+            return UNFOUND; // Parameter not found
+        }
+    }
+    else
+    {
+        fprintf(stderr, "Warning: Unknown section: %s\n", section); // Unknown section warning
+        return UNFOUND; // Section not found
+    }
+
+    // Undefine macros after use
+    #undef MATCH
+    #undef SAFE_STRTOL
+    #undef SAFE_STRTOD
+
+    return SUCCESS; // Successful operation
+}
+
+
+/**
  * @brief Obtain the system capacity from a configuration file
  *
  * @details Reads the system capacity value from a specified file path.

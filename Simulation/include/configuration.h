@@ -679,7 +679,6 @@ static int handler_common_configuration(void *config, const char *section, const
     return SUCCESS; // Successful operation
 }
 
-
 /**
  * @brief Obtain the system capacity from a configuration file
  *
@@ -854,6 +853,82 @@ cleanup:
 #undef WRITE_CHECK
     return status;
 }
+
+/**
+ * @brief Modifies an INI file with common configuration settings.
+ *
+ * This function writes the provided configuration settings to the specified INI file.
+ * It creates or overwrites the existing file and organizes the settings into sections.
+ *
+ * @param filename The path to the INI file to be modified.
+ * @param config Pointer to a common_configuration structure containing the settings.
+ * @return SUCCESS if the operation was successful, FAILURE if an error occurred.
+ */
+int modify_ini_file_common_configuration(const char *filename, const common_configuration *config)
+{
+    FILE *file = NULL; // File pointer for the INI file
+    int status = 0; // Status variable to track success or failure
+
+    // Input validation
+    if (filename == NULL || config == NULL)
+    {
+        fprintf(stderr, "Error: Invalid parameters (NULL pointer)\n");
+        return FAILURE; // Return failure if parameters are invalid
+    }
+
+    // Open file with error handling
+    file = fopen(filename, "w");
+    if (file == NULL)
+    {
+        fprintf(stderr, "Error: Unable to open file \"%s\" for writing\n", filename);
+        perror("File opening failed"); // Print error details
+        return FAILURE; // Return failure if file can't be opened
+    }
+
+    // Helper macro for writing with error checking
+    #define WRITE_CHECK(fmt, ...)                                                    \
+        if (fprintf(file, fmt, __VA_ARGS__) < 0)                                     \
+        {                                                                            \
+            fprintf(stderr, "Error: Writing to file failed at line %d\n", __LINE__); \
+            status = FAILURE;                                                        \
+            goto cleanup;                                                            \
+        }
+
+    // Write [simulation] section
+    try_write(file, "[simulation]\n"); // Write section header
+    WRITE_CHECK("tenant_number = %d\n", config->tenant_number); // Write tenant_number
+    WRITE_CHECK("simulation_time = %lf\n", config->simulation_time); // Write simulation_time
+    WRITE_CHECK("error = %.6f\n", config->error); // Write error
+    WRITE_CHECK("data_path = %s\n", config->data_path ? config->data_path : ""); // Write data_path
+    WRITE_CHECK("unit = %ld\n", config->unit); // Write unit
+    WRITE_CHECK("ratio = %lf\n", config->ratio); // Write ratio
+    try_write(file, "\n"); // Add a newline after the section
+
+    // Write [traffic] section
+    try_write(file, "[traffic]\n"); // Write section header
+    WRITE_CHECK("input_rate = %ld\n", config->input_rate); // Write input_rate
+    try_write(file, "\n"); // Add a newline after the section
+
+    // Write [threshold] section
+    try_write(file, "[threshold]\n"); // Write section header
+    WRITE_CHECK("link_queue_buffer = %d\n", config->link_queue_buffer); // Write link_queue_buffer
+
+cleanup:
+    // Cleanup and close the file
+    if (file != NULL)
+    {
+        if (fclose(file) != 0)
+        {
+            fprintf(stderr, "Error: Failed to close file\n");
+            perror("File closing failed"); // Print error details
+            status = FAILURE; // Update status to failure
+        }
+    }
+
+#undef WRITE_CHECK // Undefine the macro after use
+    return status; // Return the final status
+}
+
 
 /**
  * @brief Display the current configuration settings

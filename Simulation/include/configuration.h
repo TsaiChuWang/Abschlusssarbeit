@@ -997,37 +997,49 @@ void show_configuration(const configuration config)
     print_equals_line();
 }
 
+/**
+ * @brief Displays the common configuration settings.
+ *
+ * This function prints the configuration settings to the standard output,
+ * organizing them into sections for better readability. It includes details
+ * about simulation parameters, traffic settings, and threshold values.
+ *
+ * @param config The common_configuration structure containing the settings to display.
+ */
 void show_configuration_common_configuration(const common_configuration config)
 {
-    print_equals_line();
-    printf("- Simulation :\n");
-    printf("| tenant number                   : %-d\n", config.tenant_number);
-    printf("| simulation time                 : %-lf\n", config.simulation_time);
-    printf("| error                           : %-f\n", config.error);
-    printf("| data path                       : %-s\n", config.data_path);
+    print_equals_line(); // Print a separator line
+    printf("- Simulation :\n"); // Header for the simulation section
+    printf("| tenant number                   : %-d\n", config.tenant_number); // Display tenant number
+    printf("| simulation time                 : %-lf\n", config.simulation_time); // Display simulation time
+    printf("| error                           : %-f\n", config.error); // Display error value
+    printf("| data path                       : %-s\n", config.data_path); // Display data path
 
+    // Display unit based on its value
     switch (config.unit)
     {
     case GBPS:
-        printf("| unit                            : Gbps\n");
+        printf("| unit                            : Gbps\n"); // Gigabits per second
         break;
     case MBPS:
-        printf("| unit                            : Mbps\n");
+        printf("| unit                            : Mbps\n"); // Megabits per second
         break;
     case KBPS:
-        printf("| unit                            : kbps\n");
+        printf("| unit                            : kbps\n"); // Kilobits per second
         break;
     default:
-        printf("| unit                            : Mbps\n");
+        printf("| unit                            : Mbps\n"); // Default to Mbps if unknown
     }
-    printf("| ratio                           : %-lf\n", config.ratio);
+    
+    printf("| ratio                           : %-lf\n", config.ratio); // Display ratio
 
-    printf("- Traffic :\n");
-    printf("| input rate                      : %-ld\n", config.input_rate);
+    printf("- Traffic :\n"); // Header for the traffic section
+    printf("| input rate                      : %-ld\n", config.input_rate); // Display input rate
 
-    printf("| link queue buffer               : %-d\n", config.link_queue_buffer);
-    print_equals_line();
+    printf("| link queue buffer               : %-d\n", config.link_queue_buffer); // Display link queue buffer
+    print_equals_line(); // Print a separator line
 }
+
 /**
  * @brief Calculates the Greatest Common Divisor (GCD) of two integers
  * @details Uses the Euclidean algorithm to find the largest positive integer

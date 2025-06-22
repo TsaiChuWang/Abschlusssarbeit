@@ -1041,27 +1041,6 @@ void show_configuration_common_configuration(const common_configuration config)
 }
 
 /**
- * @brief Calculates the Greatest Common Divisor (GCD) of two integers
- * @details Uses the Euclidean algorithm to find the largest positive integer
- *          that divides both input numbers without a remainder.
- *          The algorithm works by repeatedly applying the division algorithm
- *          until a remainder of 0 is obtained.
- *
- * Algorithm steps:
- * 1. If b equals 0, return a
- * 2. Otherwise, set b to the remainder of a divided by b
- * 3. Set a to the previous value of b
- * 4. Repeat steps 1-3 until b equals 0
- *
- * @param a First integer input
- * @param b Second integer input
- * @return The greatest common divisor of a and b
- *
- * @note The function assumes positive integer inputs
- * @note If both inputs are 0, the function returns 0
- */
-
-/**
  * @brief Determines if a tenant index is noncompliant based on configured mode
  * @details Checks whether a given tenant index should be considered noncompliant
  *          according to different distribution modes specified in configuration.
@@ -1178,5 +1157,65 @@ void test_configuration_h(const char *filename)
 
     reduction_inif_file(filename);
 }
+
+
+/**
+ * @brief Tests the configuration handling for common_configuration.
+ *
+ * This function parses a configuration file, displays its contents,
+ * modifies the configuration, and then verifies the changes by reloading
+ * and displaying the updated configuration.
+ *
+ * @param filename The path to the configuration file to be tested.
+ */
+void test_configuration_h_common_configuration(const char *filename)
+{
+    common_configuration config; // Structure to hold configuration settings
+
+    printf("===== handler =====\n");
+    // Parse the INI file and load configurations into 'config'
+    if (ini_parse(filename, handler_common_configuration, &config) < 0)
+    {
+        printf(RED_ELOG "Can't load configuration \"%s\"\n", filename); // Error message if loading fails
+        exit(EXIT_FAILURE); // Exit if configuration loading fails
+    }
+    show_configuration_common_configuration(config); // Display the loaded configuration
+
+    printf("===== reduction_inif_file =====\n");
+    reduction_inif_file_common_configuration(filename); // Reduce the INI file
+    // Re-parse the INI file after reduction
+    if (ini_parse(filename, handler_common_configuration, &config) < 0)
+    {
+        printf(RED_ELOG "Can't load configuration \"%s\"\n", filename); // Error message if loading fails
+        exit(EXIT_FAILURE); // Exit if configuration loading fails
+    }
+    show_configuration_common_configuration(config); // Display the reduced configuration
+
+    printf("===== obtain_capacity =====\n");
+    char command[MAX_COMMAND_LENGTH];
+    // Uncomment the following line to execute a Python script for capacity calculation
+    // sprintf(command, "python3 ../python/capacity.py %s 0", filename);
+    // system(command); // Execute the command
+    printf("capacity = %f\n", obtain_capacity()); // Display the obtained capacity
+
+    printf("===== modify_ini_file =====\n");
+    config.link_queue_buffer = 114514; // Modify a specific field in the configuration
+    int status = modify_ini_file_common_configuration(filename, &config); // Save the modified configuration
+    if (status == FAILURE)
+    {
+        printf(RED_ELOG "modify_ini_file failed\n" RESET); // Error message if modification fails
+        exit(FAILURE); // Exit if modification fails
+    }
+    // Re-parse the INI file after modification
+    if (ini_parse(filename, handler_common_configuration, &config) < 0)
+    {
+        printf(RED_ELOG "Can't load configuration \"%s\"\n", filename); // Error message if loading fails
+        exit(EXIT_FAILURE); // Exit if configuration loading fails
+    }
+    show_configuration_common_configuration(config); // Display the updated configuration
+
+    reduction_inif_file_common_configuration(filename); // Final reduction of the INI file
+}
+
 
 #endif

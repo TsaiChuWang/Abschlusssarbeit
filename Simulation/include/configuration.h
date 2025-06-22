@@ -1227,6 +1227,23 @@ int is_noncompliant_index(int index, const configuration config)
 
 #define MAX_LINE_LENGTH 2048
 
+typedef struct {
+    int index;                  // Index of the row configuration
+    int traffic_mode;          // Mode of traffic (e.g., 0 for normal, 1 for high, etc.)
+    int mean;                  // Mean value for traffic generation
+    int standard_deviation;     // Standard deviation for traffic generation
+    int number;                // Number of packets or connections
+    int packet_size;           // Size of packets in bytes
+    int real_traffic;          // Actual traffic value
+    double state_r;            // State variable (could represent a ratio or probability)
+    int FIFO_queue_buffer;     // Size of the FIFO queue buffer
+    long tau;                  // Time constant or delay in some context
+
+    int start_index;           // Starting index for processing
+    int end_index;             // Ending index for processing
+} row_configuration;
+
+
 typedef struct{
     int kind_number;
     int fields_number;
@@ -1313,6 +1330,39 @@ int count_csv_columns(const char* filename) {
     
     return comma_count + 1; // Return the number of columns (commas + 1)
 }
+
+char* read_csv_row_by_index(const char* filename, int index) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("無法開啟檔案: %s\n", filename);
+        return NULL;
+    }
+    
+    char line[MAX_LINE_LENGTH];
+    int current_index = 0;
+    
+    while (fgets(line, sizeof(line), file) != NULL) {
+        if (current_index == index) {
+            // 找到目標行
+            fclose(file);
+            
+            // 移除換行符號
+            line[strcspn(line, "\n")] = '\0';
+            
+            // 分配記憶體並複製字串
+            char* result = malloc(strlen(line) + 1);
+            if (result != NULL) {
+                strcpy(result, line);
+            }
+            return result;
+        }
+        current_index++;
+    }
+    
+    fclose(file);
+    return NULL; // 索引超出範圍
+}
+
 
 void test_csv_function(const char* filename){
     csv_configuration config;

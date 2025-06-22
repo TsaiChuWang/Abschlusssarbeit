@@ -1328,14 +1328,8 @@ int count_csv_columns(const char* filename) {
     
     fclose(file); // Close the file
     
-    return comma_count + 1; // Return the number of columns (commas + 1)
+    return comma_count; // Return the number of columns (commas + 1)
 }
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#define MAX_LINE_LENGTH 1024
 
 /**
  * @brief Reads a specific row from a CSV file by index.
@@ -1384,6 +1378,71 @@ char* read_csv_row_by_index(const char* filename, int index) {
 }
 
 
+/**
+ * @brief Splits a CSV row string into an array of fields.
+ *
+ * This function takes a string representing a row from a CSV file and splits
+ * it into individual fields based on the comma delimiter. Leading and trailing
+ * whitespace is removed from each field.
+ *
+ * @param row_string The CSV row string to split.
+ * @param fields_number The expected number of fields in the row.
+ * @return A pointer to an array of strings (fields), or NULL if an error occurs.
+ *         The caller is responsible for freeing the allocated memory.
+ */
+char** split_csv_row(const char* row_string, int fields_number) {
+    if (row_string == NULL || fields_number <= 0) {
+        return NULL; // Return NULL for invalid input
+    }
+    
+    // Allocate memory for the array of fields
+    char** fields = malloc(fields_number * sizeof(char*));
+    if (fields == NULL) {
+        return NULL; // Return NULL if memory allocation fails
+    }
+    
+    // Initialize all fields to NULL
+    for (int i = 0; i < fields_number; i++) {
+        fields[i] = NULL;
+    }
+    
+    // Create a copy of the row string to avoid modifying the original
+    char* row_copy = malloc(strlen(row_string) + 1);
+    if (row_copy == NULL) {
+        free(fields); // Free previously allocated memory
+        return NULL; // Return NULL if memory allocation fails
+    }
+    strcpy(row_copy, row_string);
+    
+    // Split the row string into tokens using comma as the delimiter
+    char* token = strtok(row_copy, ",");
+    int field_index = 0;
+    
+    while (token != NULL && field_index < fields_number) {
+        // Trim leading whitespace
+        while (*token == ' ' || *token == '\t') token++;
+        
+        // Trim trailing whitespace
+        int len = strlen(token);
+        while (len > 0 && (token[len-1] == ' ' || token[len-1] == '\t')) {
+            token[len-1] = '\0';
+            len--;
+        }
+        
+        // Allocate memory for the field and copy the token
+        fields[field_index] = malloc(strlen(token) + 1);
+        if (fields[field_index] != NULL) {
+            strcpy(fields[field_index], token);
+        }
+        
+        field_index++;
+        token = strtok(NULL, ","); // Get the next token
+    }
+    
+    free(row_copy); // Free the copy of the row string
+    return fields; // Return the array of fields
+}
+
 
 void test_csv_function(const char* filename){
     csv_configuration config;
@@ -1397,6 +1456,10 @@ void test_csv_function(const char* filename){
     printf("column : %d\n", column_number);
 
     printf("%s\n", read_csv_row_by_index(filename,1));
+
+    char** fields = split_csv_row(read_csv_row_by_index(filename,1), config.fields_number);
+    for(int i=0;i<config.fields_number;i++)
+        printf("%s\n", *(fields+i));
 }
 
 #endif

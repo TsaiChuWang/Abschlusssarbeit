@@ -42,8 +42,8 @@ if(name == 'burst_all_compliant'):
     plt.plot(tau, [0.1 for i in tau], linestyle='-', color = 'red', label='ε')
     
     # Configure plot appearance for pure loss chart
-    plt.title('Average Packet Loss Rate with different τ and r value (All Compliant)', fontsize=12)
-    plt.xlabel('τ')
+    # plt.title('Average Packet Loss Rate with different τ and r value (All Compliant)', fontsize=12)
+    plt.xlabel('τ (bits)')
     plt.ylabel('Loss (%)')
     plt.legend()
     plt.grid(True)
@@ -63,8 +63,8 @@ if(name == 'burst_all_compliant'):
     plt.plot(tau, [0.1 for i in tau], linestyle='-', color = 'red', label='ε')
     
     # Configure plot appearance for all loss chart
-    plt.title('Average Packet Loss Rate with different τ and r value (All Compliant)', fontsize=12)
-    plt.xlabel('τ')
+    # plt.title('Average Packet Loss Rate with different τ and r value (All Compliant)', fontsize=12)
+    plt.xlabel('τ (bits)')
     plt.ylabel('Loss (%)')
     plt.legend()
     plt.grid(True)

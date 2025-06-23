@@ -552,7 +552,7 @@ if(name == 'sensitive_noncompliant_number'):
         plt.xlabel('Noncompliant Tenant Number')
         plt.legend()
         plt.grid(True)
-        plt.title(title+'Compliant')
+        plt.title('Compliant')
         plt.savefig(IMAGE_PATH.format(name,'all', 'compliant'+'_'+str(t)))
         plt.cla()
 

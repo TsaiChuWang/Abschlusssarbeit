@@ -1328,7 +1328,7 @@ int count_csv_columns(const char* filename) {
     
     fclose(file); // Close the file
     
-    return comma_count; // Return the number of columns (commas + 1)
+    return comma_count + 1; // Return the number of columns (commas + 1)
 }
 
 /**
@@ -1443,6 +1443,68 @@ char** split_csv_row(const char* row_string, int fields_number) {
     return fields; // Return the array of fields
 }
 
+#define TRAFFIC_MODE_ADVANCED_UNIFORM_DISTRIBUTION 0
+#define TRAFFIC_MODE_ADVANCED_ON_OFF_MODEL 1
+
+
+/**
+ * @brief Creates a row_configuration from an array of string fields.
+ *
+ * This function populates a row_configuration structure using values
+ * parsed from the provided fields. It updates the start_index to
+ * reflect the next available index after the current configuration.
+ *
+ * @param fields An array of strings containing configuration values.
+ * @param start_index A pointer to the current start index, which will be updated.
+ * @return A populated row_configuration structure.
+ */
+row_configuration create_row_configuration(char** fields, int* start_index) {
+    row_configuration row;
+    char *endptr;
+
+    // Convert string fields to respective data types
+    row.index = atoi(fields[0]);
+    row.traffic_mode = atoi(fields[1]);
+    row.mean = atoi(fields[2]);
+    row.standard_deviation = atoi(fields[3]);
+    row.number = atoi(fields[4]);
+    row.packet_size = atoi(fields[5]);
+    row.real_traffic = atoi(fields[6]);
+    row.state_r = strtod(fields[7], &endptr);
+    row.FIFO_queue_buffer = atoi(fields[8]);
+    row.tau = strtol(fields[9], NULL, 10);
+
+    // Set start and end indices
+    row.start_index = *start_index;
+    row.end_index = *start_index + row.number - 1;
+
+    // Update the start index for the next configuration
+    *start_index = row.end_index + 1;
+    
+    return row;
+}
+
+/**
+ * @brief Displays the contents of a row_configuration.
+ *
+ * This function prints the details of a row_configuration structure
+ * in a formatted manner, indicating whether the traffic mode is uniform
+ * or burst.
+ *
+ * @param row The row_configuration structure to display.
+ */
+void show_row_configuration(const row_configuration row) {
+    printf(" index | traffic mode | mean | deviation | number | packet | real | state_r | FIFO |   tau  |  interval |\n");
+    if (row.traffic_mode == TRAFFIC_MODE_ADVANCED_UNIFORM_DISTRIBUTION) {
+        printf("   %d   |    uniform   |  %3d |    %3d    |  %3d   |  %3d   |  %3d | %.5f | %3d  |  %5ld | %3d ~ %3d |\n",
+            row.index, row.mean, row.standard_deviation, row.number, row.packet_size, row.real_traffic, row.state_r, 
+            row.FIFO_queue_buffer, row.tau, row.start_index, row.end_index);
+    } else {
+        printf("   %d   |     burst    |  %3d |    %3d    |  %3d   |  %3d   |  %3d | %.5f | %3d  |  %5ld | %3d ~ %3d |\n",
+            row.index, row.mean, row.standard_deviation, row.number, row.packet_size, row.real_traffic, row.state_r, 
+            row.FIFO_queue_buffer, row.tau, row.start_index, row.end_index);
+    }
+}
 
 void test_csv_function(const char* filename){
     csv_configuration config;
@@ -1457,9 +1519,15 @@ void test_csv_function(const char* filename){
 
     printf("%s\n", read_csv_row_by_index(filename,1));
 
-    char** fields = split_csv_row(read_csv_row_by_index(filename,1), config.fields_number);
-    for(int i=0;i<config.fields_number;i++)
-        printf("%s\n", *(fields+i));
+    int start_index = 0;
+    for(int i=1;i<row_number;i++){
+        char** fields = split_csv_row(read_csv_row_by_index(filename,i), config.fields_number);
+        row_configuration row = create_row_configuration(fields, &start_index);
+        show_row_configuration(row);
+    }
+    // char** fields = split_csv_row(read_csv_row_by_index(filename,1), config.fields_number);
+    // for(int i=0;i<config.fields_number;i++)
+    //     printf("%s\n", *(fields+i));
 }
 
 #endif

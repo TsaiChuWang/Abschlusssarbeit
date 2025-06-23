@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     show_configuration_common_configuration(config); /** @brief Display current configuration if enabled. */
 #endif
 
-  test_csv_function(CSV_PATH);
+  test_csv_function(CSV_PATH, &config);
 
 #ifdef PRINT_EXECUTION_TIME
      execute_clock = clock() - execute_clock;                      ///< Calculate the elapsed execution time.

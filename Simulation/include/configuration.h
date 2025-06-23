@@ -1491,6 +1491,48 @@ row_configuration create_row_configuration(char** fields, int* start_index) {
 }
 
 /**
+ * @brief Creates a csv_configuration from a CSV file.
+ *
+ * This function reads the CSV file, counts the rows and columns,
+ * and populates the csv_configuration structure with row configurations.
+ *
+ * @param filename The name of the CSV file to read.
+ * @param config A pointer to a common_configuration structure to copy settings from.
+ * @return A populated csv_configuration structure.
+ */
+csv_configuration create_csv_configuration(const char* filename, common_configuration* config){
+    csv_configuration csv_config;
+
+    // Count rows and columns in the CSV file
+    csv_config.kind_number = count_csv_rows(filename);
+    csv_config.fields_number = count_csv_columns(filename);
+
+    // Allocate memory for the rows
+    csv_config.rows = (row_configuration*)malloc(csv_config.kind_number*sizeof(row_configuration));
+    
+    int start_index = 0;
+    for(int i=1;i<csv_config.kind_number;i++){
+        // Read and split the CSV row into fields
+        char** fields = split_csv_row(read_csv_row_by_index(filename,i), csv_config.fields_number);
+        *(csv_config.rows+i-1) = create_row_configuration(fields, &start_index);
+        // show_row_configuration(row);
+        free(fields); // Free the array of fields
+    }
+
+    csv_config.config = *config;
+    return csv_config;
+}
+
+/**
+ * @brief Frees the memory allocated for a csv_configuration structure.
+ *
+ * @param config The csv_configuration structure to free.
+ */
+void free_csv_configuration(csv_configuration config) {
+    free(config.rows); // Free the rows array
+}
+
+/**
  * @brief Displays the contents of a row_configuration.
  *
  * This function prints the details of a row_configuration structure
@@ -1512,33 +1554,31 @@ void show_row_configuration(const row_configuration row) {
     }
 }
 
+void test_csv_function(const char* filename, common_configuration* config){
+    csv_configuration csv_config = create_csv_configuration(filename, config);
+    free_csv_configuration(csv_config);
 
+    // int row_number = count_csv_rows(filename);
+    // csv_config.kind_number = row_number-1;
+    // printf("row    : %d\n", row_number);
 
-
-void test_csv_function(const char* filename){
-    csv_configuration config;
-
-    int row_number = count_csv_rows(filename);
-    config.kind_number = row_number-1;
-    printf("row    : %d\n", row_number);
-
-    int column_number = count_csv_columns(filename);
-    config.fields_number = column_number;
-    printf("column : %d\n", column_number);
+    // int column_number = count_csv_columns(filename);
+    // csv_config.fields_number = column_number;
+    // printf("column : %d\n", column_number);
 
     // printf("%s\n", read_csv_row_by_index(filename,1));
-    // char** fields = split_csv_row(read_csv_row_by_index(filename,1), config.fields_number);
-    // for(int i=0;i<config.fields_number;i++)
+    // char** fields = split_csv_row(read_csv_row_by_index(filename,1), csv_config.fields_number);
+    // for(int i=0;i<csv_config.fields_number;i++)
     //     printf("%s\n", *(fields+i));
 
-    int start_index = 0;
-    for(int i=1;i<row_number;i++){
-        char** fields = split_csv_row(read_csv_row_by_index(filename,i), config.fields_number);
-        row_configuration row = create_row_configuration(fields, &start_index);
-        show_row_configuration(row);
-    }
+    // int start_index = 0;
+    // for(int i=1;i<row_number;i++){
+    //     char** fields = split_csv_row(read_csv_row_by_index(filename,i), csv_config.fields_number);
+    //     row_configuration row = create_row_configuration(fields, &start_index);
+    //     show_row_configuration(row);
+    // }
 
-
+    
 
 }
 

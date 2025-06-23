@@ -1243,11 +1243,19 @@ typedef struct {
     int end_index;             // Ending index for processing
 } row_configuration;
 
-
-typedef struct{
-    int kind_number;
-    int fields_number;
-}csv_configuration;
+/**
+ * @brief Structure to hold the configuration for CSV data.
+ *
+ * This structure contains the total number of rows (kind_number),
+ * the expected number of fields in each row (fields_number),
+ * an array of row_configuration structures, and common configuration settings.
+ */
+typedef struct {
+    int kind_number;           // Total number of row configurations
+    int fields_number;         // Expected number of fields in each row
+    row_configuration* rows;    // Pointer to an array of row_configuration
+    common_configuration config; // Common configuration settings
+} csv_configuration;
 
 /**
  * @brief Counts the number of rows in a CSV file.
@@ -1377,7 +1385,6 @@ char* read_csv_row_by_index(const char* filename, int index) {
     return NULL; // Return NULL if the row does not exist
 }
 
-
 /**
  * @brief Splits a CSV row string into an array of fields.
  *
@@ -1446,7 +1453,6 @@ char** split_csv_row(const char* row_string, int fields_number) {
 #define TRAFFIC_MODE_ADVANCED_UNIFORM_DISTRIBUTION 0
 #define TRAFFIC_MODE_ADVANCED_ON_OFF_MODEL 1
 
-
 /**
  * @brief Creates a row_configuration from an array of string fields.
  *
@@ -1506,6 +1512,9 @@ void show_row_configuration(const row_configuration row) {
     }
 }
 
+
+
+
 void test_csv_function(const char* filename){
     csv_configuration config;
 
@@ -1517,7 +1526,10 @@ void test_csv_function(const char* filename){
     config.fields_number = column_number;
     printf("column : %d\n", column_number);
 
-    printf("%s\n", read_csv_row_by_index(filename,1));
+    // printf("%s\n", read_csv_row_by_index(filename,1));
+    // char** fields = split_csv_row(read_csv_row_by_index(filename,1), config.fields_number);
+    // for(int i=0;i<config.fields_number;i++)
+    //     printf("%s\n", *(fields+i));
 
     int start_index = 0;
     for(int i=1;i<row_number;i++){
@@ -1525,9 +1537,9 @@ void test_csv_function(const char* filename){
         row_configuration row = create_row_configuration(fields, &start_index);
         show_row_configuration(row);
     }
-    // char** fields = split_csv_row(read_csv_row_by_index(filename,1), config.fields_number);
-    // for(int i=0;i<config.fields_number;i++)
-    //     printf("%s\n", *(fields+i));
+
+
+
 }
 
 #endif

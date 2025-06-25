@@ -1,5 +1,6 @@
 #define PRINT_EXECUTION_TIME ///< Enable timing measurement for execution duration
 // #define SHOW_CONFIGURATION   ///< Enable display of the current configuration settings
+#define SHOW_CSV_CONFIGURATION // Uncomment this line to enable the display
 
 #include "../include/general.h"       ///< Include general definitions and declarations.
 #include "./inih/ini.h"               ///< Include INI file handling library.
@@ -8,7 +9,8 @@
 #define CONFIGURATION_PATH "../configuration/advanced.ini" ///< Path to the main configuration file
 #define CSV_PATH "../configuration/csv/advanced.csv"       ///< Path to the main csv file
 
-#define TEST_AREA
+// #define TEST_AREA
+
 /** @brief Compilation command
  *  @code{.sh}
  *  gcc ./advanced.c inih/ini.c -o ../execution/advanced -lm
@@ -57,10 +59,19 @@ int main(int argc, char *argv[])
     test_csv_function(CSV_PATH, &config);
 #endif
 
+    csv_configuration csv_config = create_csv_configuration(config.csv_data_path, &config);
+
+#ifdef SHOW_CSV_CONFIGURATION
+    show_csv_configuration(csv_config); // Display the CSV configuration
+#endif
+
 #ifdef PRINT_EXECUTION_TIME
     execute_clock = clock() - execute_clock;                      ///< Calculate the elapsed execution time.
     double time_taken = ((double)execute_clock) / CLOCKS_PER_SEC; ///< Convert clock ticks to seconds.
     printf("Execute time : %f s\n", time_taken);                  ///< Print the execution time in seconds.
 #endif
+
+    // Free allocated memory for the CSV configuration
+    free_csv_configuration(csv_config);
     return EXIT_SUCCESS;
 }

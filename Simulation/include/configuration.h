@@ -1265,6 +1265,8 @@ typedef struct
 
     int start_index; // Starting index for processing
     int end_index;   // Ending index for processing
+
+    double loss;
 } row_configuration;
 
 /**
@@ -1280,6 +1282,12 @@ typedef struct
     int fields_number;           // Expected number of fields in each row
     row_configuration *rows;     // Pointer to an array of row_configuration
     common_configuration config; // Common configuration settings
+
+    // double average_loss;
+    // double compliant_loss;
+    // double non_compliant_loss;
+    // double uniform_loss;
+    // double burst_loss;
 } csv_configuration;
 
 /**
@@ -1538,6 +1546,7 @@ row_configuration create_row_configuration(char **fields, int *start_index)
     // Update the start index for the next configuration
     *start_index = row.end_index + 1;
 
+    row.loss = 0.0;
     return row;
 }
 
@@ -1597,18 +1606,18 @@ void free_csv_configuration(csv_configuration config)
  */
 void show_row_configuration(const row_configuration row)
 {
-    printf(" index | traffic mode | mean | deviation | number | packet | real | state_r | FIFO |   tau  |  interval |\n");
+    printf(" index | traffic mode | mean | deviation | number | packet | real | state_r | FIFO |   tau  |  interval |    loss   |\n");
     if (row.traffic_mode == TRAFFIC_MODE_ADVANCED_UNIFORM_DISTRIBUTION)
     {
-        printf("   %d   |    uniform   |  %3d |    %3d    |  %3d   |  %3d   |  %3d | %.5f | %3d  |  %5ld | %3d ~ %3d |\n",
+        printf("   %d   |    uniform   |  %3d |    %3d    |  %3d   |  %3d   |  %3d | %.5f | %3d  |  %5ld | %3d ~ %3d | %2.7f |\n",
                row.index, row.mean, row.standard_deviation, row.number, row.packet_size, row.real_traffic, row.state_r,
-               row.FIFO_queue_buffer, row.tau, row.start_index, row.end_index);
+               row.FIFO_queue_buffer, row.tau, row.start_index, row.end_index, row.loss);
     }
     else
     {
-        printf("   %d   |     burst    |  %3d |    %3d    |  %3d   |  %3d   |  %3d | %.5f | %3d  |  %5ld | %3d ~ %3d |\n",
+        printf("   %d   |     burst    |  %3d |    %3d    |  %3d   |  %3d   |  %3d | %.5f | %3d  |  %5ld | %3d ~ %3d | %2.7f |\n",
                row.index, row.mean, row.standard_deviation, row.number, row.packet_size, row.real_traffic, row.state_r,
-               row.FIFO_queue_buffer, row.tau, row.start_index, row.end_index);
+               row.FIFO_queue_buffer, row.tau, row.start_index, row.end_index, row.loss);
     }
 }
 

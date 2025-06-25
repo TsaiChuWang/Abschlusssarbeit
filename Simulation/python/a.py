@@ -7,11 +7,11 @@ import sys
 x=[1+i*0.001 for i in range(11)]
 y = [17920,16384,14848,13824,12288,10752,9728,8704,7168,6144,5120]
 y_ = [-1280000*i+1297920-200 for i in x]
-plt.plot(x, y, linestyle='-', label='real data')
-plt.plot(x, y_, linestyle='-', label='equation data')
+plt.plot(x, y, linestyle='-', label='tipping point')
+plt.plot(x, y_, linestyle='-', label='equation')
 # plt.title('Packet Loss with different τ and ratio ({}) Non-compliant'.format(name), fontsize=12)
-plt.ylabel('τ (bits)')
-plt.xlabel('Ratio')
+plt.ylabel('GCRA Bucket Depth τ(bits)')
+plt.xlabel('Link Capacity Scaling Ratio')
 
 plt.legend()
 plt.grid(True)

@@ -239,7 +239,7 @@ void reduction_inif_file_common_configuration(const char *filename)
     if (fprintf(file, "simulation_time = %lf\n", INITIAL_CONFIGURATION_SIMULATION_TIME) < 0)
         goto write_error; // Handle write error
     if (fprintf(file, "error = %f\n", INITIAL_CONFIGURATION_ERROR) < 0)
-        goto write_error; // Handle write error
+        goto write_error;                                               // Handle write error
     fprintf(file, "data_path = %s\n", INITIAL_CONFIGURATION_DATA_PATH); // No error check for data_path
     if (fprintf(file, "unit = %ld\n", INITIAL_CONFIGURATION_UNIT) < 0)
         goto write_error; // Handle write error
@@ -259,13 +259,13 @@ void reduction_inif_file_common_configuration(const char *filename)
         goto write_error; // Handle write error
 
     fclose(file); // Close the file successfully
-    return; // Exit the function normally
+    return;       // Exit the function normally
 
 write_error:
     fprintf(stderr, "Error: Failed to write to file \"%s\"\n", filename);
     perror("Write operation failed"); // Print the error for the write operation
-    fclose(file); // Close the file if an error occurred
-    exit(EXIT_FAILURE); // Exit with failure status
+    fclose(file);                     // Close the file if an error occurred
+    exit(EXIT_FAILURE);               // Exit with failure status
 }
 
 /**
@@ -321,7 +321,6 @@ void test_configuration_h(const char *filename)
     reduction_inif_file(filename);
 }
 
-
 /**
  * @brief Tests the configuration handling for common_configuration.
  *
@@ -340,7 +339,7 @@ void test_configuration_h_common_configuration(const char *filename)
     if (ini_parse(filename, handler_common_configuration, &config) < 0)
     {
         printf(RED_ELOG "Can't load configuration \"%s\"\n", filename); // Error message if loading fails
-        exit(EXIT_FAILURE); // Exit if configuration loading fails
+        exit(EXIT_FAILURE);                                             // Exit if configuration loading fails
     }
     show_configuration_common_configuration(config); // Display the loaded configuration
 
@@ -350,7 +349,7 @@ void test_configuration_h_common_configuration(const char *filename)
     if (ini_parse(filename, handler_common_configuration, &config) < 0)
     {
         printf(RED_ELOG "Can't load configuration \"%s\"\n", filename); // Error message if loading fails
-        exit(EXIT_FAILURE); // Exit if configuration loading fails
+        exit(EXIT_FAILURE);                                             // Exit if configuration loading fails
     }
     show_configuration_common_configuration(config); // Display the reduced configuration
 
@@ -362,18 +361,18 @@ void test_configuration_h_common_configuration(const char *filename)
     printf("capacity = %f\n", obtain_capacity()); // Display the obtained capacity
 
     printf("===== modify_ini_file =====\n");
-    config.link_queue_buffer = 114514; // Modify a specific field in the configuration
+    config.link_queue_buffer = 114514;                                    // Modify a specific field in the configuration
     int status = modify_ini_file_common_configuration(filename, &config); // Save the modified configuration
     if (status == FAILURE)
     {
         printf(RED_ELOG "modify_ini_file failed\n" RESET); // Error message if modification fails
-        exit(FAILURE); // Exit if modification fails
+        exit(FAILURE);                                     // Exit if modification fails
     }
     // Re-parse the INI file after modification
     if (ini_parse(filename, handler_common_configuration, &config) < 0)
     {
         printf(RED_ELOG "Can't load configuration \"%s\"\n", filename); // Error message if loading fails
-        exit(EXIT_FAILURE); // Exit if configuration loading fails
+        exit(EXIT_FAILURE);                                             // Exit if configuration loading fails
     }
     show_configuration_common_configuration(config); // Display the updated configuration
 
@@ -427,7 +426,6 @@ typedef struct
     int link_queue_buffer;   /**< Max link queue buffer size. */
 } configuration;
 
-
 typedef struct
 {
     int tenant_number;         /**< Number of tenants in the simulation. */
@@ -438,10 +436,10 @@ typedef struct
     double ratio;
 
     /** @name Traffic Control Parameters */
-    long input_rate;        /**< Input traffic rate in bytes per second. */
+    long input_rate; /**< Input traffic rate in bytes per second. */
 
     /** @name Buffer and Queue Parameters */
-    int link_queue_buffer;   /**< Max link queue buffer size. */
+    int link_queue_buffer; /**< Max link queue buffer size. */
 } common_configuration;
 
 /**
@@ -650,8 +648,8 @@ static int handler(void *config, const char *section, const char *name, const ch
 /**
  * @brief Handles common configuration settings from a given section and name.
  *
- * This function processes configuration values for various sections such as 
- * "simulation", "traffic", and "threshold". It validates and assigns values 
+ * This function processes configuration values for various sections such as
+ * "simulation", "traffic", and "threshold". It validates and assigns values
  * to the corresponding fields in the common_configuration structure.
  *
  * @param config Pointer to a common_configuration structure.
@@ -671,36 +669,36 @@ static int handler_common_configuration(void *config, const char *section, const
     }
 
     common_configuration *pconfig = (common_configuration *)config; // Cast config to common_configuration
-    char *endptr; // Pointer for string conversion
-    long temp_long; // Temporary variable for long values
-    double temp_double; // Temporary variable for double values
+    char *endptr;                                                   // Pointer for string conversion
+    long temp_long;                                                 // Temporary variable for long values
+    double temp_double;                                             // Temporary variable for double values
 
-    // Helper macro for string comparison
-    #define MATCH(s, n) (strcmp(section, s) == 0 && strcmp(name, n) == 0)
+// Helper macro for string comparison
+#define MATCH(s, n) (strcmp(section, s) == 0 && strcmp(name, n) == 0)
 
-    // Safe string to long conversion
-    #define SAFE_STRTOL(val, min, max)                                                       \
-        do                                                                                   \
-        {                                                                                    \
-            temp_long = strtol(val, &endptr, 10);                                            \
-            if (*endptr != '\0' || temp_long < min || temp_long > max)                       \
-            {                                                                                \
-                fprintf(stderr, "Error: Invalid value for %s.%s: %s\n", section, name, val); \
-                return FAILURE;                                                              \
-            }                                                                                \
-        } while (0)
+// Safe string to long conversion
+#define SAFE_STRTOL(val, min, max)                                                       \
+    do                                                                                   \
+    {                                                                                    \
+        temp_long = strtol(val, &endptr, 10);                                            \
+        if (*endptr != '\0' || temp_long < min || temp_long > max)                       \
+        {                                                                                \
+            fprintf(stderr, "Error: Invalid value for %s.%s: %s\n", section, name, val); \
+            return FAILURE;                                                              \
+        }                                                                                \
+    } while (0)
 
-    // Safe string to double conversion
-    #define SAFE_STRTOD(val, min, max)                                                       \
-        do                                                                                   \
-        {                                                                                    \
-            temp_double = strtod(val, &endptr);                                              \
-            if (*endptr != '\0' || temp_double < min || temp_double > max)                   \
-            {                                                                                \
-                fprintf(stderr, "Error: Invalid value for %s.%s: %s\n", section, name, val); \
-                return FAILURE;                                                              \
-            }                                                                                \
-        } while (0)
+// Safe string to double conversion
+#define SAFE_STRTOD(val, min, max)                                                       \
+    do                                                                                   \
+    {                                                                                    \
+        temp_double = strtod(val, &endptr);                                              \
+        if (*endptr != '\0' || temp_double < min || temp_double > max)                   \
+        {                                                                                \
+            fprintf(stderr, "Error: Invalid value for %s.%s: %s\n", section, name, val); \
+            return FAILURE;                                                              \
+        }                                                                                \
+    } while (0)
 
     // Handle sections and parameters
     if (strcmp(section, "simulation") == 0)
@@ -708,12 +706,12 @@ static int handler_common_configuration(void *config, const char *section, const
         // Process simulation parameters
         if (MATCH("simulation", "tenant_number"))
         {
-            SAFE_STRTOL(value, 1, INT_MAX); // Validate and convert tenant_number
+            SAFE_STRTOL(value, 1, INT_MAX);          // Validate and convert tenant_number
             pconfig->tenant_number = (int)temp_long; // Assign value
         }
         else if (MATCH("simulation", "simulation_time"))
         {
-            SAFE_STRTOD(value, 0.0, DBL_MAX); // Validate and convert simulation_time
+            SAFE_STRTOD(value, 0.0, DBL_MAX);       // Validate and convert simulation_time
             pconfig->simulation_time = temp_double; // Assign value
         }
         else if (MATCH("simulation", "error"))
@@ -741,12 +739,12 @@ static int handler_common_configuration(void *config, const char *section, const
         else if (MATCH("simulation", "unit"))
         {
             SAFE_STRTOL(value, 0, LONG_MAX); // Validate and convert unit
-            pconfig->unit = temp_long; // Assign value
+            pconfig->unit = temp_long;       // Assign value
         }
         else if (MATCH("simulation", "ratio"))
         {
             SAFE_STRTOD(value, 0.0, DBL_MAX); // Validate and convert ratio
-            pconfig->ratio = temp_double; // Assign value
+            pconfig->ratio = temp_double;     // Assign value
         }
         else
         {
@@ -771,7 +769,7 @@ static int handler_common_configuration(void *config, const char *section, const
         // Process threshold parameters
         if (MATCH("threshold", "link_queue_buffer"))
         {
-            SAFE_STRTOL(value, 0, INT_MAX); // Validate and convert link_queue_buffer
+            SAFE_STRTOL(value, 0, INT_MAX);              // Validate and convert link_queue_buffer
             pconfig->link_queue_buffer = (int)temp_long; // Assign value
         }
         else
@@ -782,13 +780,13 @@ static int handler_common_configuration(void *config, const char *section, const
     else
     {
         fprintf(stderr, "Warning: Unknown section: %s\n", section); // Unknown section warning
-        return UNFOUND; // Section not found
+        return UNFOUND;                                             // Section not found
     }
 
-    // Undefine macros after use
-    #undef MATCH
-    #undef SAFE_STRTOL
-    #undef SAFE_STRTOD
+// Undefine macros after use
+#undef MATCH
+#undef SAFE_STRTOL
+#undef SAFE_STRTOD
 
     return SUCCESS; // Successful operation
 }
@@ -981,7 +979,7 @@ cleanup:
 int modify_ini_file_common_configuration(const char *filename, const common_configuration *config)
 {
     FILE *file = NULL; // File pointer for the INI file
-    int status = 0; // Status variable to track success or failure
+    int status = 0;    // Status variable to track success or failure
 
     // Input validation
     if (filename == NULL || config == NULL)
@@ -996,35 +994,35 @@ int modify_ini_file_common_configuration(const char *filename, const common_conf
     {
         fprintf(stderr, "Error: Unable to open file \"%s\" for writing\n", filename);
         perror("File opening failed"); // Print error details
-        return FAILURE; // Return failure if file can't be opened
+        return FAILURE;                // Return failure if file can't be opened
     }
 
-    // Helper macro for writing with error checking
-    #define WRITE_CHECK(fmt, ...)                                                    \
-        if (fprintf(file, fmt, __VA_ARGS__) < 0)                                     \
-        {                                                                            \
-            fprintf(stderr, "Error: Writing to file failed at line %d\n", __LINE__); \
-            status = FAILURE;                                                        \
-            goto cleanup;                                                            \
-        }
+// Helper macro for writing with error checking
+#define WRITE_CHECK(fmt, ...)                                                    \
+    if (fprintf(file, fmt, __VA_ARGS__) < 0)                                     \
+    {                                                                            \
+        fprintf(stderr, "Error: Writing to file failed at line %d\n", __LINE__); \
+        status = FAILURE;                                                        \
+        goto cleanup;                                                            \
+    }
 
     // Write [simulation] section
-    try_write(file, "[simulation]\n"); // Write section header
-    WRITE_CHECK("tenant_number = %d\n", config->tenant_number); // Write tenant_number
-    WRITE_CHECK("simulation_time = %lf\n", config->simulation_time); // Write simulation_time
-    WRITE_CHECK("error = %.6f\n", config->error); // Write error
+    try_write(file, "[simulation]\n");                                           // Write section header
+    WRITE_CHECK("tenant_number = %d\n", config->tenant_number);                  // Write tenant_number
+    WRITE_CHECK("simulation_time = %lf\n", config->simulation_time);             // Write simulation_time
+    WRITE_CHECK("error = %.6f\n", config->error);                                // Write error
     WRITE_CHECK("data_path = %s\n", config->data_path ? config->data_path : ""); // Write data_path
-    WRITE_CHECK("unit = %ld\n", config->unit); // Write unit
-    WRITE_CHECK("ratio = %lf\n", config->ratio); // Write ratio
-    try_write(file, "\n"); // Add a newline after the section
+    WRITE_CHECK("unit = %ld\n", config->unit);                                   // Write unit
+    WRITE_CHECK("ratio = %lf\n", config->ratio);                                 // Write ratio
+    try_write(file, "\n");                                                       // Add a newline after the section
 
     // Write [traffic] section
-    try_write(file, "[traffic]\n"); // Write section header
+    try_write(file, "[traffic]\n");                        // Write section header
     WRITE_CHECK("input_rate = %ld\n", config->input_rate); // Write input_rate
-    try_write(file, "\n"); // Add a newline after the section
+    try_write(file, "\n");                                 // Add a newline after the section
 
     // Write [threshold] section
-    try_write(file, "[threshold]\n"); // Write section header
+    try_write(file, "[threshold]\n");                                   // Write section header
     WRITE_CHECK("link_queue_buffer = %d\n", config->link_queue_buffer); // Write link_queue_buffer
 
 cleanup:
@@ -1035,7 +1033,7 @@ cleanup:
         {
             fprintf(stderr, "Error: Failed to close file\n");
             perror("File closing failed"); // Print error details
-            status = FAILURE; // Update status to failure
+            status = FAILURE;              // Update status to failure
         }
     }
 
@@ -1122,12 +1120,12 @@ void show_configuration(const configuration config)
  */
 void show_configuration_common_configuration(const common_configuration config)
 {
-    print_equals_line(); // Print a separator line
-    printf("- Simulation :\n"); // Header for the simulation section
-    printf("| tenant number                   : %-d\n", config.tenant_number); // Display tenant number
+    print_equals_line();                                                          // Print a separator line
+    printf("- Simulation :\n");                                                   // Header for the simulation section
+    printf("| tenant number                   : %-d\n", config.tenant_number);    // Display tenant number
     printf("| simulation time                 : %-lf\n", config.simulation_time); // Display simulation time
-    printf("| error                           : %-f\n", config.error); // Display error value
-    printf("| data path                       : %-s\n", config.data_path); // Display data path
+    printf("| error                           : %-f\n", config.error);            // Display error value
+    printf("| data path                       : %-s\n", config.data_path);        // Display data path
 
     // Display unit based on its value
     switch (config.unit)
@@ -1144,14 +1142,14 @@ void show_configuration_common_configuration(const common_configuration config)
     default:
         printf("| unit                            : Mbps\n"); // Default to Mbps if unknown
     }
-    
+
     printf("| ratio                           : %-lf\n", config.ratio); // Display ratio
 
-    printf("- Traffic :\n"); // Header for the traffic section
+    printf("- Traffic :\n");                                                 // Header for the traffic section
     printf("| input rate                      : %-ld\n", config.input_rate); // Display input rate
 
     printf("| link queue buffer               : %-d\n", config.link_queue_buffer); // Display link queue buffer
-    print_equals_line(); // Print a separator line
+    print_equals_line();                                                           // Print a separator line
 }
 
 /**
@@ -1227,20 +1225,21 @@ int is_noncompliant_index(int index, const configuration config)
 
 #define MAX_LINE_LENGTH 2048
 
-typedef struct {
-    int index;                  // Index of the row configuration
-    int traffic_mode;          // Mode of traffic (e.g., 0 for normal, 1 for high, etc.)
-    int mean;                  // Mean value for traffic generation
-    int standard_deviation;     // Standard deviation for traffic generation
-    int number;                // Number of packets or connections
-    int packet_size;           // Size of packets in bytes
-    int real_traffic;          // Actual traffic value
-    double state_r;            // State variable (could represent a ratio or probability)
-    int FIFO_queue_buffer;     // Size of the FIFO queue buffer
-    long tau;                  // Time constant or delay in some context
+typedef struct
+{
+    int index;              // Index of the row configuration
+    int traffic_mode;       // Mode of traffic (e.g., 0 for normal, 1 for high, etc.)
+    int mean;               // Mean value for traffic generation
+    int standard_deviation; // Standard deviation for traffic generation
+    int number;             // Number of packets or connections
+    int packet_size;        // Size of packets in bytes
+    int real_traffic;       // Actual traffic value
+    double state_r;         // State variable (could represent a ratio or probability)
+    int FIFO_queue_buffer;  // Size of the FIFO queue buffer
+    long tau;               // Time constant or delay in some context
 
-    int start_index;           // Starting index for processing
-    int end_index;             // Ending index for processing
+    int start_index; // Starting index for processing
+    int end_index;   // Ending index for processing
 } row_configuration;
 
 /**
@@ -1250,10 +1249,11 @@ typedef struct {
  * the expected number of fields in each row (fields_number),
  * an array of row_configuration structures, and common configuration settings.
  */
-typedef struct {
-    int kind_number;           // Total number of row configurations
-    int fields_number;         // Expected number of fields in each row
-    row_configuration* rows;    // Pointer to an array of row_configuration
+typedef struct
+{
+    int kind_number;             // Total number of row configurations
+    int fields_number;           // Expected number of fields in each row
+    row_configuration *rows;     // Pointer to an array of row_configuration
     common_configuration config; // Common configuration settings
 } csv_configuration;
 
@@ -1267,33 +1267,39 @@ typedef struct {
  * @param filename The path to the CSV file to be read.
  * @return The number of rows in the CSV file, or -1 if the file cannot be opened.
  */
-int count_csv_rows(const char* filename) {
+int count_csv_rows(const char *filename)
+{
     FILE *file = fopen(filename, "r"); // Open the file for reading
-    if (file == NULL) {
+    if (file == NULL)
+    {
         printf(RED_ELOG "Cannot open file: %s\n" RESET, filename); // Error message if file can't be opened
-        return -1; // Return -1 to indicate an error
+        return -1;                                                 // Return -1 to indicate an error
     }
-    
+
     int row_count = 0; // Initialize row count
-    char ch; // Variable to store each character read from the file
-    
+    char ch;           // Variable to store each character read from the file
+
     // Read each character until the end of the file
-    while ((ch = fgetc(file)) != EOF) {
-        if (ch == '\n') {
+    while ((ch = fgetc(file)) != EOF)
+    {
+        if (ch == '\n')
+        {
             row_count++; // Increment row count for each newline character
         }
     }
 
     // Check if the last line does not end with a newline
     fseek(file, -1, SEEK_END); // Move the file pointer to the last character
-    if (ftell(file) > 0) { // Ensure the file is not empty
+    if (ftell(file) > 0)
+    {                     // Ensure the file is not empty
         ch = fgetc(file); // Read the last character
-        if (ch != '\n') {
+        if (ch != '\n')
+        {
             row_count++; // Increment row count if the last line does not end with a newline
         }
     }
-    
-    fclose(file); // Close the file
+
+    fclose(file);     // Close the file
     return row_count; // Return the total row count
 }
 
@@ -1308,34 +1314,39 @@ int count_csv_rows(const char* filename) {
  * @return The number of columns in the CSV file, or -1 if the file cannot be opened.
  *         Returns 0 if the file is empty or cannot read the first line.
  */
-int count_csv_columns(const char* filename) {
+int count_csv_columns(const char *filename)
+{
     FILE *file = fopen(filename, "r"); // Open the file for reading
-    if (file == NULL) {
+    if (file == NULL)
+    {
         printf(RED_ELOG "Cannot open file: %s\n" RESET, filename); // Error message if file can't be opened
-        return -1; // Return -1 to indicate an error
+        return -1;                                                 // Return -1 to indicate an error
     }
-    
+
     char line[MAX_LINE_LENGTH]; // Buffer to hold the first line of the CSV file
-    
+
     // Read the first line from the file
-    if (fgets(line, sizeof(line), file) == NULL) {
+    if (fgets(line, sizeof(line), file) == NULL)
+    {
         fclose(file); // Close the file if reading fails
-        return 0; // Return 0 if the file is empty or cannot read the first line
+        return 0;     // Return 0 if the file is empty or cannot read the first line
     }
-    
+
     // Remove the newline character from the end of the line, if present
     line[strcspn(line, "\n")] = '\0';
-    
+
     int comma_count = 0; // Initialize comma count
     // Count the number of commas in the line
-    for (int i = 0; line[i] != '\0'; i++) {
-        if (line[i] == ',') {
+    for (int i = 0; line[i] != '\0'; i++)
+    {
+        if (line[i] == ',')
+        {
             comma_count++; // Increment comma count for each comma found
         }
     }
-    
+
     fclose(file); // Close the file
-    
+
     return comma_count + 1; // Return the number of columns (commas + 1)
 }
 
@@ -1352,37 +1363,42 @@ int count_csv_columns(const char* filename) {
  * @return A pointer to a dynamically allocated string containing the row data,
  *         or NULL if the file cannot be opened or if the row does not exist.
  */
-char* read_csv_row_by_index(const char* filename, int index) {
+char *read_csv_row_by_index(const char *filename, int index)
+{
     FILE *file = fopen(filename, "r"); // Open the file for reading
-    if (file == NULL) {
+    if (file == NULL)
+    {
         printf("Cannot open file: %s\n", filename); // Error message if file can't be opened
-        return NULL; // Return NULL to indicate an error
+        return NULL;                                // Return NULL to indicate an error
     }
-    
+
     char line[MAX_LINE_LENGTH]; // Buffer to hold each line of the CSV file
-    int current_index = 0; // Initialize the current index counter
-    
+    int current_index = 0;      // Initialize the current index counter
+
     // Read lines until the specified index is reached or end of file
-    while (fgets(line, sizeof(line), file) != NULL) {
-        if (current_index == index) { // Check if the current index matches the specified index
+    while (fgets(line, sizeof(line), file) != NULL)
+    {
+        if (current_index == index)
+        {                 // Check if the current index matches the specified index
             fclose(file); // Close the file
-            
+
             line[strcspn(line, "\n")] = '\0'; // Remove the newline character
-            
+
             // Allocate memory for the result string
-            char* result = malloc(strlen(line) + 1);
-            if (result == NULL) {
+            char *result = malloc(strlen(line) + 1);
+            if (result == NULL)
+            {
                 printf("Memory allocation failed.\n"); // Handle memory allocation failure
-                return NULL; // Return NULL if allocation fails
+                return NULL;                           // Return NULL if allocation fails
             }
             strcpy(result, line); // Copy the line into the result string
-            return result; // Return the result
+            return result;        // Return the result
         }
         current_index++; // Increment the index counter
     }
-    
+
     fclose(file); // Close the file if the specified index is not found
-    return NULL; // Return NULL if the row does not exist
+    return NULL;  // Return NULL if the row does not exist
 }
 
 /**
@@ -1397,57 +1413,66 @@ char* read_csv_row_by_index(const char* filename, int index) {
  * @return A pointer to an array of strings (fields), or NULL if an error occurs.
  *         The caller is responsible for freeing the allocated memory.
  */
-char** split_csv_row(const char* row_string, int fields_number) {
-    if (row_string == NULL || fields_number <= 0) {
+char **split_csv_row(const char *row_string, int fields_number)
+{
+    if (row_string == NULL || fields_number <= 0)
+    {
         return NULL; // Return NULL for invalid input
     }
-    
+
     // Allocate memory for the array of fields
-    char** fields = malloc(fields_number * sizeof(char*));
-    if (fields == NULL) {
+    char **fields = malloc(fields_number * sizeof(char *));
+    if (fields == NULL)
+    {
         return NULL; // Return NULL if memory allocation fails
     }
-    
+
     // Initialize all fields to NULL
-    for (int i = 0; i < fields_number; i++) {
+    for (int i = 0; i < fields_number; i++)
+    {
         fields[i] = NULL;
     }
-    
+
     // Create a copy of the row string to avoid modifying the original
-    char* row_copy = malloc(strlen(row_string) + 1);
-    if (row_copy == NULL) {
+    char *row_copy = malloc(strlen(row_string) + 1);
+    if (row_copy == NULL)
+    {
         free(fields); // Free previously allocated memory
-        return NULL; // Return NULL if memory allocation fails
+        return NULL;  // Return NULL if memory allocation fails
     }
     strcpy(row_copy, row_string);
-    
+
     // Split the row string into tokens using comma as the delimiter
-    char* token = strtok(row_copy, ",");
+    char *token = strtok(row_copy, ",");
     int field_index = 0;
-    
-    while (token != NULL && field_index < fields_number) {
+
+    while (token != NULL && field_index < fields_number)
+    {
         // Trim leading whitespace
-        while (*token == ' ' || *token == '\t') token++;
-        
+        while (*token == ' ' || *token == '\t')
+            token++;
+
         // Trim trailing whitespace
         int len = strlen(token);
-        while (len > 0 && (token[len-1] == ' ' || token[len-1] == '\t')) {
-            token[len-1] = '\0';
+        while (len > 0 && (token[len - 1] == ' ' || token[len - 1] == '\t'))
+        {
+            token[len - 1] = '\0';
             len--;
         }
-        
+
         // Allocate memory for the field and copy the token
         fields[field_index] = malloc(strlen(token) + 1);
-        if (fields[field_index] != NULL) {
+        if (fields[field_index] != NULL)
+        {
             strcpy(fields[field_index], token);
         }
-        
+
         field_index++;
         token = strtok(NULL, ","); // Get the next token
     }
-    
+
     free(row_copy); // Free the copy of the row string
-    return fields; // Return the array of fields
+    return fields;  // Return the array of fields
 }
 
 #define TRAFFIC_MODE_ADVANCED_UNIFORM_DISTRIBUTION 0
@@ -1464,7 +1489,8 @@ char** split_csv_row(const char* row_string, int fields_number) {
  * @param start_index A pointer to the current start index, which will be updated.
  * @return A populated row_configuration structure.
  */
-row_configuration create_row_configuration(char** fields, int* start_index) {
+row_configuration create_row_configuration(char **fields, int *start_index)
+{
     row_configuration row;
     char *endptr;
 
@@ -1486,7 +1512,7 @@ row_configuration create_row_configuration(char** fields, int* start_index) {
 
     // Update the start index for the next configuration
     *start_index = row.end_index + 1;
-    
+
     return row;
 }
 
@@ -1500,21 +1526,23 @@ row_configuration create_row_configuration(char** fields, int* start_index) {
  * @param config A pointer to a common_configuration structure to copy settings from.
  * @return A populated csv_configuration structure.
  */
-csv_configuration create_csv_configuration(const char* filename, common_configuration* config){
+csv_configuration create_csv_configuration(const char *filename, common_configuration *config)
+{
     csv_configuration csv_config;
 
     // Count rows and columns in the CSV file
-    csv_config.kind_number = count_csv_rows(filename);
+    csv_config.kind_number = count_csv_rows(filename) - 1;
     csv_config.fields_number = count_csv_columns(filename);
 
     // Allocate memory for the rows
-    csv_config.rows = (row_configuration*)malloc(csv_config.kind_number*sizeof(row_configuration));
-    
+    csv_config.rows = (row_configuration *)malloc(csv_config.kind_number * sizeof(row_configuration));
+
     int start_index = 0;
-    for(int i=1;i<csv_config.kind_number;i++){
+    for (int i = 1; i < csv_config.kind_number + 1; i++)
+    {
         // Read and split the CSV row into fields
-        char** fields = split_csv_row(read_csv_row_by_index(filename,i), csv_config.fields_number);
-        *(csv_config.rows+i-1) = create_row_configuration(fields, &start_index);
+        char **fields = split_csv_row(read_csv_row_by_index(filename, i), csv_config.fields_number);
+        *(csv_config.rows + i - 1) = create_row_configuration(fields, &start_index);
         // show_row_configuration(row);
         free(fields); // Free the array of fields
     }
@@ -1528,7 +1556,8 @@ csv_configuration create_csv_configuration(const char* filename, common_configur
  *
  * @param config The csv_configuration structure to free.
  */
-void free_csv_configuration(csv_configuration config) {
+void free_csv_configuration(csv_configuration config)
+{
     free(config.rows); // Free the rows array
 }
 
@@ -1541,45 +1570,92 @@ void free_csv_configuration(csv_configuration config) {
  *
  * @param row The row_configuration structure to display.
  */
-void show_row_configuration(const row_configuration row) {
+void show_row_configuration(const row_configuration row)
+{
     printf(" index | traffic mode | mean | deviation | number | packet | real | state_r | FIFO |   tau  |  interval |\n");
-    if (row.traffic_mode == TRAFFIC_MODE_ADVANCED_UNIFORM_DISTRIBUTION) {
+    if (row.traffic_mode == TRAFFIC_MODE_ADVANCED_UNIFORM_DISTRIBUTION)
+    {
         printf("   %d   |    uniform   |  %3d |    %3d    |  %3d   |  %3d   |  %3d | %.5f | %3d  |  %5ld | %3d ~ %3d |\n",
-            row.index, row.mean, row.standard_deviation, row.number, row.packet_size, row.real_traffic, row.state_r, 
-            row.FIFO_queue_buffer, row.tau, row.start_index, row.end_index);
-    } else {
+               row.index, row.mean, row.standard_deviation, row.number, row.packet_size, row.real_traffic, row.state_r,
+               row.FIFO_queue_buffer, row.tau, row.start_index, row.end_index);
+    }
+    else
+    {
         printf("   %d   |     burst    |  %3d |    %3d    |  %3d   |  %3d   |  %3d | %.5f | %3d  |  %5ld | %3d ~ %3d |\n",
-            row.index, row.mean, row.standard_deviation, row.number, row.packet_size, row.real_traffic, row.state_r, 
-            row.FIFO_queue_buffer, row.tau, row.start_index, row.end_index);
+               row.index, row.mean, row.standard_deviation, row.number, row.packet_size, row.real_traffic, row.state_r,
+               row.FIFO_queue_buffer, row.tau, row.start_index, row.end_index);
     }
 }
 
-void test_csv_function(const char* filename, common_configuration* config){
-    csv_configuration csv_config = create_csv_configuration(filename, config);
-    free_csv_configuration(csv_config);
+/**
+ * @brief Displays the contents of a csv_configuration.
+ *
+ * This function prints the number of kinds and fields, followed by the details
+ * of each row configuration, and finally the common configuration settings.
+ *
+ * @param config The csv_configuration structure to display.
+ */
+void show_csv_configuration(const csv_configuration config)
+{
+    printf("kind    : %d\n", config.kind_number);
+    printf("field   : %d\n", config.fields_number);
+    print_equals_line();
 
-    // int row_number = count_csv_rows(filename);
-    // csv_config.kind_number = row_number-1;
-    // printf("row    : %d\n", row_number);
+    for (int i = 0; i < config.kind_number; i++)
+    {
+        show_row_configuration(config.rows[i]); // Display each row configuration
+    }
 
-    // int column_number = count_csv_columns(filename);
-    // csv_config.fields_number = column_number;
-    // printf("column : %d\n", column_number);
-
-    // printf("%s\n", read_csv_row_by_index(filename,1));
-    // char** fields = split_csv_row(read_csv_row_by_index(filename,1), csv_config.fields_number);
-    // for(int i=0;i<csv_config.fields_number;i++)
-    //     printf("%s\n", *(fields+i));
-
-    // int start_index = 0;
-    // for(int i=1;i<row_number;i++){
-    //     char** fields = split_csv_row(read_csv_row_by_index(filename,i), csv_config.fields_number);
-    //     row_configuration row = create_row_configuration(fields, &start_index);
-    //     show_row_configuration(row);
-    // }
-
-    
-
+    print_equals_line();
+    show_configuration_common_configuration(config.config); // Display common settings
 }
 
+/**
+ * @brief Tests the CSV configuration functions.
+ *
+ * This function creates a csv_configuration from a CSV file, displays its contents,
+ * and then frees the allocated memory.
+ *
+ * @param filename The name of the CSV file to read.
+ * @param config A pointer to a common_configuration structure to copy settings from.
+ */
+void test_csv_function(const char *filename, common_configuration *config)
+{
+    csv_configuration csv_config = create_csv_configuration(filename, config);
+
+    // Display the CSV configuration
+    show_csv_configuration(csv_config);
+
+    // Free allocated memory for the CSV configuration
+    free_csv_configuration(csv_config);
+
+    // Uncomment for additional testing
+    /*
+    int row_number = count_csv_rows(filename);
+    csv_config.kind_number = row_number - 1;
+    printf("row    : %d\n", row_number);
+
+    int column_number = count_csv_columns(filename);
+    csv_config.fields_number = column_number;
+    printf("column : %d\n", column_number);
+
+    printf("%s\n", read_csv_row_by_index(filename, 1));
+    char** fields = split_csv_row(read_csv_row_by_index(filename, 1), csv_config.fields_number);
+    for (int i = 0; i < csv_config.fields_number; i++) {
+        printf("%s\n", fields[i]);
+    }
+
+    int start_index = 0;
+    for (int i = 1; i < row_number; i++) {
+        char** fields = split_csv_row(read_csv_row_by_index(filename, i), csv_config.fields_number);
+        row_configuration row = create_row_configuration(fields, &start_index);
+        show_row_configuration(row);
+        // Free fields after use
+        for (int j = 0; j < csv_config.fields_number; j++) {
+            free(fields[j]);
+        }
+        free(fields);
+    }
+    */
+}
 #endif

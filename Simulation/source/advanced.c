@@ -8,6 +8,7 @@
 #define CONFIGURATION_PATH "../configuration/advanced.ini" ///< Path to the main configuration file
 #define CSV_PATH "../configuration/csv/advanced.csv"       ///< Path to the main csv file
 
+#define TEST_AREA
 /** @brief Compilation command
  *  @code{.sh}
  *  gcc ./advanced.c inih/ini.c -o ../execution/advanced -lm
@@ -50,8 +51,11 @@ int main(int argc, char *argv[])
 #ifdef SHOW_CONFIGURATION
     show_configuration_common_configuration(config); /** @brief Display current configuration if enabled. */
 #endif
-    test_configuration_h_common_configuration(configuration_path);
+
+#ifdef TEST_AREA
+    // test_configuration_h_common_configuration(configuration_path);
     test_csv_function(CSV_PATH, &config);
+#endif
 
 #ifdef PRINT_EXECUTION_TIME
     execute_clock = clock() - execute_clock;                      ///< Calculate the elapsed execution time.

@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
         config.traffic_mode = TRAFFIC_MODE_UNIFORM; ///< Set the traffic mode to uniform.
         modify_ini_file(configuration_path, &config);
 
-#ifdef NORMAL_MODE
+#ifndef APPEND_MODE
         // Prepare the data directory by removing existing data and creating new directories.
         sprintf(command, "rm -r %s", config.data_path);        ///< Command to remove the existing data directory.
         system(command);                                       ///< Execute the command.
@@ -101,6 +101,7 @@ int main(int argc, char *argv[])
         system(command);                                       ///< Execute the command.
 
         write_statistics_header_config(config, HEADER_TYPE_AVERAGE); ///< Write the header for statistics.
+#endif
 
         // Loop through tau values and execute the main program for each.
         for (long tau = 0; tau <= 25600; tau += step)
@@ -114,17 +115,7 @@ int main(int argc, char *argv[])
             sprintf(command, "python3 %s %s %s", PYTHON_AVERAGE_LOSS_CHART_PATH, name, configuration_path); ///< Command to run the Python script for data analysis.
             system(command);                                                                                ///< Execute the command.
         }
-#endif
-#ifdef VALIDATE_MODE
-        config.tau = default_tau; ///< Set the current tau value in the configuration.
-        config.upper_queue_buffer = 5;
-        // config.tenant_number = 1; // for FIFO queue validation
-        // config.link_queue_buffer = 10;
-        modify_ini_file(configuration_path, &config); ///< Update the INI file with the new tau value.
 
-        sprintf(command, "../execution/main %s 1", configuration_path); ///< Command to execute the main program.
-        system(command);                                                ///< Execute the command.
-#endif
         break;
     case UNIFORM_DISTRIBUTION_NONCOMPLIANT:
         strcpy(name, "uniform_half_noncompliant");                    ///< Set the name for the configuration.

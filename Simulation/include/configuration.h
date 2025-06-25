@@ -1283,11 +1283,11 @@ typedef struct
     row_configuration *rows;     // Pointer to an array of row_configuration
     common_configuration config; // Common configuration settings
 
-    // double average_loss;
-    // double compliant_loss;
-    // double non_compliant_loss;
-    // double uniform_loss;
-    // double burst_loss;
+    double average_loss;
+    double compliant_loss;
+    double non_compliant_loss;
+    double uniform_loss;
+    double burst_loss;
 } csv_configuration;
 
 /**
@@ -1582,6 +1582,13 @@ csv_configuration create_csv_configuration(const char *filename, common_configur
     }
 
     csv_config.config = *config;
+
+    csv_config.average_loss = 0.0;
+    csv_config.compliant_loss = 0.0;
+    csv_config.non_compliant_loss = 0.0;
+    csv_config.uniform_loss = 0.0;
+    csv_config.burst_loss = 0.0;
+
     return csv_config;
 }
 
@@ -1641,6 +1648,13 @@ void show_csv_configuration(const csv_configuration config)
     }
 
     print_equals_line();
+
+    printf("average loss       = %-3.17lf \%\n", config.average_loss);
+    printf("compliant loss     = %-3.17lf \%\n", config.compliant_loss);
+    printf("non-compliant loss = %-3.17lf \%\n", config.non_compliant_loss);
+    printf("uniform loss       = %-3.17lf \%\n", config.uniform_loss);
+    printf("burst loss         = %-3.17lf \%\n", config.burst_loss);
+
     show_configuration_common_configuration(config.config); // Display common settings
 }
 

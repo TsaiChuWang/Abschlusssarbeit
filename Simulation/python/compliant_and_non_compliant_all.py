@@ -111,6 +111,7 @@ if(name == 'burst_half_noncompliant'):
             plt.plot(tau, noncompliant_loss_pure, linestyle='-', label='(pure)r = {}'.format(key), alpha = 1)
     plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
     plt.title('Packet Loss with different τ and r ({}) Non-compliant'.format(name), fontsize=12)
+    plt.title('Non-compliant SLA'.format(name), fontsize=12)
     plt.xlabel('GCRA Bucket Depth τ(bits)')
     plt.ylabel('Packet Loss Rate(%)')
     plt.legend()
@@ -139,9 +140,9 @@ if(name == 'burst_half_noncompliant'):
         noncompliant_loss_all = dataframe[dataframe['state_r'] == key][['noncompliant_loss_all']]
         if(len(noncompliant_loss_all)!=0):
             tau = dataframe[dataframe['state_r'] == key]['tau'].tolist()
-            plt.plot(tau, noncompliant_loss_all, linestyle='-', label='(all)r = {}'.format(key), alpha = 1)
+            plt.plot(tau, noncompliant_loss_all, linestyle='-', label='r = {}'.format(key), alpha = 1)
     plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
-    plt.title('Packet Loss with different τ and r ({}) Non-compliant'.format(name), fontsize=12)
+    plt.title('Non-compliant SLA', fontsize=12)
     plt.xlabel('GCRA Bucket Depth τ(bits)')
     plt.ylabel('Packet Loss Rate(%)')
     plt.legend()
@@ -156,7 +157,7 @@ if(name == 'burst_half_noncompliant'):
             tau = dataframe[dataframe['state_r'] == key]['tau'].tolist()
             plt.plot(tau, compliant_loss_all, linestyle='-', label='(all)r = {}'.format(key), alpha = 1)
     plt.plot(tau_, [0.1 for i in tau_], linestyle='-', color = 'red', label='ε')
-    plt.title('Packet Loss with different τ and r ({}) Compliant'.format(name), fontsize=12)
+    plt.title('Compliant SLA', fontsize=12)
     plt.xlabel('GCRA Bucket Depth τ(bits)')
     plt.ylabel('Packet Loss Rate(%)')
     plt.legend()

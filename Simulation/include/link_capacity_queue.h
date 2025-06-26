@@ -265,6 +265,18 @@ void initlink_priority_queue(link_priority_queue *pqueue, int max_buffer_size,
                                            (double)ONE_SECOND_IN_NS / (bandwidth * config.unit));
 }
 
+void initlink_priority_queue_advanced(link_priority_queue *pqueue, int max_buffer_size,
+                                      const common_configuration config, double bandwidth, int packet_size)
+{
+    init_circular_queue(&pqueue->alpha, max_buffer_size);
+    init_circular_queue(&pqueue->beta, max_buffer_size);
+    pqueue->max_buffer = max_buffer_size;
+
+    pqueue->dequeue_timestamp = 0;
+    pqueue->dequeue_interval = (TIME_TYPE)(cpacket_size *
+                                           (double)ONE_SECOND_IN_NS / (bandwidth * config.unit));
+}
+
 /**
  * @brief Checks if a circular queue is empty.
  *

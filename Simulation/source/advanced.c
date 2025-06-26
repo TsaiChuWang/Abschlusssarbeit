@@ -86,6 +86,19 @@ int main(int argc, char *argv[])
         }
     }
 
+    link_priority_queue link;
+    initlink_priority_queue_advanced(&link, config.link_queue_buffer, config, capacity, (flows)->packet_size); // now doesn't support different packet size
+
+    TIME_TYPE timestamp = (TIME_TYPE)0;
+    TIME_TYPE time_per_packet = (double)ONE_SECOND_IN_NS / config.input_rate;
+    TIME_TYPE step_size = (TIME_TYPE)((flows)->packet_size * time_per_packet); // now doesn't support different packet size
+
+    while (timestamp <= (TIME_TYPE)(config.simulation_time * ONE_SECOND_IN_NS))
+    {
+        // Increment the timestamp by the step size defined in the generator.
+        timestamp += (TIME_TYPE)(step_size);
+    }
+
 #ifdef PRINT_EXECUTION_TIME
     execute_clock = clock() - execute_clock;                      ///< Calculate the elapsed execution time.
     double time_taken = ((double)execute_clock) / CLOCKS_PER_SEC; ///< Convert clock ticks to seconds.

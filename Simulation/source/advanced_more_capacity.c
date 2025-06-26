@@ -273,33 +273,38 @@ int main(int argc, char *argv[])
         int *packets = (int *)malloc(tenant_number * sizeof(int));
         for (int i = 0; i < 20; i++)
         {
-            if(i<10)
-            *(packets + i) = uniform_distribution((double)120 * config.unit / config.input_rate);
-            else *(packets + i) = uniform_distribution((double)150 * config.unit / config.input_rate);
+            if (i < 10)
+                *(packets + i) = uniform_distribution((double)120 * config.unit / config.input_rate);
+            else
+                *(packets + i) = uniform_distribution((double)150 * config.unit / config.input_rate);
         }
         for (int i = 20; i < 40; i++)
         {
-            if(i<30)
-            *(packets + i) = uniform_distribution((double)140 * config.unit / config.input_rate);
-            else *(packets + i) = uniform_distribution((double)160 * config.unit / config.input_rate);
+            if (i < 30)
+                *(packets + i) = uniform_distribution((double)140 * config.unit / config.input_rate);
+            else
+                *(packets + i) = uniform_distribution((double)160 * config.unit / config.input_rate);
         }
         for (int i = 40; i < 50; i++)
         {
-            if(i<45)
-            *(packets + i) = uniform_distribution((double)80 * config.unit / config.input_rate);
-            else *(packets + i) = uniform_distribution((double)120 * config.unit / config.input_rate);
+            if (i < 45)
+                *(packets + i) = uniform_distribution((double)80 * config.unit / config.input_rate);
+            else
+                *(packets + i) = uniform_distribution((double)120 * config.unit / config.input_rate);
         }
         for (int i = 50; i < 80; i++)
         {
-            if(i<65)
-            *(packets + i) = uniform_distribution((double)160 * config.unit / config.input_rate);
-            else *(packets + i) = uniform_distribution((double)170 * config.unit / config.input_rate);
+            if (i < 65)
+                *(packets + i) = uniform_distribution((double)160 * config.unit / config.input_rate);
+            else
+                *(packets + i) = uniform_distribution((double)170 * config.unit / config.input_rate);
         }
         for (int i = 80; i < 100; i++)
         {
-            if(i<90)
-            *(packets + i) = uniform_distribution((double)130 * config.unit / config.input_rate);
-            else *(packets + i) = uniform_distribution((double)135 * config.unit / config.input_rate);
+            if (i < 90)
+                *(packets + i) = uniform_distribution((double)130 * config.unit / config.input_rate);
+            else
+                *(packets + i) = uniform_distribution((double)135 * config.unit / config.input_rate);
         }
 #ifdef PRINT_EACH_GRID_PACKET
         print_packets(packets, config.tenant_number); ///< Print the generated packets for each tenant.
@@ -353,7 +358,7 @@ int main(int argc, char *argv[])
 
             if (*(packets + tenant) == PACKET_LABEL_ACCEPT) ///< Check if the packet label is ACCEPT for the tenant
             {
-                *(packets + tenant) = gcra_update_advanced(timestamp, (gcras + tenant), config, tenant); ///< Update the packet using GCRA
+                *(packets + tenant) = gcra_update_advanced_(timestamp, (gcras + tenant), config, tenant); ///< Update the packet using GCRA
             }
 
 #ifdef CHECK_GCRA
@@ -634,27 +639,27 @@ int main(int argc, char *argv[])
         case 0:
             for (int i = 10; i < 20; i++)
                 average_loss_all += (double)(label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[i][PACKET_LABEL_ACCEPT] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] + label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
-            printf(" Interval %d : %03d ~ %03d |  "RED_ELOG"%03d"RESET" |   %2d   | %.7lf %%\n", j, 80, 160, 150, 10, average_loss_all / 10);
+            printf(" Interval %d : %03d ~ %03d |  " RED_ELOG "%03d" RESET " |   %2d   | %.7lf %%\n", j, 80, 160, 150, 10, average_loss_all / 10);
             break;
         case 1:
             for (int i = 30; i < 40; i++)
                 average_loss_all += (double)(label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[i][PACKET_LABEL_ACCEPT] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] + label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
-            printf(" Interval %d : %03d ~ %03d |  "RED_ELOG"%03d"RESET" |   %2d   | %.7lf %%\n", j, 110, 170, 160, 10, average_loss_all / 10);
+            printf(" Interval %d : %03d ~ %03d |  " RED_ELOG "%03d" RESET " |   %2d   | %.7lf %%\n", j, 110, 170, 160, 10, average_loss_all / 10);
             break;
         case 2:
             for (int i = 45; i < 50; i++)
                 average_loss_all += (double)(label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[i][PACKET_LABEL_ACCEPT] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] + label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
-            printf(" Interval %d : %03d ~ %03d |  "RED_ELOG"%03d"RESET" |   %2d   | %.7lf %%\n", j, 30, 130, 120, 5, average_loss_all / 5);
+            printf(" Interval %d : %03d ~ %03d |  " RED_ELOG "%03d" RESET " |   %2d   | %.7lf %%\n", j, 30, 130, 120, 5, average_loss_all / 5);
             break;
         case 3:
             for (int i = 65; i < 80; i++)
                 average_loss_all += (double)(label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[i][PACKET_LABEL_ACCEPT] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] + label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
-            printf(" Interval %d : %03d ~ %03d |  "RED_ELOG"%03d"RESET" |   %2d   | %.7lf %%\n", j, 140, 180, 170, 15, average_loss_all / 15);
+            printf(" Interval %d : %03d ~ %03d |  " RED_ELOG "%03d" RESET " |   %2d   | %.7lf %%\n", j, 140, 180, 170, 15, average_loss_all / 15);
             break;
         case 4:
             for (int i = 90; i < 100; i++)
                 average_loss_all += (double)(label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED]) * 100.0 / (label.labels[i][PACKET_LABEL_ACCEPT] + label.labels[i][PACKET_LABEL_OVER_UPPERBOUND_DROPPED] + label.labels[i][PACKET_LABEL_OVER_CAPACITY_DROPPED]); /**< Calculate average loss percentage. */
-            printf(" Interval %d : %03d ~ %03d |  "RED_ELOG"%03d"RESET" |   %2d   | %.7lf %%\n", j, 120, 140, 135, 10, average_loss_all / 10);
+            printf(" Interval %d : %03d ~ %03d |  " RED_ELOG "%03d" RESET " |   %2d   | %.7lf %%\n", j, 120, 140, 135, 10, average_loss_all / 10);
             break;
         default:
             break;

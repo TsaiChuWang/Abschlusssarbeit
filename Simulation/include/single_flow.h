@@ -170,4 +170,100 @@ int create_packet_single_flow(single_flow *flow)
     return packet; // Return the packet label
 }
 
+/**
+ * @brief Manages the FIFO queue meter for a single flow.
+ *
+ * This function processes the meter queue for a flow, handling both dequeuing and enqueuing of packets
+ * based on the current timestamp. It updates the counts of dequeued packets and manages packet drops
+ * when the queue is full.
+ *
+ * @param flow Pointer to the single_flow structure representing the flow configuration.
+ * @param current_timestamp The current time used to determine when to dequeue packets.
+ * @return int Returns a packet label indicating the result of the operation.
+ *              Possible return values:
+ *              - PACKET_LABEL_ACCEPT: A packet was successfully enqueued.
+ *              - PACKET_LABEL_OVER_UPPERBOUND_DROPPED: A packet was dropped due to queue overflow.
+ */
+int FIFO_queue_meter_single_flow(single_flow *flow, TIME_TYPE current_timestamp)
+{
+    int packet = PACKET_LABEL_NO_PACKET; // Initialize packet label to indicate no packet
+
+    // Dequeue packets based on the current timestamp
+    while (flow->mqueue.dequeue_timestamp <= current_timestamp)
+    {
+        flow->mqueue.dequeue_timestamp += flow->mqueue.dequeue_interval; // Update dequeue timestamp
+        flow->dequeue_count += 1;                                        // Increment the count of dequeued packets
+    }
+
+    // Check if there are packets to dequeue for the tenant
+    if (flow->dequeue_count > 0)
+    {
+        meter_dequeue(&(flow->mqueue)); // Dequeue a packet from the meter queue
+        flow->dequeue_count -= 1;       // Decrement the count of dequeued packets
+    }
+
+    // Enqueue a packet if the meter queue is ready
+    if (meter_enqueue(&(flow->mqueue)) == QUEUE_READY)
+    {
+        packet = PACKET_LABEL_ACCEPT; // Set the packet label to ACCEPT
+    }
+    else
+    {
+        flow->FIFO_drop_count += 1;                    // Increment drop count if queue is not ready
+        packet = PACKET_LABEL_OVER_UPPERBOUND_DROPPED; // Return drop label
+    }
+
+    // Dequeue remaining packets if any
+    while (flow->dequeue_count > 0)
+    {
+        meter_dequeue(&(flow->mqueue)); // Dequeue a packet from the meter queue
+        flow->dequeue_count -= 1;       // Decrement the count of dequeued packets
+    }
+    return packet; // Return the packet label
+}
+
+/**
+ * @brief Updates the GCRA (Generic Cell Rate Algorithm) for a single flow.
+ *
+ * This function updates the flow's GCRA state based on the current timestamp
+ * and increments the labeled packet count if a packet is labeled by GCRA.
+ *
+ * @param flow Pointer to the single_flow structure representing the flow configuration.
+ * @param current_timestamp The current time used to update the GCRA.
+ * @param config Common configuration parameters affecting the GCRA update.
+ * @return int Returns a packet label indicating the result of the GCRA update.
+ *              Possible return values:
+ *              - PACKET_LABEL_NO_PACKET: No packet was generated.
+ *              - PACKET_LABEL_GCRA_LABELED: A packet was labeled by GCRA.
+ */
+int GCRA_update_single_flow(single_flow *flow, TIME_TYPE current_timestamp, common_configuration config)
+{
+    int packet = PACKET_LABEL_NO_PACKET; // Initialize packet label to indicate no packet
+
+    // Update GCRA state and check for packet labeling
+    packet = gcra_update_advanced(current_timestamp, &(flow->gcra), flow->mean, config);
+    if (packet == PACKET_LABEL_GCRA_LABELED)
+    {
+        flow->GCRA_labeled_count += 1; // Increment the count of labeled packets
+    }
+
+    return packet; // Return the packet label
+}
+
+int three_update(single_flow *flow, TIME_TYPE current_timestamp, common_configuration config)
+{
+    int packet = PACKET_LABEL_NO_PACKET; // Initialize packet label to indicate no packet
+
+    packet = create_packet_single_flow(flow);
+    if (packet == PACKET_LABEL_NO_PACKET)
+        return PACKET_LABEL_NO_PACKET;
+
+    packet = FIFO_queue_meter_single_flow(flow, current_timestamp);
+    if (packet == PACKET_LABEL_OVER_UPPERBOUND_DROPPED)
+        return PACKET_LABEL_OVER_UPPERBOUND_DROPPED;
+
+    packet = GCRA_update_single_flow(flow, current_timestamp, config);
+    return packet;
+}
+
 #endif

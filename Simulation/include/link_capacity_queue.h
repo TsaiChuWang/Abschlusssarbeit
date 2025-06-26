@@ -157,7 +157,7 @@ meter_queue init_meter_queue(const configuration config)
     return mqueue; ///< Return the initialized meter queue.
 }
 
-meter_queue init_meter_queue_advanced(const configuration config, int mean, int standard_deviation)
+meter_queue init_meter_queue_advanced_(const configuration config, int mean, int standard_deviation)
 {
     meter_queue mqueue = {0}; ///< Initialize the meter queue structure to zero.
 
@@ -169,6 +169,32 @@ meter_queue init_meter_queue_advanced(const configuration config, int mean, int 
 
     return mqueue; ///< Return the initialized meter queue.
 }
+
+#ifdef CSV_CONFIGURSTION_H
+/**
+ * @brief Initializes an advanced meter queue.
+ *
+ * This function initializes a meter queue structure based on the provided row configuration
+ * and a specified unit. It sets up a circular queue, initializes timestamps, and calculates
+ * the dequeue interval based on the packet size, mean, and standard deviation.
+ *
+ * @param rconfig The row_configuration containing parameters for initialization.
+ * @param unit The unit used for calculating the dequeue interval.
+ * @return The initialized meter_queue structure.
+ */
+meter_queue init_meter_queue_advanced(row_configuration rconfig, long unit)
+{
+    meter_queue mqueue = {0}; ///< Initialize the meter queue structure to zero.
+
+    init_circular_queue(&(mqueue.queue), rconfig.FIFO_queue_buffer); ///< Initialize the circular queue.
+
+    mqueue.dequeue_timestamp = (TIME_TYPE)0; ///< Initialize the dequeue timestamp to zero.
+    mqueue.dequeue_interval = (TIME_TYPE)(rconfig.packet_size *
+                                          (double)ONE_SECOND_IN_NS / ((rconfig.mean + rconfig.standard_deviation) * unit)); ///< Calculate the dequeue interval.
+
+    return mqueue; ///< Return the initialized meter queue.
+}
+#endif
 
 /**
  * @brief Initializes multiple meter queues for each tenant.
@@ -195,23 +221,23 @@ meter_queue *init_meter_queues_advanced(const configuration config)
     meter_queue *mqueues = (meter_queue *)malloc(sizeof(meter_queue) * config.tenant_number); ///< Allocate memory for meter queues.
     for (int i = 0; i < 20; i++)
     {
-        *(mqueues + i) = init_meter_queue_advanced(config, 120, 40); ///< Initialize each meter queue.
+        *(mqueues + i) = init_meter_queue_advanced_(config, 120, 40); ///< Initialize each meter queue.
     }
     for (int i = 20; i < 40; i++)
     {
-        *(mqueues + i) = init_meter_queue_advanced(config, 140, 30); ///< Initialize each meter queue.
+        *(mqueues + i) = init_meter_queue_advanced_(config, 140, 30); ///< Initialize each meter queue.
     }
     for (int i = 40; i < 50; i++)
     {
-        *(mqueues + i) = init_meter_queue_advanced(config, 80, 50); ///< Initialize each meter queue.
+        *(mqueues + i) = init_meter_queue_advanced_(config, 80, 50); ///< Initialize each meter queue.
     }
     for (int i = 50; i < 80; i++)
     {
-        *(mqueues + i) = init_meter_queue_advanced(config, 160, 20); ///< Initialize each meter queue.
+        *(mqueues + i) = init_meter_queue_advanced_(config, 160, 20); ///< Initialize each meter queue.
     }
     for (int i = 80; i < 100; i++)
     {
-        *(mqueues + i) = init_meter_queue_advanced(config, 130, 10); ///< Initialize each meter queue.
+        *(mqueues + i) = init_meter_queue_advanced_(config, 130, 10); ///< Initialize each meter queue.
     }
     return mqueues; ///< Return the pointer to the array of meter queues.
 }

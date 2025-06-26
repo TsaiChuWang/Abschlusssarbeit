@@ -565,7 +565,7 @@ int main(int argc, char *argv[])
 
         // Loop through state_r values and tau values, executing the main program for each combination.
 
-        for (int upper_queue_buffer = 5; upper_queue_buffer <= 100; upper_queue_buffer += 5)
+        for (int upper_queue_buffer = 5; upper_queue_buffer <= 100; upper_queue_buffer++)
             for (double state_r = 0.6; state_r < 0.9; state_r += state_r_step) // Iterate over state_r values.
             {
                 config.upper_queue_buffer = upper_queue_buffer;

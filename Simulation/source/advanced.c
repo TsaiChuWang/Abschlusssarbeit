@@ -60,6 +60,7 @@ int main(int argc, char *argv[])
 #endif
 
     csv_configuration csv_config = create_csv_configuration(config.csv_data_path, &config);
+    modify_ini_file_common_configuration(configuration_path, &config);
 
 #ifdef SHOW_CSV_CONFIGURATION
     show_csv_configuration(csv_config); // Display the CSV configuration

@@ -1278,8 +1278,11 @@ typedef struct
  */
 typedef struct
 {
-    int kind_number;             // Total number of row configurations
-    int fields_number;           // Expected number of fields in each row
+    int kind_number;   // Total number of row configurations
+    int fields_number; // Expected number of fields in each row
+
+    int tenant_number;
+
     row_configuration *rows;     // Pointer to an array of row_configuration
     common_configuration config; // Common configuration settings
 
@@ -1571,15 +1574,20 @@ csv_configuration create_csv_configuration(const char *filename, common_configur
     // Allocate memory for the rows
     csv_config.rows = (row_configuration *)malloc(csv_config.kind_number * sizeof(row_configuration));
 
+    int tenant_number = 0;
     int start_index = 0;
     for (int i = 1; i < csv_config.kind_number + 1; i++)
     {
         // Read and split the CSV row into fields
         char **fields = split_csv_row(read_csv_row_by_index(filename, i), csv_config.fields_number);
         *(csv_config.rows + i - 1) = create_row_configuration(fields, &start_index);
+        tenant_number += (csv_config.rows + i - 1)->number;
         // show_row_configuration(row);
         free(fields); // Free the array of fields
     }
+
+    csv_config.tenant_number = tenant_number;
+    config->tenant_number = tenant_number;
 
     csv_config.config = *config;
 
@@ -1640,6 +1648,7 @@ void show_csv_configuration(const csv_configuration config)
 {
     printf("kind    : %d\n", config.kind_number);
     printf("field   : %d\n", config.fields_number);
+    printf("number  : %d\n", config.tenant_number);
     print_equals_line();
 
     for (int i = 0; i < config.kind_number; i++)

@@ -65,7 +65,7 @@ if(name == 'uniform_different_noncompliant_number'):
         noncompliant_loss_all = dataframe[dataframe['noncompliant_tenant_number'] == key][['noncompliant_loss_all']]
         if(len(noncompliant_loss_all)!=0):
             tau = dataframe[dataframe['noncompliant_tenant_number'] == key]['tau'].tolist()
-            plt.plot(tau[:], noncompliant_loss_all[:], linestyle='-', label='(all)μ = {}, n = {:2d}'.format(real_noncompliant_mean, key), alpha = 1)
+            plt.plot(tau[:], noncompliant_loss_all[:], linestyle='-', label='n = {:2d}'.format(key), alpha = 1)
     plt.plot(tau_[:], [0.1 for i in tau_][:], linestyle='-', color = 'red', label='ε')
     # plt.title('Packet Loss with different τ and μ ({}) Non-compliant'.format(name), fontsize=7.5)
     plt.title('Non-compliant SLA')
@@ -81,7 +81,7 @@ if(name == 'uniform_different_noncompliant_number'):
         compliant_loss_all = dataframe[dataframe['noncompliant_tenant_number'] == key][['compliant_loss_all']]
         if(len(compliant_loss_all)!=0):
             tau = dataframe[dataframe['noncompliant_tenant_number'] == key]['tau'].tolist()
-            plt.plot(tau[:], compliant_loss_all[:], linestyle='-', label='(all)μ = {}, n = {:2d}'.format(real_noncompliant_mean, key), alpha = 1)
+            plt.plot(tau[:], compliant_loss_all[:], linestyle='-', label='n = {:2d}'.format(key), alpha = 1)
     plt.plot(tau_[:], [0.1 for i in tau_][:], linestyle='-', color = 'red', label='ε')
     # plt.title('Packet Loss with different τ and μ ({}) Compliant'.format(name), fontsize=7.5)
     plt.title('Compliant SLA')

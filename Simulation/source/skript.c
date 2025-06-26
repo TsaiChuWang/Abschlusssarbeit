@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
         sprintf(data_path, "../data/%s", name);       ///< Construct the path for the data directory.
         config.data_path = data_path;                 ///< Set the data path in the configuration structure.
         modify_ini_file(configuration_path, &config); ///< Update the INI file with the current configuration.
-#ifdef NORMAL_MODE
+#ifndef APPEND_MODE
         // Prepare the data directory by removing existing data and creating new directories.
         sprintf(command, "rm -r %s", config.data_path);        ///< Command to remove the existing data directory.
         system(command);                                       ///< Execute the command.
@@ -194,6 +194,7 @@ int main(int argc, char *argv[])
         write_statistics_header_config(config, HEADER_TYPE_AVERAGE); ///< Write the header for average statistics.
         write_statistics_header_config(config, HEADER_TYPE_ALL);     ///< Write the header for all statistics.
         write_statistics_header_config(config, HEADER_TYPE_TAU);     ///< Write the header for tau statistics.
+#endif
 
         // Set additional configuration parameters for non-compliant mode.
         config.traffic_mode = TRAFFIC_MODE_NONCOMPLIANT_UNIFORM; ///< Update traffic mode to non-compliant uniform.
@@ -210,13 +211,6 @@ int main(int argc, char *argv[])
 
             sprintf(command, "../execution/main %s", configuration_path); ///< Command to execute the main program.
             system(command);                                              ///< Execute the command.
-
-            // Run Python scripts for data analysis.
-            sprintf(command, "python3 %s %s %s", PYTHON_AVERAGE_LOSS_CHART_PATH, name, configuration_path); ///< Command for average loss chart.
-            system(command);                                                                                ///< Execute the command.
-
-            sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_TAU_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
-            system(command);                                                                                                  ///< Execute the command.
 
             sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_ALL_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
             system(command);                                                                                                  ///< Execute the command.
@@ -235,12 +229,7 @@ int main(int argc, char *argv[])
                 sprintf(command, "../execution/main %s", configuration_path); ///< Command to execute the main program.
                 system(command);                                              ///< Execute the command.
 
-                // Run Python scripts for data analysis.
-                sprintf(command, "python3 %s %s %s", PYTHON_AVERAGE_LOSS_CHART_PATH, name, configuration_path); ///< Command for average loss chart.
-                system(command);                                                                                ///< Execute the command.
-
-                sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_TAU_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
-                system(command);                                                                                                  ///< Execute the command.
+                // Run Python scripts for data analysis.///< Execute the command.
 
                 sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_ALL_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
                 system(command);
@@ -259,72 +248,9 @@ int main(int argc, char *argv[])
             system(command);                                              ///< Execute the command.
 
             // Run Python scripts for data analysis.
-            sprintf(command, "python3 %s %s %s", PYTHON_AVERAGE_LOSS_CHART_PATH, name, configuration_path); ///< Command for average loss chart.
-            system(command);                                                                                ///< Execute the command.
-
-            sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_TAU_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
-            system(command);
-
             sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_ALL_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
             system(command);                                                                                                  ///< Execute the command.
         }
-#endif
-
-#ifdef APPPEND_MODE
-
-        // Set additional configuration parameters for non-compliant mode.
-        config.traffic_mode = TRAFFIC_MODE_NONCOMPLIANT_UNIFORM; ///< Update traffic mode to non-compliant uniform.
-        config.noncompliant_mean = 155;                          ///< Set the mean for non-compliant configuration.
-
-        config.noncompliant_tenant_number = 1;                             ///< Set the initial tenant number for non-compliant mode.
-        config.noncompliant_mode = NONCOMPLIANT_MODE_EXTREME_NONCOMPLIANT; ///< Set the mode for extreme non-compliance.
-
-        // Loop through tau values and execute the main program for each.
-        for (long tau = 25600 + step; tau <= 51200; tau += step)
-        {
-            config.tau = tau;                             ///< Set the current tau value in the configuration.
-            modify_ini_file(configuration_path, &config); ///< Update the INI file with the new tau value.
-
-            sprintf(command, "../execution/main %s", configuration_path); ///< Command to execute the main program.
-            system(command);                                              ///< Execute the command.
-
-            sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_ALL_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
-            system(command);                                                                                                  ///< Execute the command.
-        }
-
-        config.noncompliant_mode = NONCOMPLIANT_MODE_AVERAGE; ///< Set the mode for non-compliant configuration to average.
-
-        // Loop through tenant numbers and tau values for further analysis.
-        for (int noncompliant_number = 25; noncompliant_number <= 75; noncompliant_number += 25)
-            for (long tau = 25600 + step; tau <= 51200; tau += step)
-            {
-                config.tau = tau;                                        ///< Set the current tau value in the configuration.
-                config.noncompliant_tenant_number = noncompliant_number; ///< Update the tenant number for the current iteration.
-                modify_ini_file(configuration_path, &config);            ///< Update the INI file with the new configuration.
-
-                sprintf(command, "../execution/main %s", configuration_path); ///< Command to execute the main program.
-                system(command);                                              ///< Execute the command.                                                                                             ///< Execute the command.
-
-                sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_ALL_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
-                system(command);
-            }
-
-        config.noncompliant_tenant_number = 99;                         ///< Set the tenant number for extreme compliant mode.
-        config.noncompliant_mode = NONCOMPLIANT_MODE_EXTREME_COMPLIANT; ///< Set the mode for extreme compliance.
-
-        // Loop through tau values and execute the main program for each in extreme compliant mode.
-        for (long tau = 25600 + step; tau <= 51200; tau += step)
-        {
-            config.tau = tau;                             ///< Set the current tau value in the configuration.
-            modify_ini_file(configuration_path, &config); ///< Update the INI file with the new tau value.
-
-            sprintf(command, "../execution/main %s", configuration_path); ///< Command to execute the main program.
-            system(command);                                              ///< Execute the command.
-
-            sprintf(command, "python3 %s %s %s", PYTHON_COMPLIANT_AND_NONCOMPLIANT_ALL_CHART_PATH, name, configuration_path); ///< Command for compliant and non-compliant tau chart.
-            system(command);                                                                                                  ///< Execute the command.
-        }
-#endif
         break;
     case BURST_ALL_COMPLIANT:
         strcpy(name, "burst_all_compliant");                          ///< Set the name for the configuration.

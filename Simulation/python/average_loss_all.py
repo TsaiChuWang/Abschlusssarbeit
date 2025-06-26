@@ -43,8 +43,8 @@ if(name == 'burst_all_compliant'):
     
     # Configure plot appearance for pure loss chart
     # plt.title('Average Packet Loss Rate with different τ and r value (All Compliant)', fontsize=12)
-    plt.xlabel('τ (bits)')
-    plt.ylabel('Loss (%)')
+    plt.xlabel('GCRA Bucket Depth τ(bits)')
+    plt.ylabel('Packet Loss Rate(%)')
     plt.legend()
     plt.grid(True)
     
@@ -57,15 +57,15 @@ if(name == 'burst_all_compliant'):
         # Filter dataframe by state_r value and extract all loss data
         loss = dataframe[dataframe['state_r'] == key][['average_loss_all']]
         # Plot all loss data for current r value with line style and label
-        plt.plot(tau, loss, linestyle='-', label='(all)r = '+str(key), alpha = 1)
+        plt.plot(tau, loss, linestyle='-', label='r = '+str(key), alpha = 1)
 
     # Add horizontal reference line at 0.1 (epsilon threshold)
     plt.plot(tau, [0.1 for i in tau], linestyle='-', color = 'red', label='ε')
     
     # Configure plot appearance for all loss chart
-    # plt.title('Average Packet Loss Rate with different τ and r value (All Compliant)', fontsize=12)
-    plt.xlabel('τ (bits)')
-    plt.ylabel('Loss (%)')
+    plt.title('Average Packet Loss Rate with different level of burst (All Compliant)', fontsize=12)
+    plt.xlabel('GCRA Bucket Depth τ(bits)')
+    plt.ylabel('Packet Loss Rate(%)')
     plt.legend()
     plt.grid(True)
     

@@ -70,9 +70,21 @@ int main(int argc, char *argv[])
 #ifdef SHOW_CSV_CONFIGURATION
     show_csv_configuration(csv_config); // Display the CSV configuration
 #endif
+
+    // Initialize flow index and allocate memory for flows array
     int flow_index = 0;
-    single_flow *flows = (single_flow *)malloc(config.tenant_number * sizeof(single_flow));
-    init_single_flow((flows + 0), (csv_config.rows), &flow_index, config);
+    single_flow *flows = (single_flow *)malloc(config.tenant_number * sizeof(single_flow)); // Allocate memory for single_flow structures
+
+    // Loop through each kind of configuration in csv_config
+    for (int i = 0; i < csv_config.kind_number; i++)
+    {
+        // Initialize flows for each row configuration until the end index is reached
+        while (flow_index <= (csv_config.rows + i)->end_index)
+        {
+            init_single_flow((flows + flow_index), (csv_config.rows + i), &flow_index, config); // Initialize a single flow
+            // show_single_flow(*(flows + flow_index - 1)); // Uncomment to display the flow details
+        }
+    }
 
 #ifdef PRINT_EXECUTION_TIME
     execute_clock = clock() - execute_clock;                      ///< Calculate the elapsed execution time.

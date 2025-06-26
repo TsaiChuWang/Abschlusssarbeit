@@ -44,7 +44,7 @@ typedef struct
 void init_single_flow(single_flow *flow, row_configuration *rconfig, int *index, common_configuration cconfig)
 {
     flow->index = *index;                                   // Set the index of the flow
-    *index++;                                               // Increment the index for the next flow
+    *index += 1;                                            // Increment the index for the next flow
     flow->traffic_mode = rconfig->traffic_mode;             // Set traffic mode
     flow->mean = rconfig->mean;                             // Set mean value for traffic generation
     flow->standard_deviation = rconfig->standard_deviation; // Set standard deviation
@@ -60,7 +60,7 @@ void init_single_flow(single_flow *flow, row_configuration *rconfig, int *index,
 
     // Initialize state machine based on traffic mode
     if (flow->traffic_mode == TRAFFIC_MODE_ADVANCED_UNIFORM_DISTRIBUTION)
-        flow->states = initialize_state_machine(0.5, flow->generate_probability);
+        flow->states = initialize_state_machine(1, 0.5);
     else if (flow->traffic_mode == TRAFFIC_MODE_ADVANCED_ON_OFF_MODEL)
         flow->states = initialize_state_machine(flow->state_r, flow->generate_probability);
     else
@@ -81,6 +81,93 @@ void init_single_flow(single_flow *flow, row_configuration *rconfig, int *index,
     flow->link_dropped_count = 0;
 
     double loss = 0; // Initialize loss variable (not used further)
+}
+
+/**
+ * @brief Displays the details of a single flow configuration.
+ *
+ * This function prints the attributes of a single_flow structure, including traffic mode,
+ * mean, standard deviation, packet size, real traffic, and other relevant statistics.
+ * It also displays the generate probability and various counts related to packet processing.
+ *
+ * @param flow The single_flow structure containing the flow configuration to be displayed.
+ */
+void show_single_flow(single_flow flow)
+{
+    printf(" index | traffic mode | mean | deviation | packet | real | state_r | FIFO |   tau  |    loss   |\n");
+
+    // Display flow details based on traffic mode
+    if (flow.traffic_mode == TRAFFIC_MODE_ADVANCED_UNIFORM_DISTRIBUTION)
+    {
+        printf("  %2d   |    uniform   |  %3d |    %3d    |  %3d   |  %3d | %.5f | %3d  |  %5ld | %2.7f |\n",
+               flow.index, flow.mean, flow.standard_deviation, flow.packet_size, flow.real_traffic, flow.state_r,
+               flow.FIFO_queue_buffer, flow.tau, flow.loss);
+    }
+    else
+    {
+        printf("  %2d   |     burst    |  %3d |    %3d    |  %3d   |  %3d | %.5f | %3d  |  %5ld | %2.7f |\n",
+               flow.index, flow.mean, flow.standard_deviation, flow.packet_size, flow.real_traffic, flow.state_r,
+               flow.FIFO_queue_buffer, flow.tau, flow.loss);
+    }
+
+    // Print generate probability and other statistics
+    printf("generate probability : %-2.7lf\n", flow.generate_probability);
+    print_equals_line(); // Print a separator line
+
+    // Display state machine details if applicable
+    if (flow.traffic_mode == TRAFFIC_MODE_ADVANCED_ON_OFF_MODEL)
+        show_state_machine(flow.states);
+
+    // Show GCRA details
+    show_GCRA(flow.gcra);
+    print_equals_line(); // Print another separator line
+
+    // Print additional flow statistics
+    printf("generate probability : %-2.7lf\n", flow.generate_probability);
+    printf("dequeue count        : %-7d\n", flow.dequeue_count);
+    printf("packet count         : %-7d\n", flow.packet_count);
+    printf("FIFO drop count      : %-7d\n", flow.FIFO_drop_count);
+    printf("GCRA labeled count   : %-7d\n", flow.GCRA_labeled_count);
+    printf("link dropped count   : %-7d\n", flow.link_dropped_count);
+    printf("loss                 : %-2.7lf\n", flow.loss);
+}
+
+/**
+ * @brief Creates a packet for a single flow based on the traffic mode.
+ *
+ * This function determines whether to create a packet based on the flow's traffic mode.
+ * It uses either a uniform distribution or an on-off model to decide if a packet should be generated.
+ *
+ * @param flow Pointer to the single_flow structure representing the flow configuration.
+ * @return int Returns a packet label indicating whether a packet was created or not.
+ *              Possible return values:
+ *              - PACKET_LABEL_ACCEPT: A packet was created.
+ *              - PACKET_LABEL_NO_PACKET: No packet was created.
+ */
+int create_packet_single_flow(single_flow *flow)
+{
+    int packet = PACKET_LABEL_NO_PACKET; // Initialize packet label to indicate no packet
+
+    // Determine packet creation based on traffic mode
+    if (flow->traffic_mode == TRAFFIC_MODE_ADVANCED_UNIFORM_DISTRIBUTION)
+    {
+        packet = uniform_distribution(flow->generate_probability); // Use uniform distribution
+    }
+    else if (flow->traffic_mode == TRAFFIC_MODE_ADVANCED_ON_OFF_MODEL)
+    {
+        change_state(&(flow->states), flow->index); // Change state based on the flow's state machine
+        packet = (flow->states.state == STATE_CREATE_PACKET)
+                     ? PACKET_LABEL_ACCEPT     // Accept packet creation
+                     : PACKET_LABEL_NO_PACKET; // No packet created
+    }
+
+    // Increment packet count if a packet was created
+    if (packet == PACKET_LABEL_ACCEPT)
+    {
+        flow->packet_count += 1;
+    }
+
+    return packet; // Return the packet label
 }
 
 #endif

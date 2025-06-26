@@ -1,10 +1,15 @@
 #define PRINT_EXECUTION_TIME ///< Enable timing measurement for execution duration
 // #define SHOW_CONFIGURATION   ///< Enable display of the current configuration settings
-#define SHOW_CSV_CONFIGURATION // Uncomment this line to enable the display
+// #define SHOW_CSV_CONFIGURATION // Uncomment this line to enable the display
 
 #include "../include/general.h"       ///< Include general definitions and declarations.
 #include "./inih/ini.h"               ///< Include INI file handling library.
 #include "../include/configuration.h" ///< Include configuration management definitions.
+
+#include "../include/traffic_generation.h"  ///< Include traffic generation functions and definitions.
+#include "../include/GCRA.h"                ///< Include Generic Cell Rate Algorithm (GCRA) definitions.
+#include "../include/link_capacity_queue.h" ///< Include link capacity and queue management definitions.
+#include "../include/single_flow.h"
 
 #define CONFIGURATION_PATH "../configuration/advanced.ini" ///< Path to the main configuration file
 #define CSV_PATH "../configuration/csv/advanced.csv"       ///< Path to the main csv file

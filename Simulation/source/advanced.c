@@ -2,6 +2,8 @@
 // #define SHOW_CONFIGURATION   ///< Enable display of the current configuration settings
 // #define SHOW_CSV_CONFIGURATION // Uncomment this line to enable the display
 #define PRINT_CAPACITY        ///< Enable display of the calculated network capacity
+// #define PRINT_EACH_TIMESTAMP      ///< Enable printing of each timestamp.
+// #define PRINT_LINK_DEQUEUE_COUNT ///< Enable printing of the link dequeue count.
 
 #include "../include/general.h"       ///< Include general definitions and declarations.
 #include "./inih/ini.h"               ///< Include INI file handling library.
@@ -115,6 +117,34 @@ int main(int argc, char *argv[])
     {
         // Increment the timestamp by the step size defined in the generator.
         timestamp += (TIME_TYPE)(step_size);
+#ifdef PRINT_EACH_TIMESTAMP
+        printf("timestamp : %-lf\n", timestamp); ///< Print the current timestamp with a formatted output.
+#endif
+
+int link_dequeue_count = 0; ///< Initialize the count of link dequeues to zero.
+        // Loop until the dequeue timestamp exceeds the current timestamp.
+        while (link.dequeue_timestamp <= (double)timestamp)
+        {
+            link.dequeue_timestamp += link.dequeue_interval; ///< Update the dequeue timestamp by the interval.
+            link_dequeue_count += 1;                         ///< Increment the dequeue count for each dequeue operation.
+        }
+#ifdef PRINT_LINK_DEQUEUE_COUNT
+        printf("link dequeue_count = %-3d\n", link_dequeue_count); ///< Print the total number of link dequeues.
+#endif
+
+        /**
+         * @brief Dequeues packets from the link queue and updates statistics.
+         *
+         * This code processes packets in the link queue while there are
+         * packets available to dequeue. For each dequeued packet, the
+         * corresponding statistic for PACKET_LABEL_ACCEPT is incremented.
+         */
+        while (link_dequeue_count > 0) ///< Continue processing while there are packets to dequeue
+        {
+            int index = dequeue(&link);                        ///< Dequeue a packet from the link queue
+            link_dequeue_count -= 1;                           ///< Decrease the dequeue count
+        }
+
     }
 
 #ifdef PRINT_EXECUTION_TIME

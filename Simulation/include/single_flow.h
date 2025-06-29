@@ -250,20 +250,36 @@ int GCRA_update_single_flow(single_flow *flow, TIME_TYPE current_timestamp, comm
     return packet; // Return the packet label
 }
 
-int three_update(single_flow *flow, TIME_TYPE current_timestamp, common_configuration config)
-{
+/**
+ * @brief Updates the state of a single flow and processes packets.
+ *
+ * This function attempts to create a packet for the given flow and updates
+ * its state based on the current timestamp and configuration. It uses FIFO
+ * queuing and GCRA (Generic Cell Rate Algorithm) for flow control.
+ *
+ * @param flow Pointer to the single flow structure to be updated.
+ * @param current_timestamp The current time for processing the flow.
+ * @param config Configuration settings for flow management.
+ * @return int Packet label indicating the result of the update operation.
+ */
+int three_update(single_flow *flow, TIME_TYPE current_timestamp, common_configuration config) {
     int packet = PACKET_LABEL_NO_PACKET; // Initialize packet label to indicate no packet
 
+    // Attempt to create a packet for the flow
     packet = create_packet_single_flow(flow);
-    if (packet == PACKET_LABEL_NO_PACKET)
-        return PACKET_LABEL_NO_PACKET;
+    if (packet == PACKET_LABEL_NO_PACKET) {
+        return PACKET_LABEL_NO_PACKET; // No packet created, exit early
+    }
 
+    // Process the packet through FIFO queueing
     packet = FIFO_queue_meter_single_flow(flow, current_timestamp);
-    if (packet == PACKET_LABEL_OVER_UPPERBOUND_DROPPED)
-        return PACKET_LABEL_OVER_UPPERBOUND_DROPPED;
+    if (packet == PACKET_LABEL_OVER_UPPERBOUND_DROPPED) {
+        return PACKET_LABEL_OVER_UPPERBOUND_DROPPED; // Packet dropped due to upper bound
+    }
 
+    // Update the flow state using GCRA
     packet = GCRA_update_single_flow(flow, current_timestamp, config);
-    return packet;
+    return packet; // Return the result of the GCRA update
 }
 
 #endif

@@ -1,6 +1,7 @@
 #define PRINT_EXECUTION_TIME ///< Enable timing measurement for execution duration
 // #define SHOW_CONFIGURATION   ///< Enable display of the current configuration settings
 // #define SHOW_CSV_CONFIGURATION // Uncomment this line to enable the display
+#define PRINT_CAPACITY        ///< Enable display of the calculated network capacity
 
 #include "../include/general.h"       ///< Include general definitions and declarations.
 #include "./inih/ini.h"               ///< Include INI file handling library.
@@ -69,6 +70,23 @@ int main(int argc, char *argv[])
 
 #ifdef SHOW_CSV_CONFIGURATION
     show_csv_configuration(csv_config); // Display the CSV configuration
+#endif
+
+    /** @brief Buffer for system commands */
+    char *command = (char *)malloc(MAX_COMMAND_LENGTH * sizeof(char));
+    memset(command, '\0', MAX_COMMAND_LENGTH * sizeof(char));
+
+    sprintf(command, "python3 ../python/capacity_advanced.py %s %s 0", config.csv_data_path, configuration_path);
+    system(command);
+    double capacity = obtain_capacity_advanced("../data/capacity_advanced.txt") * config.ratio; ///< Variable to hold the calculated capacity
+
+#ifdef PRINT_CAPACITY
+    /** @brief Display the calculated capacity.
+     *
+     * This section outputs the calculated network capacity to the console.
+     * The capacity is displayed in bits per second (bps).
+     */
+    printf("capacity : %f bps\n", capacity);
 #endif
 
     // Initialize flow index and allocate memory for flows array

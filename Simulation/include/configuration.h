@@ -762,6 +762,56 @@ double obtain_capacity(void)
 }
 
 /**
+ * @brief Reads the capacity value from a specified file.
+ *
+ * This function attempts to read a capacity value from a file specified by
+ * the `capacity_data_path`. It validates the value to ensure it is positive
+ * and does not exceed a predefined maximum capacity.
+ *
+ * @param capacity_data_path Path to the file containing the capacity value.
+ * @return double The capacity value read from the file, or FAILURE on error.
+ */
+double obtain_capacity_advanced(char* capacity_data_path) {
+    FILE *file = NULL;
+    double capacity = 0.0;
+    const double MAX_CAPACITY = 1e12; // 1 Tbps as reasonable upper limit
+
+    // Open the file for reading
+    file = fopen(capacity_data_path, "r");
+    if (file == NULL) {
+        fprintf(stderr, "Cannot read file %s\n", capacity_data_path);
+        perror("Error opening file capacity_data_path");
+        return FAILURE;
+    }
+
+    // Read capacity value
+    if (fscanf(file, "%lf", &capacity) != 1) {
+        fprintf(stderr, "Error: Failed to read capacity value from %s\n", capacity_data_path);
+        perror("File reading failed");
+        fclose(file);
+        return FAILURE;
+    }
+
+    // Validate capacity value
+    if (capacity <= 0.0) {
+        fprintf(stderr, "Error: Invalid capacity value: %lf (must be positive)\n", capacity);
+        fclose(file);
+        return FAILURE;
+    }
+
+    if (capacity > MAX_CAPACITY) {
+        fprintf(stderr, "Error: Capacity value too large: %lf (max: %lf)\n", capacity, MAX_CAPACITY);
+        fclose(file);
+        return FAILURE;
+    }
+
+    // Close the file and return the valid capacity
+    fclose(file);
+    return capacity;
+}
+
+
+/**
  * @brief Attempts to write a string to a file.
  *
  * This function writes the provided string to the specified file.

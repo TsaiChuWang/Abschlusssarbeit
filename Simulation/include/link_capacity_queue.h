@@ -273,7 +273,7 @@ void initlink_priority_queue_advanced(link_priority_queue *pqueue, int max_buffe
     pqueue->max_buffer = max_buffer_size;
 
     pqueue->dequeue_timestamp = 0;
-    pqueue->dequeue_interval = (TIME_TYPE)(cpacket_size *
+    pqueue->dequeue_interval = (TIME_TYPE)(packet_size *
                                            (double)ONE_SECOND_IN_NS / (bandwidth * config.unit));
 }
 

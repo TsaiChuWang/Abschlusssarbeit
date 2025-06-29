@@ -4,6 +4,7 @@
 #define PRINT_CAPACITY        ///< Enable display of the calculated network capacity
 // #define PRINT_EACH_TIMESTAMP      ///< Enable printing of each timestamp.
 // #define PRINT_LINK_DEQUEUE_COUNT ///< Enable printing of the link dequeue count.
+// #define PRINT_ORDER ///< Enable printing of the tenant order.
 
 #include "../include/general.h"       ///< Include general definitions and declarations.
 #include "./inih/ini.h"               ///< Include INI file handling library.
@@ -45,6 +46,7 @@ int main(int argc, char *argv[])
 #endif
 
     common_configuration config; ///< Configuration structure to hold settings
+    srand48(time(NULL)); ///< Seed the random number generator with the current time.
 
     /** @brief Load and parse the configuration file.
      *
@@ -112,6 +114,7 @@ int main(int argc, char *argv[])
     TIME_TYPE timestamp = (TIME_TYPE)0;
     TIME_TYPE time_per_packet = (double)ONE_SECOND_IN_NS / config.input_rate;
     TIME_TYPE step_size = (TIME_TYPE)((flows)->packet_size * time_per_packet); // now doesn't support different packet size
+    int drop_tenant = UNFOUND;
 
     while (timestamp <= (TIME_TYPE)(config.simulation_time * ONE_SECOND_IN_NS))
     {
@@ -131,6 +134,49 @@ int link_dequeue_count = 0; ///< Initialize the count of link dequeues to zero.
 #ifdef PRINT_LINK_DEQUEUE_COUNT
         printf("link dequeue_count = %-3d\n", link_dequeue_count); ///< Print the total number of link dequeues.
 #endif
+
+        // Generate a shuffled array of tenant indices.
+        int *order = generateShuffledArray(config.tenant_number);
+
+        // Iterate over each tenant index in the shuffled array.
+        for (int index = 0; index < config.tenant_number; index++)
+        {
+#ifdef PRINT_ORDER
+            printf("%d ", *(order + index)); ///< Print the current tenant index.
+#endif
+            int tenant = *(order + index); ///< Retrieve the tenant index from the shuffled array.
+
+            int packet = three_update((flows+tenant), timestamp, config);
+
+            if(packet == PACKET_LABEL_NO_PACKET || packet == PACKET_LABEL_OVER_UPPERBOUND_DROPPED)
+                continue;
+
+            if (link_dequeue_count > 0) ///< Check if there are packets to dequeue
+            {
+                int dequeue_index = dequeue(&link);                        ///< Dequeue a packet from the link queue
+                link_dequeue_count -= 1; ///< Decrease the dequeue count
+            }
+
+            if (packet == PACKET_LABEL_ACCEPT) ///< Further check if the packet is ACCEPT
+            {
+                enqueue(&link, ALPHA, tenant, &drop_tenant); ///< Enqueue the ACCEPT packet into the link queue
+                if (drop_tenant != UNFOUND)                                                 ///< Check if a packet was dropped
+                    if (drop_tenant != tenant)                                              ///< If the dropped packet is not from the current tenant
+                        (flows+drop_tenant)->link_dropped_count += 1; ///< Increment the drop count for the other tenant
+                    else
+                        (flows+tenant)->link_dropped_count += 1; ///< Increment the drop count for the current tenant
+                continue;
+            }
+
+            if(packet == PACKET_LABEL_GCRA_LABELED){
+                enqueue(&link, BETA, tenant, &drop_tenant); ///< Enqueue the GCRA labeled packet into the link queue
+
+                if (drop_tenant != UNFOUND)                                             ///< Check if a packet was dropped
+                    (flows+drop_tenant)->link_dropped_count += 1; ///< Increment the drop count for the tenant whose packet was dropped
+
+                continue;
+            }
+        }
 
         /**
          * @brief Dequeues packets from the link queue and updates statistics.

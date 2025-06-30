@@ -6,6 +6,7 @@
 // #define PRINT_LINK_DEQUEUE_COUNT ///< Enable printing of the link dequeue count.
 // #define PRINT_ORDER ///< Enable printing of the tenant order.
 #define PRINT_PACKET_COUNT
+#define PRINT_CONFIG_LOSS
 
 #include "../include/general.h"       ///< Include general definitions and declarations.
 #include "./inih/ini.h"               ///< Include INI file handling library.
@@ -200,7 +201,11 @@ int link_dequeue_count = 0; ///< Initialize the count of link dequeues to zero.
     print_equals_line();
 #endif
 
-update_loss_csv_config(&csv_config, flows, &config);
+    update_loss_csv_config(&csv_config, flows, &config);
+#ifdef PRINT_CONFIG_LOSS
+    print_csv_config_loss(csv_config, config.error*100);
+    print_equals_line();
+#endif
 
 #ifdef PRINT_EXECUTION_TIME
     execute_clock = clock() - execute_clock;                      ///< Calculate the elapsed execution time.

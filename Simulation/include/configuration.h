@@ -1787,4 +1787,48 @@ void test_csv_function(const char *filename, common_configuration *config)
     }
     */
 }
+
+/**
+ * @brief Formats the loss rate for printing.
+ *
+ * This function creates a formatted string representing the loss rate.
+ * If the loss exceeds the specified threshold, the output is colored red.
+ *
+ * @param loss The loss rate to format.
+ * @param threshold The threshold to compare against.
+ * @return A pointer to a dynamically allocated string containing the formatted loss rate.
+ */
+char* print_loss_rate(double loss, double threshold) {
+    // Allocate memory for the formatted string
+    char* ret = (char*)malloc(MAX_BUFFER_SIZE * sizeof(char));
+    if (ret == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(EXIT_FAILURE); // Exit if memory allocation fails
+    }
+
+    // Format the loss rate based on the threshold
+    if (loss > threshold) {
+        sprintf(ret, RED_ELOG "%-3.17lf \%" RESET, loss);
+    } else {
+        sprintf(ret, "%-3.17lf \%" RESET, loss);
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Prints the loss statistics from a CSV configuration.
+ *
+ * This function prints various loss statistics, comparing each to a specified threshold.
+ *
+ * @param config The csv_configuration containing loss statistics.
+ * @param threshold The threshold for highlighting losses.
+ */
+void print_csv_config_loss(const csv_configuration config, double threshold) {
+    printf("average loss       = %s\n", print_loss_rate(config.average_loss, threshold));
+    printf("compliant loss     = %s\n", print_loss_rate(config.compliant_loss, threshold));
+    printf("non-compliant loss = %s\n", print_loss_rate(config.non_compliant_loss, threshold));
+    printf("uniform loss       = %s\n", print_loss_rate(config.uniform_loss, threshold));
+    printf("burst loss         = %s\n", print_loss_rate(config.burst_loss, threshold));
+}
 #endif

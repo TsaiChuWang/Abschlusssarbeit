@@ -193,6 +193,8 @@ int link_dequeue_count = 0; ///< Initialize the count of link dequeues to zero.
 
     }
 
+    print_packet_count(flows, config.tenant_number);
+
 #ifdef PRINT_EXECUTION_TIME
     execute_clock = clock() - execute_clock;                      ///< Calculate the elapsed execution time.
     double time_taken = ((double)execute_clock) / CLOCKS_PER_SEC; ///< Convert clock ticks to seconds.

@@ -282,4 +282,44 @@ int three_update(single_flow *flow, TIME_TYPE current_timestamp, common_configur
     return packet; // Return the result of the GCRA update
 }
 
+/**
+ * @brief Prints the packet counts for a single flow.
+ *
+ * This function formats and prints the packet statistics for a given flow,
+ * including the total packet count, FIFO drop count, GCRA labeled count,
+ * and link drop count.
+ *
+ * @param flow Pointer to the single_flow structure containing packet statistics.
+ */
+void print_packet_count_single_flow(single_flow *flow) {
+    printf("   %-2d  | %-8d | %-8d | %-8d | %-8d |\n", 
+           flow->index, 
+           flow->packet_count, 
+           flow->FIFO_drop_count, 
+           flow->GCRA_labeled_count, 
+           flow->link_dropped_count);
+}
+
+/**
+ * @brief Prints the packet counts for multiple flows.
+ *
+ * This function prints the header and iterates through an array of flows,
+ * calling print_packet_count_single_flow for each flow to display its statistics.
+ *
+ * @param flows Pointer to an array of single_flow structures.
+ * @param flow_number The number of flows in the array.
+ */
+void print_packet_count(single_flow *flows, int flow_number) {
+    // Print the header for the packet statistics
+    printf(" index |  Packet  |   FIFO   |   GCRA   |   Link   |\n");
+    
+    // Iterate through the array of flows and print each flow's statistics
+    for (int i = 0; i < flow_number; i++) {
+        print_packet_count_single_flow(&flows[i]);
+    }
+}
+// void print_packet_loss(single_flow *flow){
+
+//     printf(" %-2d | %-.7lf | %-.7lf |\n", )
+// }
 #endif

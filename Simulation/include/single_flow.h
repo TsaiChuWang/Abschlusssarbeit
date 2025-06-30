@@ -292,8 +292,22 @@ int three_update(single_flow *flow, TIME_TYPE current_timestamp, common_configur
  * @param flow Pointer to the single_flow structure containing packet statistics.
  */
 void print_packet_count_single_flow(single_flow *flow) {
-    printf("   %-2d  | %-8d | %-8d | %-8d | %-8d | %-.7lf |\n", 
+    char mode = '-';
+    if(flow->traffic_mode == TRAFFIC_MODE_ADVANCED_UNIFORM_DISTRIBUTION)
+        mode = 'u';
+    if(flow->traffic_mode == TRAFFIC_MODE_ADVANCED_ON_OFF_MODEL)
+        mode = 'b';
+    
+    char tag = '-';
+    if(flow->real_traffic > flow->mean)
+        tag = 'n';
+    else
+        tag = 'c';
+
+    printf("   %-2d  |   %c   |  %c  | %-8d | %-8d | %-8d | %-8d | %-.7lf |\n", 
            flow->index, 
+           mode,
+           tag,
            flow->packet_count, 
            flow->FIFO_drop_count, 
            flow->GCRA_labeled_count, 
@@ -312,8 +326,8 @@ void print_packet_count_single_flow(single_flow *flow) {
  */
 void print_packet_count(single_flow *flows, int flow_number) {
     // Print the header for the packet statistics
-    printf(" index |  Packet  |   FIFO   |   GCRA   |   Link   |    Loss   |\n");
-    printf("----------------------------------------------------------------\n");
+    printf(" index | mode  | SLA |  Packet  |   FIFO   |   GCRA   |   Link   |    Loss   |\n");
+    printf("------------------------------------------------------------------------------\n");
     
     // Iterate through the array of flows and print each flow's statistics
     for (int i = 0; i < flow_number; i++) {

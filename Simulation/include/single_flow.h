@@ -369,35 +369,81 @@ void count_loss(single_flow *flows, int flow_number) {
     }
 }
 
-// void update_loss_row_config(row_configuration* rconfig, single_flow* flows, common_configuration *config){
-//     double loss = 0.0;
-//     for(int i=0;i<config->tenant_number;i++)
-//         if(i <= rconfig->end_index && i >= rconfig->start_index)
-//             loss = (flows+i)->loss;
-//     loss = loss/rconfig->number;
-//     rconfig->loss = loss;
-// }
+/**
+ * @brief Updates the loss for a specific row configuration based on the flows.
+ *
+ * This function calculates the loss for a row configuration by averaging
+ * the losses of the relevant flows within the specified range.
+ *
+ * @param rconfig Pointer to the row_configuration to update.
+ * @param flows Pointer to an array of single_flow structures.
+ * @param config Pointer to the common_configuration containing tenant information.
+ */
+void update_loss_row_config(row_configuration* rconfig, single_flow* flows, common_configuration *config) {
+    double loss = 0.0;
+    int count = 0; // To count valid flows in the range
 
-// void update_loss_csv_config(csv_configuration* csv_config, single_flow* flows, common_configuration *config){
-//     double average_loss = 0.0;
-//     double compliant_loss = 0.0;
-//     double non_compliant_loss = 0.0;
+    for (int i = 0; i < config->tenant_number; i++) {
+        if (i <= rconfig->end_index && i >= rconfig->start_index) {
+            loss += (flows + i)->loss; // Accumulate loss
+            count++; // Increment count of valid flows
+        }
+    }
 
-//     for(int i= 0;i<csv_config->kind_number;i++){
-//         update_loss_row_config((csv_config->rows+i), flows, config);
+    // Calculate average loss if there are valid flows
+    if (count > 0) {
+        loss /= count;
+    }
+    rconfig->loss = loss; // Update the row configuration with the calculated loss
+}
 
-//         average_loss += (csv_config->rows+i)->loss*((csv_config->rows+i)->number/config->tenant_number);
-//         if((csv_config->rows+i)->real_traffic<=(csv_config->rows+i)->mean)
-//             compliant_loss += (csv_config->rows+i)->loss*((csv_config->rows+i)->number/config->tenant_number);
-//         else non_compliant_loss +=
-//     }
-        
-//     csv_config->average_loss = average_loss;
-//     csv_config->compliant_loss = compliant_loss;
-        
-//         csv_config.compliant_loss = 0.0;
-//         csv_config.non_compliant_loss = 0.0;
-//         csv_config.uniform_loss = 0.0;
-//         csv_config.burst_loss = 0.0;
-// }
+/**
+ * @brief Updates the CSV configuration with loss statistics based on the flows.
+ *
+ * This function calculates various types of loss statistics for the CSV configuration,
+ * including average loss, compliant loss, non-compliant loss, uniform loss, and burst loss.
+ *
+ * @param csv_config Pointer to the csv_configuration to update.
+ * @param flows Pointer to an array of single_flow structures.
+ * @param config Pointer to the common_configuration containing tenant information.
+ */
+void update_loss_csv_config(csv_configuration* csv_config, single_flow* flows, common_configuration *config) {
+    double average_loss = 0.0;
+    double compliant_loss = 0.0;
+    double non_compliant_loss = 0.0;
+    double uniform_loss = 0.0;
+    double burst_loss = 0.0;
+
+    for (int i = 0; i < csv_config->kind_number; i++) {
+        update_loss_row_config((csv_config->rows + i), flows, config);
+
+        // Calculate average loss
+        average_loss += (csv_config->rows + i)->loss * ((csv_config->rows + i)->number / (double)config->tenant_number);
+
+        // Calculate compliant loss
+        if ((csv_config->rows + i)->real_traffic <= (csv_config->rows + i)->mean && 
+            (config->tenant_number - csv_config->noncompliant_number) > 0) {
+            compliant_loss += (csv_config->rows + i)->loss * ((csv_config->rows + i)->number / (double)(config->tenant_number - csv_config->noncompliant_number));
+        } else if (csv_config->noncompliant_number > 0) {
+            non_compliant_loss += (csv_config->rows + i)->loss * ((csv_config->rows + i)->number / (double)csv_config->noncompliant_number);
+        }
+
+        // Calculate uniform loss
+        if ((csv_config->rows + i)->traffic_mode == TRAFFIC_MODE_ADVANCED_UNIFORM_DISTRIBUTION && csv_config->uniform_number > 0) {
+            uniform_loss += (csv_config->rows + i)->loss * ((csv_config->rows + i)->number / (double)csv_config->uniform_number);
+        }
+
+        // Calculate burst loss
+        if ((csv_config->rows + i)->traffic_mode == TRAFFIC_MODE_ADVANCED_ON_OFF_MODEL && csv_config->burst_number > 0) {
+            burst_loss += (csv_config->rows + i)->loss * ((csv_config->rows + i)->number / (double)csv_config->burst_number);
+        }
+    }
+
+    // Update the CSV configuration with calculated losses
+    csv_config->average_loss = average_loss;
+    csv_config->compliant_loss = compliant_loss;
+    csv_config->non_compliant_loss = non_compliant_loss;
+    csv_config->uniform_loss = uniform_loss;
+    csv_config->burst_loss = burst_loss;
+}
 #endif

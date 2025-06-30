@@ -1654,9 +1654,9 @@ csv_configuration create_csv_configuration(const char *filename, common_configur
     csv_config.tenant_number = tenant_number;
     config->tenant_number = tenant_number;
 
-    config->noncompliant_number = noncompliant_number;
-    config->uniform_number = uniform_number;
-    config->burst_number = burst_number;
+    csv_config.noncompliant_number = noncompliant_number;
+    csv_config.uniform_number = uniform_number;
+    csv_config.burst_number = burst_number;
 
     csv_config.config = *config;
 

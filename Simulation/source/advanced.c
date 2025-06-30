@@ -200,7 +200,7 @@ int link_dequeue_count = 0; ///< Initialize the count of link dequeues to zero.
     print_equals_line();
 #endif
 
-
+update_loss_csv_config(&csv_config, flows, &config);
 
 #ifdef PRINT_EXECUTION_TIME
     execute_clock = clock() - execute_clock;                      ///< Calculate the elapsed execution time.

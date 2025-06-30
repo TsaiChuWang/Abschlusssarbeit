@@ -350,6 +350,8 @@ void count_loss_single_flow(single_flow *flow) {
     } else {
         flow->loss = 0.0; // Set loss to 0 if there are no packets to avoid division by zero
     }
+
+    flow->loss = flow->loss*100;
 }
 
 /**
@@ -367,4 +369,35 @@ void count_loss(single_flow *flows, int flow_number) {
     }
 }
 
+// void update_loss_row_config(row_configuration* rconfig, single_flow* flows, common_configuration *config){
+//     double loss = 0.0;
+//     for(int i=0;i<config->tenant_number;i++)
+//         if(i <= rconfig->end_index && i >= rconfig->start_index)
+//             loss = (flows+i)->loss;
+//     loss = loss/rconfig->number;
+//     rconfig->loss = loss;
+// }
+
+// void update_loss_csv_config(csv_configuration* csv_config, single_flow* flows, common_configuration *config){
+//     double average_loss = 0.0;
+//     double compliant_loss = 0.0;
+//     double non_compliant_loss = 0.0;
+
+//     for(int i= 0;i<csv_config->kind_number;i++){
+//         update_loss_row_config((csv_config->rows+i), flows, config);
+
+//         average_loss += (csv_config->rows+i)->loss*((csv_config->rows+i)->number/config->tenant_number);
+//         if((csv_config->rows+i)->real_traffic<=(csv_config->rows+i)->mean)
+//             compliant_loss += (csv_config->rows+i)->loss*((csv_config->rows+i)->number/config->tenant_number);
+//         else non_compliant_loss +=
+//     }
+        
+//     csv_config->average_loss = average_loss;
+//     csv_config->compliant_loss = compliant_loss;
+        
+//         csv_config.compliant_loss = 0.0;
+//         csv_config.non_compliant_loss = 0.0;
+//         csv_config.uniform_loss = 0.0;
+//         csv_config.burst_loss = 0.0;
+// }
 #endif

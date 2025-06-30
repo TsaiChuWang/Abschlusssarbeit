@@ -1332,6 +1332,9 @@ typedef struct
     int fields_number; // Expected number of fields in each row
 
     int tenant_number;
+    int noncompliant_number;
+    int uniform_number;
+    int burst_number;
 
     row_configuration *rows;     // Pointer to an array of row_configuration
     common_configuration config; // Common configuration settings
@@ -1626,6 +1629,9 @@ csv_configuration create_csv_configuration(const char *filename, common_configur
 
     int tenant_number = 0;
     int start_index = 0;
+    int noncompliant_number = 0;
+    int uniform_number = 0;
+    int burst_number = 0;
     for (int i = 1; i < csv_config.kind_number + 1; i++)
     {
         // Read and split the CSV row into fields
@@ -1633,11 +1639,24 @@ csv_configuration create_csv_configuration(const char *filename, common_configur
         *(csv_config.rows + i - 1) = create_row_configuration(fields, &start_index);
         tenant_number += (csv_config.rows + i - 1)->number;
         // show_row_configuration(row);
+
+        if((csv_config.rows + i - 1)->real_traffic > (csv_config.rows + i - 1)->mean)
+            noncompliant_number += (csv_config.rows + i - 1)->number;
+
+        if((csv_config.rows + i - 1)->traffic_mode == TRAFFIC_MODE_ADVANCED_UNIFORM_DISTRIBUTION)
+            uniform_number += (csv_config.rows + i - 1)->number;
+
+        if((csv_config.rows + i - 1)->traffic_mode == TRAFFIC_MODE_ADVANCED_ON_OFF_MODEL)
+            burst_number += (csv_config.rows + i - 1)->number;
         free(fields); // Free the array of fields
     }
 
     csv_config.tenant_number = tenant_number;
     config->tenant_number = tenant_number;
+
+    config->noncompliant_number = noncompliant_number;
+    config->uniform_number = uniform_number;
+    config->burst_number = burst_number;
 
     csv_config.config = *config;
 
@@ -1696,9 +1715,12 @@ void show_row_configuration(const row_configuration row)
  */
 void show_csv_configuration(const csv_configuration config)
 {
-    printf("kind    : %d\n", config.kind_number);
-    printf("field   : %d\n", config.fields_number);
-    printf("number  : %d\n", config.tenant_number);
+    printf("kind         : %d\n", config.kind_number);
+    printf("field        : %d\n", config.fields_number);
+    printf("number       : %d\n", config.tenant_number);
+    printf("noncompliant : %d\n", config.noncompliant_number);
+    printf("uniform      : %d\n", config.uniform_number);
+    printf("burst        : %d\n", config.burst_number);
     print_equals_line();
 
     for (int i = 0; i < config.kind_number; i++)

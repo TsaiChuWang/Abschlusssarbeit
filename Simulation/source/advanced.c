@@ -197,7 +197,10 @@ int link_dequeue_count = 0; ///< Initialize the count of link dequeues to zero.
     count_loss(flows, config.tenant_number);
 #ifdef PRINT_PACKET_COUNT
     print_packet_count(flows, config.tenant_number);
+    print_equals_line();
 #endif
+
+
 
 #ifdef PRINT_EXECUTION_TIME
     execute_clock = clock() - execute_clock;                      ///< Calculate the elapsed execution time.

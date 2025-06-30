@@ -292,12 +292,13 @@ int three_update(single_flow *flow, TIME_TYPE current_timestamp, common_configur
  * @param flow Pointer to the single_flow structure containing packet statistics.
  */
 void print_packet_count_single_flow(single_flow *flow) {
-    printf("   %-2d  | %-8d | %-8d | %-8d | %-8d |\n", 
+    printf("   %-2d  | %-8d | %-8d | %-8d | %-8d | %-.7lf |\n", 
            flow->index, 
            flow->packet_count, 
            flow->FIFO_drop_count, 
            flow->GCRA_labeled_count, 
-           flow->link_dropped_count);
+           flow->link_dropped_count,
+           flow->loss);
 }
 
 /**
@@ -311,15 +312,45 @@ void print_packet_count_single_flow(single_flow *flow) {
  */
 void print_packet_count(single_flow *flows, int flow_number) {
     // Print the header for the packet statistics
-    printf(" index |  Packet  |   FIFO   |   GCRA   |   Link   |\n");
+    printf(" index |  Packet  |   FIFO   |   GCRA   |   Link   |    Loss   |\n");
+    printf("----------------------------------------------------------------\n");
     
     // Iterate through the array of flows and print each flow's statistics
     for (int i = 0; i < flow_number; i++) {
         print_packet_count_single_flow(&flows[i]);
     }
 }
-// void print_packet_loss(single_flow *flow){
 
-//     printf(" %-2d | %-.7lf | %-.7lf |\n", )
-// }
+/**
+ * @brief Calculates the loss rate for a single flow.
+ *
+ * This function computes the loss rate as the sum of link drops and FIFO drops
+ * divided by the total packet count. If the packet count is zero, the loss rate
+ * is set to zero to avoid division by zero.
+ *
+ * @param flow Pointer to the single_flow structure for which to calculate loss.
+ */
+void count_loss_single_flow(single_flow *flow) {
+    if (flow->packet_count > 0) {
+        flow->loss = (double)(flow->link_dropped_count + flow->FIFO_drop_count) / flow->packet_count;
+    } else {
+        flow->loss = 0.0; // Set loss to 0 if there are no packets to avoid division by zero
+    }
+}
+
+/**
+ * @brief Calculates the loss rates for multiple flows.
+ *
+ * This function iterates through an array of flows and calculates the loss
+ * rate for each flow by calling count_loss_single_flow.
+ *
+ * @param flows Pointer to an array of single_flow structures.
+ * @param flow_number The number of flows in the array.
+ */
+void count_loss(single_flow *flows, int flow_number) {
+    for (int i = 0; i < flow_number; i++) {
+        count_loss_single_flow(&flows[i]);
+    }
+}
+
 #endif

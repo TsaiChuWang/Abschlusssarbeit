@@ -5,6 +5,7 @@
 // #define PRINT_EACH_TIMESTAMP      ///< Enable printing of each timestamp.
 // #define PRINT_LINK_DEQUEUE_COUNT ///< Enable printing of the link dequeue count.
 // #define PRINT_ORDER ///< Enable printing of the tenant order.
+#define PRINT_PACKET_COUNT
 
 #include "../include/general.h"       ///< Include general definitions and declarations.
 #include "./inih/ini.h"               ///< Include INI file handling library.
@@ -193,7 +194,11 @@ int link_dequeue_count = 0; ///< Initialize the count of link dequeues to zero.
 
     }
 
+
+    count_loss(flows, config.tenant_number);
+#ifdef PRINT_PACKET_COUNT
     print_packet_count(flows, config.tenant_number);
+#endif
 
 #ifdef PRINT_EXECUTION_TIME
     execute_clock = clock() - execute_clock;                      ///< Calculate the elapsed execution time.

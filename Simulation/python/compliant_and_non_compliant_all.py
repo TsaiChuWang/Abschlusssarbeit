@@ -27,6 +27,7 @@ if(name == 'uniform_different_noncompliant_number'):
 
     # pure
     keys = list(set(dataframe['noncompliant_tenant_number'].tolist()))
+    keys.sort()
     for key in keys:
         real_noncompliant_mean = (noncompliant_mean*key+ mean*(tenant_number-key))/tenant_number
         noncompliant_loss_pure = dataframe[dataframe['noncompliant_tenant_number'] == key][['noncompliant_loss_pure']]
@@ -65,7 +66,7 @@ if(name == 'uniform_different_noncompliant_number'):
         noncompliant_loss_all = dataframe[dataframe['noncompliant_tenant_number'] == key][['noncompliant_loss_all']]
         if(len(noncompliant_loss_all)!=0):
             tau = dataframe[dataframe['noncompliant_tenant_number'] == key]['tau'].tolist()
-            plt.plot(tau[:], noncompliant_loss_all[:], linestyle='-', label='n = {:2d}'.format(key), alpha = 1)
+            plt.plot(tau[:], noncompliant_loss_all[:], linestyle='-', label='n$_n$ = {:2d}'.format(key), alpha = 1)
     plt.plot(tau_[:], [0.1 for i in tau_][:], linestyle='-', color = 'red', label='ε')
     # plt.title('Packet Loss with different τ and μ ({}) Non-compliant'.format(name), fontsize=7.5)
     plt.title('Non-compliant SLA')
@@ -76,12 +77,13 @@ if(name == 'uniform_different_noncompliant_number'):
     plt.savefig(IMAGE_PATH.format(name,'all', 'noncompliant'))
     plt.cla()
 
+    keys.reverse()
     for key in keys:
         real_noncompliant_mean = (noncompliant_mean*key+ mean*(tenant_number-key))/tenant_number
         compliant_loss_all = dataframe[dataframe['noncompliant_tenant_number'] == key][['compliant_loss_all']]
         if(len(compliant_loss_all)!=0):
             tau = dataframe[dataframe['noncompliant_tenant_number'] == key]['tau'].tolist()
-            plt.plot(tau[:], compliant_loss_all[:], linestyle='-', label='n = {:2d}'.format(key), alpha = 1)
+            plt.plot(tau[:], compliant_loss_all[:], linestyle='-', label='n$_c$ = {:2d}'.format(100-key), alpha = 1)
     plt.plot(tau_[:], [0.1 for i in tau_][:], linestyle='-', color = 'red', label='ε')
     # plt.title('Packet Loss with different τ and μ ({}) Compliant'.format(name), fontsize=7.5)
     plt.title('Compliant SLA')
